@@ -6,6 +6,8 @@ export type AuthUser = {
     _id?: string  // Optional for MongoDB documents
     role: string
     email: string
+    name?: string  // Optional for user display
+    mobileNumber?: string  // Optional for user authentication
 }
 
 export async function getCurrentUser(): Promise<AuthUser | null> {
@@ -31,7 +33,9 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
         return {
             id: userId,
             role: payload.role as string,
-            email: payload.email as string
+            email: payload.email as string,
+            name: payload.name as string | undefined,
+            mobileNumber: payload.mobileNumber as string | undefined
         }
 
     } catch (error) {

@@ -73,7 +73,7 @@ export const columns: ColumnDef<Participant>[] = [
         accessorKey: "ticketType",
         header: "Ticket",
         cell: ({ row }) => {
-            const ticketType = row.getValue("ticketType")
+            const ticketType = row.getValue("ticketType") as string
             return <Badge variant="outline">{ticketType}</Badge>
         },
     },
@@ -81,7 +81,7 @@ export const columns: ColumnDef<Participant>[] = [
         accessorKey: "guestCount",
         header: "Guests",
         cell: ({ row }) => {
-            const guestCount = row.getValue("guestCount")
+            const guestCount = row.getValue("guestCount") as number
             return <div className="text-center">{guestCount}</div>
         },
     },
@@ -89,7 +89,7 @@ export const columns: ColumnDef<Participant>[] = [
         accessorKey: "totalAmount",
         header: "Amount",
         cell: ({ row }) => {
-            const amount = row.getValue("totalAmount")
+            const amount = row.getValue("totalAmount") as number
             return <div className="font-medium">₹{amount}</div>
         },
     },
@@ -97,7 +97,7 @@ export const columns: ColumnDef<Participant>[] = [
         accessorKey: "paymentMethod",
         header: "Payment",
         cell: ({ row }) => {
-            const method = row.getValue("paymentMethod")
+            const method = row.getValue("paymentMethod") as string
             return (
                 <Badge variant={method === "online" ? "default" : "secondary"}>
                     {method === "online" ? "Online" : "Cash"}
@@ -109,7 +109,7 @@ export const columns: ColumnDef<Participant>[] = [
         accessorKey: "paymentStatus",
         header: "Payment Status",
         cell: ({ row }) => {
-            const status = row.getValue("paymentStatus")
+            const status = row.getValue("paymentStatus") as string
             return (
                 <Badge 
                     variant={status === "completed" ? "default" : status === "failed" ? "destructive" : "secondary"}
@@ -123,7 +123,7 @@ export const columns: ColumnDef<Participant>[] = [
         accessorKey: "approvalStatus",
         header: "Approval Status",
         cell: ({ row }) => {
-            const status = row.getValue("approvalStatus")
+            const status = row.getValue("approvalStatus") as string
             return (
                 <Badge 
                     variant={status === "approved" ? "default" : status === "rejected" ? "destructive" : "secondary"}
@@ -148,8 +148,8 @@ export const columns: ColumnDef<Participant>[] = [
         id: "actions",
         header: "Actions",
         cell: ({ row }) => {
-            const approvalStatus = row.getValue("approvalStatus")
-            const paymentMethod = row.getValue("paymentMethod")
+            const approvalStatus = row.getValue("approvalStatus") as string
+            const paymentMethod = row.getValue("paymentMethod") as string
             
             const handleApprove = async () => {
                 try {
@@ -255,7 +255,7 @@ export const columns: ColumnDef<Participant>[] = [
         accessorKey: "createdAt",
         header: "Registered At",
         cell: ({ row }) => {
-            return new Date(row.getValue("createdAt")).toLocaleDateString()
+            return new Date(row.getValue("createdAt") as string).toLocaleDateString()
         },
     },
 ]

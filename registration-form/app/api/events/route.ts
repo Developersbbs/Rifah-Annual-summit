@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
     }
 
     // ✅ FILTER EMPTY TICKETS: Remove invalid entries
-    finalTickets = finalTickets.filter(ticket => 
+    finalTickets = finalTickets.filter((ticket: any) =>
       ticket.name && ticket.price >= 0
     )
 

@@ -8,9 +8,13 @@ import Link from "next/link"
 
 export default async function UserDashboard() {
     const user = await getCurrentUser()
-    
+
     if (!user) {
         return <div>Please log in</div>
+    }
+
+    if (!user.mobileNumber) {
+        return <div>Invalid user data</div>
     }
 
     const registrationData = await checkRegistration(user.mobileNumber)
@@ -22,7 +26,7 @@ export default async function UserDashboard() {
                     <h1 className="text-3xl font-bold">My Registration</h1>
                     <div className="flex gap-2">
                         <span className="text-sm text-muted-foreground">Logged in as:</span>
-                        <Badge variant="outline">{user.name}</Badge>
+                        <Badge variant="outline">{user.name || user.email}</Badge>
                     </div>
                 </div>
 
@@ -72,7 +76,7 @@ export default async function UserDashboard() {
                                             </div>
                                         </div>
                                     </div>
-                                    
+
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div className="space-y-2">
                                             <h3 className="font-semibold text-sm">Event Details</h3>
@@ -101,7 +105,7 @@ export default async function UserDashboard() {
                                                 <div className="flex items-center gap-2">
                                                     <Clock className="h-4 w-4 text-muted-foreground" />
                                                     <span>Status: </span>
-                                                    <Badge 
+                                                    <Badge
                                                         variant={
                                                             registrationData.participant.approvalStatus === 'approved' ? 'default' :
                                                             registrationData.participant.approvalStatus === 'rejected' ? 'destructive' : 'secondary'
@@ -143,7 +147,7 @@ export default async function UserDashboard() {
                                     </CardHeader>
                                     <CardContent>
                                         <CardDescription>
-                                            Your registration has been rejected. 
+                                            Your registration has been rejected.
                                             {registrationData.participant.rejectionReason ? (
                                                 <span>Reason: {registrationData.participant.rejectionReason}</span>
                                             ) : null}
@@ -196,7 +200,26 @@ export default async function UserDashboard() {
                             </CardContent>
                         </Card>
                     )
-                </div>
+                ) : (
+                    // User doesn't exist in database
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>No Registration Found</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <CardDescription>
+                                You haven't registered for the event yet. Please complete your registration to participate.
+                            </CardDescription>
+                            <div className="mt-4">
+                                <Link href="/register">
+                                    <Button className="w-full">
+                                        Register Now
+                                    </Button>
+                                </Link>
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
             </div>
         </div>
     )
