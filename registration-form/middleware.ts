@@ -1,3 +1,6 @@
+if (typeof __dirname === 'undefined') {
+  globalThis.__dirname = '/';
+}
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { jwtVerify } from 'jose'
