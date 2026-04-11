@@ -4,6 +4,7 @@ import dbConnect from "@/lib/db"
 import Participant from "@/models/Participant"
 import { getCurrentUser } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
+import { IParticipant } from "@/lib/types"
 
 export async function searchParticipants(query: string) {
     if (!query || query.length < 2) return []
@@ -19,7 +20,7 @@ export async function searchParticipants(query: string) {
             ]
         }).sort({ createdAt: -1 }).limit(10).lean()
 
-        return participants.map((p: any) => ({
+        return (participants as unknown as IParticipant[]).map((p) => ({
             ...p,
             _id: p._id.toString()
         }))
@@ -70,9 +71,9 @@ export async function performCheckIn(id: string, data: CheckInData) {
         revalidatePath("/admin/checkin")
 
         return { success: true }
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Check-in error:", error)
-        return { success: false, error: error.message || "Check-in failed" }
+        return { success: false, error: error instanceof Error ? error.message : "Check-in failed" }
     }
 }
 
@@ -84,9 +85,9 @@ export async function getCheckInStats() {
         let registeredMembers = 0
         let registeredParticipants = 0
         let checkedInMembers = 0
-        let checkedInParticipants = 0
+        let checkedInParticipants = 0;
 
-        participants.forEach((p: any) => {
+        (participants as unknown as IParticipant[]).forEach((p) => {
             registeredMembers++
             const regAdults = p.ageGroups?.adults || 0
             const regChildren = p.ageGroups?.children || 0
@@ -129,7 +130,7 @@ export async function getCheckInStats() {
 export async function getParticipantsByStatus(status: 'all' | 'checked-in' | 'pending', page: number = 1, limit: number = 20, query: string = "") {
     await dbConnect()
     try {
-        let dbQuery: any = { isRegistered: true }
+        const dbQuery: Record<string, unknown> = { isRegistered: true }
 
         if (status === 'checked-in') {
             dbQuery["checkIn.isCheckedIn"] = true
@@ -146,15 +147,17 @@ export async function getParticipantsByStatus(status: 'all' | 'checked-in' | 'pe
         }
 
         const skip = (page - 1) * limit
-        const sort: any = status === 'checked-in' ? { "checkIn.timestamp": -1 } : { createdAt: -1 }
+        const sort = status === 'checked-in' 
+            ? { "checkIn.timestamp": -1 } as const 
+            : { createdAt: -1 } as const
 
         const participants = await Participant.find(dbQuery)
-            .sort(sort)
+            .sort(sort as unknown as string | Record<string, 1 | -1>) 
             .skip(skip)
             .limit(limit)
             .lean()
 
-        return participants.map((p: any) => ({
+        return (participants as unknown as IParticipant[]).map((p) => ({
             ...p,
             _id: p._id.toString()
         }))

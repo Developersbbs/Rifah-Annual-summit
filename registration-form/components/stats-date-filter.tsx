@@ -3,7 +3,6 @@
 import * as React from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { DateRange } from "react-day-picker"
-import { addDays } from "date-fns"
 
 import { DatePickerWithRange } from "./date-range-picker"
 

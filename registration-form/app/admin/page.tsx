@@ -1,11 +1,8 @@
 import { SectionCards } from "@/components/section-cards"
 import { ParticipantsTable } from "@/components/participants-table"
 import { columns } from "./columns"
-import { getAdminData } from "@/app/actions/get-admin-data"
-import { logout } from "@/app/login/actions"
-import { Button } from "@/components/ui/button"
-import { LogOut } from "lucide-react"
 import { getCurrentUser } from "@/lib/auth"
+import { getAdminData } from "@/app/actions/get-admin-data"
 
 export default async function Page() {
   const user = await getCurrentUser()

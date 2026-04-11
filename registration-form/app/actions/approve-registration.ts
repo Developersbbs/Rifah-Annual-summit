@@ -3,7 +3,6 @@
 import dbConnect from "@/lib/db"
 import Participant from "@/models/Participant"
 import { getCurrentUser } from "@/lib/auth"
-import { redirect } from "next/navigation"
 
 export async function approveRegistration(participantId: string) {
     try {
@@ -37,7 +36,7 @@ export async function approveRegistration(participantId: string) {
 
         return { success: true, message: "Registration approved successfully" }
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Error approving registration:", error)
         return { success: false, error: "Failed to approve registration" }
     }
@@ -76,7 +75,7 @@ export async function rejectRegistration(participantId: string, reason?: string)
 
         return { success: true, message: "Registration rejected successfully" }
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Error rejecting registration:", error)
         return { success: false, error: "Failed to reject registration" }
     }

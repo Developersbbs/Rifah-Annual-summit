@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import dbConnect from "@/lib/db"
 import Event from '@/models/Event'
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     await dbConnect()
     
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     }).sort({ createdAt: -1 })
     
     return NextResponse.json(activeEvent || null)
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error fetching active event:', error)
     return NextResponse.json({ error: 'Failed to fetch active event' }, { status: 500 })
   }

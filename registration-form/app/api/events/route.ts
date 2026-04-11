@@ -59,7 +59,6 @@ export async function POST(request: NextRequest) {
       endDate,
       location,
       maxCapacity,
-      ticketsPrice
     } = body
 
     // VALIDATION
@@ -86,7 +85,7 @@ export async function POST(request: NextRequest) {
     }
 
     // ✅ FILTER EMPTY TICKETS: Remove invalid entries
-    finalTickets = finalTickets.filter((ticket: any) =>
+    finalTickets = finalTickets.filter((ticket: { name: string; price: number }) =>
       ticket.name && ticket.price >= 0
     )
 
@@ -107,11 +106,11 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(event, { status: 201 })
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error creating event:', error)
 
     return NextResponse.json(
-      { error: error.message || 'Failed to create event' },
+      { error: error instanceof Error ? error.message : 'Failed to create event' },
       { status: 500 }
     )
   }

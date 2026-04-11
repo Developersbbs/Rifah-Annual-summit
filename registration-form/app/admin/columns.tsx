@@ -2,41 +2,12 @@
 
 import { ColumnDef } from "@tanstack/react-table"
 import { Badge } from "@/components/ui/badge"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
-import { ArrowUpDown, MoreHorizontal, Soup, Salad, Coffee, CheckCircle, XCircle } from "lucide-react"
+import { ArrowUpDown, Soup, Salad, Coffee, CheckCircle, XCircle } from "lucide-react"
+import { IParticipant } from "@/lib/types"
 
 // Types matching what getAdminData returns
-export type Participant = {
-    _id: string
-    mobileNumber: string
-    name: string
-    email: string
-    businessName: string
-    businessCategory: string
-    location: string
-    ticketType: string
-    ticketPrice: number
-    totalAmount: number
-    guestCount: number
-    paymentMethod: string
-    paymentStatus: string
-    approvalStatus: string
-    foodPreference: {
-        veg: number
-        nonVeg: number
-    }
-    isMorningFood: boolean
-    createdAt: string
-    updatedAt: string
-    checkIn?: {
-        isCheckedIn: boolean
-        memberPresent: boolean
-        actualAdults: number
-        actualChildren: number
-        checkInTime: string
-    }
-}
+export type Participant = IParticipant
 
 export const columns: ColumnDef<Participant>[] = [
     {
@@ -52,7 +23,7 @@ export const columns: ColumnDef<Participant>[] = [
                 </Button>
             )
         },
-        cell: ({ row }) => <div className="font-medium ml-4">{row.getValue("name")}</div>,
+        cell: ({ row }) => <div className="font-medium ml-4">{row.getValue("name") || "N/A"}</div>,
     },
     {
         accessorKey: "email",
@@ -162,10 +133,10 @@ export const columns: ColumnDef<Participant>[] = [
                     if (response.ok) {
                         window.location.reload()
                     } else {
-                        const error = await response.json()
-                        alert(error.error || "Failed to approve")
+                        const { error } = await response.json()
+                        alert(error || "Failed to approve")
                     }
-                } catch (error) {
+                } catch {
                     alert("Error approving registration")
                 }
             }
@@ -183,10 +154,10 @@ export const columns: ColumnDef<Participant>[] = [
                     if (response.ok) {
                         window.location.reload()
                     } else {
-                        const error = await response.json()
-                        alert(error.error || "Failed to reject")
+                        const { error } = await response.json()
+                        alert(error || "Failed to reject")
                     }
-                } catch (error) {
+                } catch {
                     alert("Error rejecting registration")
                 }
             }

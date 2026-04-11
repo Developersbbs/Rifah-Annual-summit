@@ -3,8 +3,9 @@
 import dbConnect from "@/lib/db"
 import Participant from "@/models/Participant"
 import { revalidatePath } from "next/cache"
+import { IParticipant } from "@/lib/types"
 
-export async function updateParticipant(id: string, data: any) {
+export async function updateParticipant(id: string, data: Partial<IParticipant>) {
     try {
         await dbConnect()
 
@@ -24,7 +25,7 @@ export async function updateParticipant(id: string, data: any) {
         }
 
         // Check if mobile number is being changed and if it conflicts
-        if (mobileNumber !== existingParticipant.mobileNumber) {
+        if (mobileNumber && mobileNumber !== existingParticipant.mobileNumber) {
             const conflict = await Participant.findOne({ mobileNumber })
             if (conflict) {
                 return { success: false, error: "Mobile number already registered to another participant" }
@@ -32,12 +33,12 @@ export async function updateParticipant(id: string, data: any) {
         }
 
         // Update fields
-        existingParticipant.mobileNumber = mobileNumber
-        existingParticipant.name = name
-        existingParticipant.groupNumber = groupNumber
-        existingParticipant.ageGroups = ageGroups
-        existingParticipant.foodPreference = foodPreference
-        existingParticipant.isMorningFood = isMorningFood
+        if (mobileNumber) existingParticipant.mobileNumber = mobileNumber
+        if (name) existingParticipant.name = name
+        if (groupNumber) existingParticipant.groupNumber = groupNumber
+        if (ageGroups) existingParticipant.ageGroups = ageGroups
+        if (foodPreference) existingParticipant.foodPreference = foodPreference
+        if (isMorningFood !== undefined) existingParticipant.isMorningFood = isMorningFood
         existingParticipant.updatedAt = new Date()
 
         await existingParticipant.save()
@@ -46,7 +47,7 @@ export async function updateParticipant(id: string, data: any) {
         revalidatePath("/admin/groups")
 
         return { success: true }
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Error updating participant:", error)
         return { success: false, error: "Failed to update participant" }
     }

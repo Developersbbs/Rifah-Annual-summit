@@ -2,12 +2,11 @@
 
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Calendar, MapPin, Sun, Wheat, Utensils, Music, Menu, Heart, Info, ArrowRight, Instagram, Facebook, Twitter, Mail, Clock, AlertCircle } from "lucide-react"
+import { Calendar, MapPin, Sun, Menu, ArrowRight, Instagram, Facebook, Twitter, Mail, Clock, AlertCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 

@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Search, Loader2, Minus, Plus, CheckCircle2, AlertCircle, RefreshCw } from "lucide-react"
+import { Search, Loader2, Minus, Plus, RefreshCw } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -14,16 +14,17 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { searchParticipants, performCheckIn, getCheckInStats, getParticipantsByStatus } from "@/app/actions/check-in"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { performCheckIn, getCheckInStats, getParticipantsByStatus } from "@/app/actions/check-in"
 import { toast } from "sonner"
+import { IParticipant } from "@/lib/types"
 
 type ViewMode = 'search' | 'pending' | 'checked-in'
 
 export function CheckInTable() {
     const [view, setView] = React.useState<ViewMode>('search')
     const [query, setQuery] = React.useState("")
-    const [results, setResults] = React.useState<any[]>([])
+    const [results, setResults] = React.useState<IParticipant[]>([])
     const [loading, setLoading] = React.useState(false)
     const [debouncedQuery, setDebouncedQuery] = React.useState("")
     const [stats, setStats] = React.useState({
@@ -39,7 +40,10 @@ export function CheckInTable() {
     }
 
     React.useEffect(() => {
-        loadStats()
+        const loadStatsInit = async () => {
+            await loadStats()
+        }
+        loadStatsInit()
     }, [])
 
     // Search Logic
@@ -63,8 +67,12 @@ export function CheckInTable() {
     }
 
     React.useEffect(() => {
-        fetchData()
-        loadStats()
+        const fetchAll = async () => {
+            await fetchData()
+            await loadStats()
+        }
+        fetchAll()
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [debouncedQuery, view])
 
     const handleRefresh = () => {
@@ -164,7 +172,7 @@ export function CheckInTable() {
     )
 }
 
-function CheckInRow({ participant, onRefresh }: { participant: any, onRefresh: () => void }) {
+function CheckInRow({ participant, onRefresh }: { participant: IParticipant, onRefresh: () => void }) {
     // Initial State derived from DB
     const isCheckedIn = participant.checkIn?.isCheckedIn
 

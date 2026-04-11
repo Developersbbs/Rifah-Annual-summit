@@ -1,0 +1,82 @@
+
+/home/jeeva/Project/event-management/registration-form/app/actions/check-in.ts
+    8:8   warning  'mongoose' is defined but never used      @typescript-eslint/no-unused-vars
+  152:21  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  155:27  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/jeeva/Project/event-management/registration-form/app/actions/get-admin-data.ts
+  164:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/jeeva/Project/event-management/registration-form/app/actions/user-actions.ts
+  155:20  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  206:14  warning  'error' is defined but never used         @typescript-eslint/no-unused-vars
+
+/home/jeeva/Project/event-management/registration-form/app/admin/columns.tsx
+  139:26  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  160:26  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/jeeva/Project/event-management/registration-form/components/check-in-table.tsx
+  47:9  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+
+/home/jeeva/Project/event-management/registration-form/components/check-in-view.tsx
+  10:31  warning  'userRole' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/jeeva/Project/event-management/registration-form/components/data-table.tsx
+  368:17  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/home/jeeva/Project/event-management/registration-form/components/data-table.tsx:368:17
+  366 |   )
+  367 |
+> 368 |   const table = useReactTable({
+      |                 ^^^^^^^^^^^^^ TanStack Table's `useReactTable()` API returns functions that cannot be memoized safely
+  369 |     data,
+  370 |     columns,
+  371 |     state: {  react-hooks/incompatible-library
+
+/home/jeeva/Project/event-management/registration-form/components/date-range-picker.tsx
+  4:10  warning  'addDays' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/jeeva/Project/event-management/registration-form/components/edit-participant-dialog.tsx
+   25:10  warning  'toast' is defined but never used                                                                        @typescript-eslint/no-unused-vars
+   69:8   warning  React Hook useEffect has a missing dependency: 'form'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  126:18  warning  'e' is defined but never used                                                                            @typescript-eslint/no-unused-vars
+  139:90  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`                                          react/no-unescaped-entities
+
+/home/jeeva/Project/event-management/registration-form/components/event-schedule-dialog.tsx
+  16:10  warning  'Calendar' is defined but never used  @typescript-eslint/no-unused-vars
+
+/home/jeeva/Project/event-management/registration-form/components/participants-table.tsx
+   16:10  warning  'ArrowUpDown' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      @typescript-eslint/no-unused-vars
+   77:18  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     @typescript-eslint/no-explicit-any
+   95:57  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     @typescript-eslint/no-explicit-any
+  102:57  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     @typescript-eslint/no-explicit-any
+  113:57  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     @typescript-eslint/no-explicit-any
+  113:74  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     @typescript-eslint/no-explicit-any
+  141:19  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+/home/jeeva/Project/event-management/registration-form/components/participants-table.tsx:141:19
+  139 |
+  140 |
+> 141 |     const table = useReactTable({
+      |                   ^^^^^^^^^^^^^ TanStack Table's `useReactTable()` API returns functions that cannot be memoized safely
+  142 |         data: filteredData as TData[],
+  143 |         columns: tableColumns as ColumnDef<TData, any>[],
+  144 |         onSortingChange: setSorting,  react-hooks/incompatible-library
+  143:51  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     @typescript-eslint/no-explicit-any
+  178:38  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     @typescript-eslint/no-explicit-any
+  261:54  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     @typescript-eslint/no-explicit-any
+
+/home/jeeva/Project/event-management/registration-form/components/quick-create-form.tsx
+   96:18  warning  'err' is defined but never used  @typescript-eslint/no-unused-vars
+  129:18  warning  'e' is defined but never used    @typescript-eslint/no-unused-vars
+
+/home/jeeva/Project/event-management/registration-form/components/smtp-settings-dialog.tsx
+  70:18  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+✖ 30 problems (13 errors, 17 warnings)
+  0 errors and 1 warning potentially fixable with the `--fix` option.
+

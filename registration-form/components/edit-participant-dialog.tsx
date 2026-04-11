@@ -22,7 +22,8 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Loader2, Plus, Minus, Users, Utensils, AlertCircle } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Separator } from "@/components/ui/separator"
-import { toast } from "sonner"
+// import { toast } from "sonner"
+import { IParticipant } from "@/lib/types"
 // Assuming sonner or toast is available? If not, simple alert or callback. 
 // I'll stick to props based callback or internal state.
 
@@ -33,7 +34,7 @@ const personalDetailsSchema = z.object({
 })
 
 interface EditParticipantDialogProps {
-    participant: any
+    participant: IParticipant
     open: boolean
     onOpenChange: (open: boolean) => void
     onSuccess?: () => void
@@ -48,6 +49,15 @@ export function EditParticipantDialog({ participant, open, onOpenChange, onSucce
         ageGroups: participant.ageGroups || { adults: 1, children: 0 },
         foodPreference: participant.foodPreference || { veg: 1, nonVeg: 0 },
         isMorningFood: participant.isMorningFood || false,
+    })
+
+    const form = useForm<z.infer<typeof personalDetailsSchema>>({
+        resolver: zodResolver(personalDetailsSchema),
+        defaultValues: {
+            name: participant.name,
+            groupNumber: participant.groupNumber,
+            mobileNumber: participant.mobileNumber,
+        }
     })
 
     // Reset state when participant changes (if dialog re-opens with different user)
@@ -65,22 +75,12 @@ export function EditParticipantDialog({ participant, open, onOpenChange, onSucce
             })
             setDbError(null)
         }
-    }, [open, participant])
-
-
-    const form = useForm<z.infer<typeof personalDetailsSchema>>({
-        resolver: zodResolver(personalDetailsSchema),
-        defaultValues: {
-            name: participant.name,
-            groupNumber: participant.groupNumber,
-            mobileNumber: participant.mobileNumber,
-        }
-    })
+    }, [open, participant, form])
 
     // --- Derived State (Pricing) ---
     const totalGuests = useMemo(() => {
         const { adults, children } = eventData.ageGroups
-        return (parseInt(adults as any) || 0) + (parseInt(children as any) || 0)
+        return (Number(adults) || 0) + (Number(children) || 0)
     }, [eventData.ageGroups])
 
     // Update Food Prefs when total guests changes
@@ -122,7 +122,7 @@ export function EditParticipantDialog({ participant, open, onOpenChange, onSucce
             } else {
                 setDbError(result.error || "Update failed.")
             }
-        } catch (e) {
+        } catch {
             setDbError("An unexpected error occurred.")
         } finally {
             setIsSubmitting(false)
@@ -135,7 +135,7 @@ export function EditParticipantDialog({ participant, open, onOpenChange, onSucce
                 <DialogHeader>
                     <DialogTitle>Edit Participant</DialogTitle>
                     <DialogDescription>
-                        Make changes to the participant details here. Click save when you're done.
+                        Make changes to the participant details here. Click save when you&apos;re done.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -204,9 +204,9 @@ export function EditParticipantDialog({ participant, open, onOpenChange, onSucce
                                         <div key={item.key} className="flex items-center justify-between p-2 border rounded-lg bg-muted/20">
                                             <span className="text-sm font-medium">{item.label}</span>
                                             <div className="flex items-center gap-2">
-                                                <Button type="button" variant="outline" size="icon" className="h-6 w-6" onClick={() => updateCount(item.key as any, -1)}><Minus className="h-3 w-3" /></Button>
+                                                <Button type="button" variant="outline" size="icon" className="h-6 w-6" onClick={() => updateCount(item.key as 'adults' | 'children', -1)}><Minus className="h-3 w-3" /></Button>
                                                 <span className="w-4 text-center text-sm">{eventData.ageGroups[item.key as keyof typeof eventData.ageGroups]}</span>
-                                                <Button type="button" variant="outline" size="icon" className="h-6 w-6" onClick={() => updateCount(item.key as any, 1)}><Plus className="h-3 w-3" /></Button>
+                                                <Button type="button" variant="outline" size="icon" className="h-6 w-6" onClick={() => updateCount(item.key as 'adults' | 'children', 1)}><Plus className="h-3 w-3" /></Button>
                                             </div>
                                         </div>
                                     ))}

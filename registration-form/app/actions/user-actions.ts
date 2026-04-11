@@ -6,8 +6,9 @@ import SystemConfig from "@/models/SystemConfig"
 import User from "@/models/User"
 import nodemailer from "nodemailer"
 import crypto from "crypto"
+import { IUser } from "@/lib/types"
 
-export async function saveSmtpConfig(prevState: any, formData: FormData) {
+export async function saveSmtpConfig(prevState: unknown, formData: FormData) {
     const currentUser = await getCurrentUser()
     if (!currentUser || currentUser.role !== 'super-admin') {
         return { success: false, error: 'Unauthorized' }
@@ -53,7 +54,7 @@ export async function getSmtpConfig() {
 import bcrypt from "bcryptjs"
 import { revalidatePath } from "next/cache"
 
-export async function createUser(prevState: any, formData: FormData) {
+export async function createUser(prevState: unknown, formData: FormData) {
     const currentUser = await getCurrentUser()
 
     if (!currentUser || currentUser.role !== 'super-admin') {
@@ -149,10 +150,10 @@ export async function getUsers() {
     await dbConnect()
     const users = await User.find({}).select('-password').sort({ createdAt: -1 }).lean()
 
-    return users.map((u: any) => ({
+    return (users as unknown as IUser[]).map((u) => ({
         ...u,
         _id: u._id.toString(),
-        createdAt: u.createdAt?.toISOString()
+        createdAt: u.createdAt instanceof Date ? u.createdAt.toISOString() : u.createdAt
     }))
 }
 
@@ -202,7 +203,7 @@ export async function getUserByToken(token: string) {
         if (!user) return null
 
         return { email: user.email }
-    } catch (error) {
+    } catch {
         return null
     }
 }

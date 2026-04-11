@@ -12,14 +12,14 @@ import {
     getPaginationRowModel,
     getSortedRowModel,
     useReactTable,
-    FilterFn,
 } from "@tanstack/react-table"
-import { ArrowUpDown, ChevronDown, Download, Search, Pencil, FileText } from "lucide-react"
+import { ChevronDown, Download, Search, Pencil, FileText } from "lucide-react"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 import { EditParticipantDialog } from "@/components/edit-participant-dialog"
 import { DateRange } from "react-day-picker"
 import { isWithinInterval, parseISO, startOfDay, endOfDay } from "date-fns"
+import { IParticipant } from "@/lib/types"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -64,7 +64,7 @@ export function ParticipantsTable<TData, TValue>({
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
     const [rowSelection, setRowSelection] = React.useState({})
     const [globalFilter, setGlobalFilter] = React.useState("")
-    const [editingParticipant, setEditingParticipant] = React.useState<any>(null)
+    const [editingParticipant, setEditingParticipant] = React.useState<IParticipant | null>(null)
 
     // Custom Filters State
     const [dateRange, setDateRange] = React.useState<DateRange | undefined>()
@@ -73,8 +73,8 @@ export function ParticipantsTable<TData, TValue>({
 
     // Calculate Group Counts
     const groupOptions = React.useMemo(() => {
-        const groups: Record<string, number> = {}
-        data.forEach((item: any) => {
+        const groups: Record<string, number> = {};
+        (data as unknown as IParticipant[]).forEach((item: IParticipant) => {
             const g = item.groupNumber || "Unassigned"
             groups[g] = (groups[g] || 0) + 1
         })
@@ -92,15 +92,17 @@ export function ParticipantsTable<TData, TValue>({
 
         // Group Filter
         if (groupFilter !== "all") {
-            processedData = processedData.filter((item: any) =>
-                (item.groupNumber || "Unassigned").toString() === groupFilter
+            processedData = processedData.filter((item) =>
+                ((item as unknown as IParticipant).groupNumber || "Unassigned").toString() === groupFilter
             )
         }
 
         // Date Range Filter
         if (dateRange?.from) {
-            processedData = processedData.filter((item: any) => {
-                const createdDate = parseISO(item.createdAt)
+            processedData = processedData.filter((item) => {
+                const p = item as unknown as IParticipant
+                const createdAtStr = typeof p.createdAt === 'string' ? p.createdAt : p.createdAt.toISOString()
+                const createdDate = parseISO(createdAtStr)
                 const from = startOfDay(dateRange.from!)
                 const to = dateRange.to ? endOfDay(dateRange.to) : endOfDay(dateRange.from!)
 
@@ -110,7 +112,7 @@ export function ParticipantsTable<TData, TValue>({
 
         // Morning Food Filter
         if (showMorningFoodOnly) {
-            processedData = processedData.filter((item: any) => item.isMorningFood === true)
+            processedData = processedData.filter((item) => (item as unknown as IParticipant).isMorningFood === true)
         }
 
         return processedData
@@ -124,10 +126,10 @@ export function ParticipantsTable<TData, TValue>({
             {
                 id: "actions",
                 enableHiding: false,
-                cell: ({ row }: any) => {
+                cell: ({ row }: { row: { original: TData } }) => {
                     return (
                         <div className="flex justify-end">
-                            <Button variant="ghost" size="icon" onClick={() => setEditingParticipant(row.original)}>
+                            <Button variant="ghost" size="icon" onClick={() => setEditingParticipant(row.original as unknown as IParticipant)}>
                                 <Pencil className="h-4 w-4" />
                             </Button>
                         </div>
@@ -138,9 +140,10 @@ export function ParticipantsTable<TData, TValue>({
     }, [columns, userRole])
 
 
+    // eslint-disable-next-line react-hooks/incompatible-library
     const table = useReactTable({
-        data: filteredData,
-        columns: tableColumns,
+        data: filteredData as TData[],
+        columns: tableColumns as ColumnDef<TData, unknown>[],
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
         onGlobalFilterChange: setGlobalFilter,
@@ -175,31 +178,35 @@ export function ParticipantsTable<TData, TValue>({
 
         const csvContent = "data:text/csv;charset=utf-8,"
             + headers.join(",") + "\n"
-            + filteredData.map((row: any) => {
-                const checkIn = row.checkIn || {}
-                const isCheckedIn = checkIn.isCheckedIn
-                const memberPresent = checkIn.memberPresent
-                const actualAdults = checkIn.actualAdults || 0
-                const actualChildren = checkIn.actualChildren || 0
+            + (filteredData as unknown as IParticipant[]).map((row) => {
+                const isCheckedIn = row.checkIn?.isCheckedIn
+                const memberPresent = row.checkIn?.memberPresent
+                const actualAdults = row.checkIn?.actualAdults || 0
+                const actualChildren = row.checkIn?.actualChildren || 0
 
                 // Calculate guest adults for export logic same as display
                 const guestAdultsIn = Math.max(0, actualAdults - (memberPresent ? 1 : 0))
 
+                const regAdults = row.ageGroups?.adults || 0
+                const regChildren = row.ageGroups?.children || 0
+                const vegCount = row.foodPreference?.veg || 0
+                const nonVegCount = row.foodPreference?.nonVeg || 0
+
                 return [
-                    `"${row.name}"`,
+                    `"${row.name || ''}"`,
                     `"${row.mobileNumber}"`,
                     `"${row.groupNumber || ''}"`,
-                    row.ageGroups.adults > 0 ? row.ageGroups.adults - 1 : 0,
-                    row.ageGroups.children,
-                    row.foodPreference.veg,
-                    row.foodPreference.nonVeg,
+                    regAdults > 0 ? regAdults - 1 : 0,
+                    regChildren,
+                    vegCount,
+                    nonVegCount,
                     row.isMorningFood ? "Yes" : "No",
                     `"${new Date(row.createdAt).toLocaleDateString()}"`,
                     isCheckedIn ? "Checked In" : "Pending",
                     isCheckedIn ? (memberPresent ? "Yes" : "No") : "-",
                     isCheckedIn ? guestAdultsIn : "-",
                     isCheckedIn ? actualChildren : "-",
-                    isCheckedIn && checkIn.checkInTime ? `"${new Date(checkIn.checkInTime).toLocaleString()}"` : "-"
+                    isCheckedIn && row.checkIn?.timestamp ? `"${new Date(row.checkIn.timestamp).toLocaleString()}"` : "-"
                 ].join(",")
             }).join("\n");
 
@@ -258,11 +265,11 @@ export function ParticipantsTable<TData, TValue>({
             doc.text(filterInfo, 14, 33)
 
             // Table Data
-            const tableBody = filteredData.map((row: any) => [
-                row.name,
-                row.mobileNumber,
+            const tableBody = (filteredData as unknown as IParticipant[]).map((row) => [
+                row.name || "",
+                row.mobileNumber || "",
                 row.groupNumber || "-",
-                row.ageGroups?.adults > 0 ? row.ageGroups.adults - 1 : 0,
+                (row.ageGroups?.adults ?? 0) > 0 ? (row.ageGroups?.adults ?? 0) - 1 : 0,
                 row.ageGroups?.children || 0,
                 row.foodPreference?.veg || 0,
                 row.foodPreference?.nonVeg || 0,

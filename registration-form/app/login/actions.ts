@@ -7,7 +7,7 @@ import bcrypt from 'bcryptjs'
 import dbConnect from '@/lib/db'
 import User from '@/models/User'
 
-export async function login(prevState: any, formData: FormData) {
+export async function login(prevState: unknown, formData: FormData) {
     const email = formData.get('email') as string
     const password = formData.get('password') as string
 

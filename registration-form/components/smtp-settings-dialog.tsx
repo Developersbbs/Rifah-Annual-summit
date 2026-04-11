@@ -18,10 +18,18 @@ import { saveSmtpConfig, getSmtpConfig } from "@/app/actions/user-actions"
 import { toast } from "sonner"
 import { Settings } from "lucide-react"
 
+interface ISmtpConfig {
+    host: string
+    port: number
+    user: string
+    pass: string
+    fromEmail: string
+}
+
 export function SmtpSettingsDialog() {
     const [open, setOpen] = useState(false)
     const [loading, setLoading] = useState(false)
-    const [config, setConfig] = useState<any>({
+    const [config, setConfig] = useState<ISmtpConfig>({
         host: "",
         port: 587,
         user: "",
@@ -59,7 +67,7 @@ export function SmtpSettingsDialog() {
             } else {
                 toast.error(result.error || "Failed to save settings")
             }
-        } catch (error) {
+        } catch {
             toast.error("An error occurred")
         } finally {
             setLoading(false)
@@ -104,7 +112,7 @@ export function SmtpSettingsDialog() {
                                 id="port"
                                 type="number"
                                 value={config.port}
-                                onChange={(e) => setConfig({ ...config, port: e.target.value })}
+                                onChange={(e) => setConfig({ ...config, port: Number(e.target.value) })}
                                 className="col-span-3"
                                 placeholder="587"
                                 required

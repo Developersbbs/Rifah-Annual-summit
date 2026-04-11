@@ -16,6 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Loader2, CheckCircle2, AlertCircle, Plus, Minus, Phone, Users, Utensils, Info } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Separator } from "@/components/ui/separator"
+import { IParticipant } from "@/lib/types"
 
 enum Step {
     PHONE_INPUT = 0,
@@ -49,7 +50,7 @@ export function QuickCreateForm() {
         isMorningFood: false,
         ticketType: "General",
     })
-    const [existingParticipant, setExistingParticipant] = useState<any>(null)
+    const [existingParticipant, setExistingParticipant] = useState<IParticipant | null>(null)
 
     // Forms
     const phoneForm = useForm<z.infer<typeof phoneSchema>>({ resolver: zodResolver(phoneSchema), defaultValues: { phoneNumber: "+91" } })
@@ -61,7 +62,7 @@ export function QuickCreateForm() {
     // --- Derived State (Pricing) ---
     const totalGuests = useMemo(() => {
         const { adults, children } = eventData.ageGroups
-        return (parseInt(adults as any) || 0) + (parseInt(children as any) || 0)
+        return (Number(adults) || 0) + (Number(children) || 0)
     }, [eventData.ageGroups])
 
     // Update Food Prefs when total guests changes
@@ -92,7 +93,7 @@ export function QuickCreateForm() {
                 setVerifiedPhone(ph)
                 setStep(Step.PERSONAL_DETAILS)
             }
-        } catch (err) {
+        } catch {
             setDbError("System error checking registration.")
         } finally {
             setIsCheckingDb(false)
@@ -108,7 +109,7 @@ export function QuickCreateForm() {
         setIsSubmitting(true)
         try {
             const { adults, children } = eventData.ageGroups
-            const guestCount = (parseInt(adults as any) || 0) + (parseInt(children as any) || 0)
+            const guestCount = (Number(adults) || 0) + (Number(children) || 0)
 
             const payload = {
                 mobileNumber: verifiedPhone,
@@ -125,7 +126,7 @@ export function QuickCreateForm() {
             } else {
                 setDbError(result.error || "Registration failed.")
             }
-        } catch (e) {
+        } catch {
             setDbError("An unexpected error occurred.")
         } finally {
             setIsSubmitting(false)
@@ -198,18 +199,18 @@ export function QuickCreateForm() {
                             onClick={() => {
                                 setVerifiedPhone(phoneForm.getValues("phoneNumber"))
                                 setPersonalData({
-                                    name: existingParticipant.name || "",
-                                    groupNumber: existingParticipant.groupNumber || ""
+                                    name: existingParticipant?.name || "",
+                                    groupNumber: existingParticipant?.groupNumber || ""
                                 })
                                 setEventData({
-                                    ageGroups: existingParticipant.ageGroups || { adults: 1, children: 0 },
-                                    foodPreference: existingParticipant.foodPreference || { veg: 1, nonVeg: 0 },
-                                    isMorningFood: existingParticipant.isMorningFood || false,
-                                    ticketType: existingParticipant.ticketType || "General"
+                                    ageGroups: existingParticipant?.ageGroups || { adults: 1, children: 0 },
+                                    foodPreference: existingParticipant?.foodPreference || { veg: 1, nonVeg: 0 },
+                                    isMorningFood: existingParticipant?.isMorningFood || false,
+                                    ticketType: existingParticipant?.ticketType || "General"
                                 })
                                 personalForm.reset({
-                                    name: existingParticipant.name || "",
-                                    groupNumber: existingParticipant.groupNumber || ""
+                                    name: existingParticipant?.name || "",
+                                    groupNumber: existingParticipant?.groupNumber || ""
                                 })
                                 setStep(Step.PERSONAL_DETAILS)
                             }}
@@ -302,9 +303,9 @@ export function QuickCreateForm() {
                                         <div className="font-medium">{item.label}</div>
                                     </div>
                                     <div className="flex items-center gap-3">
-                                        <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => updateCount(item.key as any, -1)}><Minus className="h-3 w-3" /></Button>
+                                        <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => updateCount(item.key as 'adults' | 'children', -1)}><Minus className="h-3 w-3" /></Button>
                                         <span className="w-4 text-center">{eventData.ageGroups[item.key as keyof typeof eventData.ageGroups]}</span>
-                                        <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => updateCount(item.key as any, 1)}><Plus className="h-3 w-3" /></Button>
+                                        <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => updateCount(item.key as 'adults' | 'children', 1)}><Plus className="h-3 w-3" /></Button>
                                     </div>
                                 </div>
                             ))}
