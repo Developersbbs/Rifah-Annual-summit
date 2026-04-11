@@ -1,3 +1,62 @@
+// import mongoose from "mongoose"
+
+// const ParticipantSchema = new mongoose.Schema({
+//     mobileNumber: {
+//         type: String,
+//         required: true,
+//         unique: true,
+//     },
+//     name: {
+//         type: String,
+//         required: false, // Optional initially, but required for full reg
+//     },
+//     groupNumber: {
+//         type: String, // Storing as string to handle "Covai Group" etc.
+//         required: false,
+//     },
+//     ageGroups: {
+//         adults: { type: Number, default: 0 },
+//         children: { type: Number, default: 0 },
+//     },
+//     foodPreference: {
+//         veg: { type: Number, default: 0 },
+//         nonVeg: { type: Number, default: 0 },
+//     },
+
+//     isMorningFood: {
+//         type: Boolean,
+//         default: false,
+//     },
+//     isRegistered: {
+//         type: Boolean,
+//         default: false,
+//     },
+//     checkIn: {
+//         isCheckedIn: { type: Boolean, default: false },
+//         memberPresent: { type: Boolean, default: false },
+//         timestamp: { type: Date },
+//         actualAdults: { type: Number },
+//         actualChildren: { type: Number },
+//         checkedInBy: { type: String }
+//     },
+//     createdAt: {
+//         type: Date,
+//         default: Date.now,
+//     },
+//     updatedAt: {
+//         type: Date,
+//         default: Date.now,
+//     }
+// })
+
+// // Force re-compilation of model in dev to apply schema changes
+// if (process.env.NODE_ENV === "development" && mongoose.models.Participant) {
+//     delete mongoose.models.Participant
+// }
+
+// export default mongoose.models.Participant || mongoose.model("Participant", ParticipantSchema)
+
+
 import mongoose from "mongoose"
 
 const ParticipantSchema = new mongoose.Schema({
@@ -6,18 +65,61 @@ const ParticipantSchema = new mongoose.Schema({
         required: true,
         unique: true,
     },
-    name: {
+
+    name: String,
+    businessName: String,
+    businessCategory: String,
+    location: String,
+
+    //  ADD THIS (EVENT LINK)
+    eventId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Event",
+    },
+
+    // ADD THIS (RESCHEDULE)
+    isRescheduled: {
+        type: Boolean,
+        default: false,
+    },
+    rescheduledTo: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Event",
+    },
+
+    paymentMethod: {
         type: String,
-        required: false, // Optional initially, but required for full reg
+        enum: ["cash", "online"],
     },
-    groupNumber: {
-        type: String, // Storing as string to handle "Covai Group" etc.
-        required: false,
+
+    paymentStatus: {
+        type: String,
+        enum: ["pending", "completed", "failed"],
+        default: "pending",
     },
-    ageGroups: {
-        adults: { type: Number, default: 0 },
-        children: { type: Number, default: 0 },
+
+    //  ADD THIS (TRACK AMOUNT)
+    totalAmount: {
+        type: Number,
     },
+
+    //  ADD THIS (APPROVAL)
+    approvalStatus: {
+        type: String,
+        enum: ["pending", "approved", "rejected"],
+        default: "pending",
+    },
+
+    approvedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+    },
+
+    approvedRole: {
+        type: String,
+        enum: ["admin", "superadmin"],
+    },
+
     foodPreference: {
         veg: { type: Number, default: 0 },
         nonVeg: { type: Number, default: 0 },
@@ -27,31 +129,21 @@ const ParticipantSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
+
     isRegistered: {
         type: Boolean,
         default: false,
     },
+
     checkIn: {
         isCheckedIn: { type: Boolean, default: false },
         memberPresent: { type: Boolean, default: false },
         timestamp: { type: Date },
-        actualAdults: { type: Number },
-        actualChildren: { type: Number },
-        checkedInBy: { type: String }
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now,
-    },
-    updatedAt: {
-        type: Date,
-        default: Date.now,
+        actualAdults: Number,
+        actualChildren: Number,
+        checkedInBy: String,
     }
-})
 
-// Force re-compilation of model in dev to apply schema changes
-if (process.env.NODE_ENV === "development" && mongoose.models.Participant) {
-    delete mongoose.models.Participant
-}
+}, { timestamps: true })
 
 export default mongoose.models.Participant || mongoose.model("Participant", ParticipantSchema)

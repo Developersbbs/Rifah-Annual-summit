@@ -3,10 +3,14 @@ import dbConnect from "@/lib/db"
 import Event from '@/models/Event'
 import { getCurrentUser } from '@/lib/auth'
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     await dbConnect()
-    const event = await Event.findById(params.id)
+    
+    // ✅ Await params in Next.js 15
+    const { id } = await params
+    
+    const event = await Event.findById(id)
     
     if (!event) {
       return NextResponse.json({ error: 'Event not found' }, { status: 404 })
@@ -19,7 +23,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = await getCurrentUser()
     
@@ -31,8 +35,11 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     
     await dbConnect()
     
+    // ✅ Await params in Next.js 15
+    const { id } = await params
+    
     const event = await Event.findByIdAndUpdate(
-      params.id,
+      id,
       { ...eventData, updatedBy: user.id.toString() },
       { new: true, runValidators: true }
     )
@@ -48,7 +55,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const user = await getCurrentUser()
     
@@ -58,7 +65,10 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
 
     await dbConnect()
     
-    const event = await Event.findByIdAndDelete(params.id)
+    // ✅ Await params in Next.js 15
+    const { id } = await params
+    
+    const event = await Event.findByIdAndDelete(id)
     
     if (!event) {
       return NextResponse.json({ error: 'Event not found' }, { status: 404 })
