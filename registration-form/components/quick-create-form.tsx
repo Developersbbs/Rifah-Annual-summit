@@ -46,12 +46,19 @@ export function QuickCreateForm() {
     const [personalData, setPersonalData] = useState({ name: "", location: "" })
     const [eventData, setEventData] = useState({
         guestCount: 0,
-        // FOOD PREFERENCE - Commented out
-        // foodPreference: { veg: 1, nonVeg: 0 },
-        // isMorningFood: false,
+        ageGuest: 0,
+        foodGuest: 0,
         ticketType: "General",
     })
-    const [existingParticipant, setExistingParticipant] = useState<IParticipant | null>(null)
+    const [existingParticipant, setExistingParticipant] = useState<{
+        name?: string;
+        location?: string;
+        guestCount?: number;
+        ageGroups?: { guest: number };
+        foodPreference?: { guest: number };
+        isMorningFood?: boolean;
+        ticketType?: string;
+    } | null>(null)
 
     // Forms
     const phoneForm = useForm<z.infer<typeof phoneSchema>>({ resolver: zodResolver(phoneSchema), defaultValues: { phoneNumber: "+91" } })
@@ -114,10 +121,9 @@ export function QuickCreateForm() {
                 name: personalData.name,
                 location: personalData.location,
                 guestCount: eventData.guestCount,
-                // FOOD PREFERENCE - Commented out
-                // foodPreference: eventData.foodPreference,
-                // isMorningFood: eventData.isMorningFood,
-                ticketType: eventData.ticketType,
+                ageGuest: eventData.guestCount,
+                foodGuest: eventData.guestCount + 1,
+                ticketType: eventData.ticketType || "General",
             }
 
             const result = await registerParticipant(payload)
@@ -203,9 +209,9 @@ export function QuickCreateForm() {
                                     location: existingParticipant?.location || ""
                                 })
                                 setEventData({
-                                    guestCount: Math.max(0, (existingParticipant?.ageGroups?.adults || 1) + (existingParticipant?.ageGroups?.children || 0) - 1),
-                                    foodPreference: existingParticipant?.foodPreference || { veg: 1, nonVeg: 0 },
-                                    isMorningFood: existingParticipant?.isMorningFood || false,
+                                    guestCount: existingParticipant?.guestCount || 0,
+                                    ageGuest: existingParticipant?.ageGroups?.guest || 0,
+                                    foodGuest: existingParticipant?.foodPreference?.guest || 1,
                                     ticketType: existingParticipant?.ticketType || "General"
                                 })
                                 personalForm.reset({
@@ -394,7 +400,7 @@ export function QuickCreateForm() {
                         phoneForm.reset()
                         personalForm.reset()
                         setPersonalData({ name: "", location: "" })
-                        setEventData({ guestCount: 0, /* FOOD PREFERENCE - Commented out: ageGroups: { adults: 1, children: 0 }, foodPreference: { veg: 1, nonVeg: 0 }, isMorningFood: false, */ ticketType: "General" })
+                        setEventData({ guestCount: 0, ageGuest: 0, foodGuest: 0, ticketType: "General" })
                         setVerifiedPhone("")
                     }}>Add Another</Button>
                 </CardContent>

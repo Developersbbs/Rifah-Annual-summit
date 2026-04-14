@@ -137,13 +137,15 @@ const ParticipantSchema = new mongoose.Schema({
     },
 
     ageGroups: {
-        adults: { type: Number, default: 0 },
-        children: { type: Number, default: 0 },
+        // adults: { type: Number, default: 0 },
+        // children: { type: Number, default: 0 },
+        guest: { type: Number, default: 0 },
     },
 
     foodPreference: {
-        veg: { type: Number, default: 0 },
-        nonVeg: { type: Number, default: 0 },
+        // veg: { type: Number, default: 0 },
+        // nonVeg: { type: Number, default: 0 },
+        guest: { type: Number, default: 0 },
     },
 
     isMorningFood: {
@@ -160,8 +162,9 @@ const ParticipantSchema = new mongoose.Schema({
         isCheckedIn: { type: Boolean, default: false },
         memberPresent: { type: Boolean, default: false },
         timestamp: { type: Date },
-        actualAdults: Number,
-        actualChildren: Number,
+        // actualAdults: Number,
+        // actualChildren: Number,
+        actualGuests: Number,
         checkedInBy: String,
     }
 

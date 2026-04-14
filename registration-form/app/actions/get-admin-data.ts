@@ -8,13 +8,11 @@ import { IParticipant } from "@/lib/types"
 interface GroupStat {
     _id: string
     membersCount: number
-    rawAdultsCount: number
-    childrenCount: number
-    checkedInMembers: number
-    checkedInGuestAdults: number
-    checkedInChildren: number
-    adultsCount: number
+    membersCount: number
     totalGuest: number
+    checkedInMembers: number
+    checkedInParticipants: number
+    totalCheckedIn: number
     checkedInParticipants: number
     totalCheckedIn: number
 }
@@ -37,7 +35,8 @@ export async function getAdminData() {
             // FOOD PREFERENCE - Commented out
             // vegCount: 0,
             // nonVegCount: 0,
-            // morningFoodCount: 0,
+            foodGuestCount: 0,
+            morningFoodCount: 0,
         };
 
         (participants as unknown as IParticipant[]).forEach((p: IParticipant) => {
@@ -49,12 +48,14 @@ export async function getAdminData() {
             // FOOD PREFERENCE - Commented out
             // const veg = p.foodPreference?.veg || 0
             // const nonVeg = p.foodPreference?.nonVeg || 0
+            const foodGuest = p.foodPreference?.guest || 0
 
             stats.totalGuests += guestCount
             stats.totalAmount += totalAmount
             // FOOD PREFERENCE - Commented out
             // stats.vegCount += veg
             // stats.nonVegCount += nonVeg
+            stats.foodGuestCount += foodGuest
             
             if (paymentMethod === "cash") {
                 stats.cashPayments += 1
@@ -71,9 +72,9 @@ export async function getAdminData() {
             }
 
             // FOOD PREFERENCE - Commented out
-            // if (p.isMorningFood) {
-            //     stats.morningFoodCount += (guestCount + 1) // +1 for registrant
-            // }
+            if (p.isMorningFood) {
+                stats.morningFoodCount += (foodGuest) // foodGuest includes registrant if they opted in
+            }
         })
 
         // Serializing MongoDB IDs and dates for client components
@@ -138,11 +139,7 @@ export async function getLocationStats(from?: string, to?: string) {
                             $cond: [
                                 "$checkIn.isCheckedIn",
                                 { 
-                                    $add: [
-                                        { $ifNull: ["$checkIn.actualAdults", 0] },
-                                        { $ifNull: ["$checkIn.actualChildren", 0] },
-                                        { $cond: ["$checkIn.memberPresent", -1, 0] } // Subtract 1 if member present to get guest count
-                                    ]
+                                    $ifNull: ["$checkIn.actualGuests", 0] 
                                 },
                                 0
                             ]

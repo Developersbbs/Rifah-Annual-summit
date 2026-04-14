@@ -1,19 +1,22 @@
 export interface IAgeGroups {
-    adults: number;
-    children: number;
+    // adults: number;
+    // children: number;
+    guest: number;
 }
 
 export interface IFoodPreference {
-    veg: number;
-    nonVeg: number;
+    // veg: number;
+    // nonVeg: number;
+    guest: number;
 }
 
 export interface ICheckIn {
     isCheckedIn: boolean;
     memberPresent: boolean;
     timestamp?: Date;
-    actualAdults?: number;
-    actualChildren?: number;
+    // actualAdults?: number;
+    // actualChildren?: number;
+    actualGuests?: number;
     checkedInBy?: string;
     checkInTime?: string; // For serialized dates
 }

@@ -161,13 +161,12 @@ export function ParticipantsTable<TData, TValue>({
     const downloadCSV = () => {
         const headers = [
             "Name", "Mobile", "Location",
-            "Reg Adults", "Reg Children",
-            "Veg", "NonVeg", "MorningFood",
+            "Reg Guests",
+            "Food Guests", "MorningFood",
             "RegisteredAt",
             "Check-in Status",
             "Member Present",
-            "Guest Adults (In)",
-            "Children (In)",
+            "Actual Guests (In)",
             "Check-in Time"
         ]
 
@@ -176,31 +175,22 @@ export function ParticipantsTable<TData, TValue>({
             + (filteredData as unknown as IParticipant[]).map((row) => {
                 const isCheckedIn = row.checkIn?.isCheckedIn
                 const memberPresent = row.checkIn?.memberPresent
-                const actualAdults = row.checkIn?.actualAdults || 0
-                const actualChildren = row.checkIn?.actualChildren || 0
+                const actualGuests = row.checkIn?.actualGuests || 0
 
-                // Calculate guest adults for export logic same as display
-                const guestAdultsIn = Math.max(0, actualAdults - (memberPresent ? 1 : 0))
-
-                const regAdults = row.ageGroups?.adults || 0
-                const regChildren = row.ageGroups?.children || 0
-                const vegCount = row.foodPreference?.veg || 0
-                const nonVegCount = row.foodPreference?.nonVeg || 0
+                const regGuests = row.ageGroups?.guest || 0
+                const foodGuests = row.foodPreference?.guest || 0
 
                 return [
                     `"${row.name || ''}"`,
                     `"${row.mobileNumber}"`,
                     `"${row.location || ''}"`,
-                    regAdults > 0 ? regAdults - 1 : 0,
-                    regChildren,
-                    vegCount,
-                    nonVegCount,
+                    regGuests,
+                    foodGuests,
                     row.isMorningFood ? "Yes" : "No",
                     `"${new Date(row.createdAt).toLocaleDateString()}"`,
                     isCheckedIn ? "Checked In" : "Pending",
                     isCheckedIn ? (memberPresent ? "Yes" : "No") : "-",
-                    isCheckedIn ? guestAdultsIn : "-",
-                    isCheckedIn ? actualChildren : "-",
+                    isCheckedIn ? actualGuests : "-",
                     isCheckedIn && row.checkIn?.timestamp ? `"${new Date(row.checkIn.timestamp).toLocaleString()}"` : "-"
                 ].join(",")
             }).join("\n");
@@ -264,16 +254,14 @@ export function ParticipantsTable<TData, TValue>({
                 row.name || "",
                 row.mobileNumber || "",
                 row.location || "-",
-                (row.ageGroups?.adults ?? 0) > 0 ? (row.ageGroups?.adults ?? 0) - 1 : 0,
-                row.ageGroups?.children || 0,
-                row.foodPreference?.veg || 0,
-                row.foodPreference?.nonVeg || 0,
+                row.ageGroups?.guest || 0,
+                row.foodPreference?.guest || 0,
                 row.isMorningFood ? "Yes" : "No",
                 new Date(row.createdAt).toLocaleDateString()
             ])
 
             autoTable(doc, {
-                head: [['Name', 'Mobile', 'Loc', 'Adults', 'Children', 'Veg', 'NonVeg', 'Morn', 'Reg Date']],
+                head: [['Name', 'Mobile', 'Loc', 'Guests', 'Food', 'Morn', 'Reg Date']],
                 body: tableBody,
                 startY: 40,
                 styles: {

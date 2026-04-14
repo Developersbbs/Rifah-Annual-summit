@@ -78,10 +78,25 @@ export function RegisterForm() {
     guestCount: 0,
     ticketType: "",
     paymentMethod: "cash",
-    foodPreference: { veg: 0, nonVeg: 0 },
+    foodGuest: 0,
+    ageGuest: 0,
     isMorningFood: false,
   })
-  const [existingParticipant, setExistingParticipant] = useState<{ mobileNumber: string; name: string; isRegistered: boolean; email?: string; businessName?: string; businessCategory?: string; location?: string; ageGroups?: { adults: number; children: number }; guestCount?: number; ticketType?: string; paymentMethod?: string; foodPreference?: { veg: number; nonVeg: number }; isMorningFood?: boolean } | null>(null)
+  const [existingParticipant, setExistingParticipant] = useState<{ 
+    mobileNumber: string; 
+    name: string; 
+    isRegistered: boolean; 
+    email?: string; 
+    businessName?: string; 
+    businessCategory?: string; 
+    location?: string; 
+    ageGroups?: { guest: number }; 
+    guestCount?: number; 
+    ticketType?: string; 
+    paymentMethod?: string; 
+    foodPreference?: { guest: number }; 
+    isMorningFood?: boolean 
+  } | null>(null)
 
   // Forms
   const phoneForm = useForm<z.infer<typeof phoneSchema>>({ resolver: zodResolver(phoneSchema), defaultValues: { phoneNumber: "+91" } })
@@ -202,9 +217,9 @@ export function RegisterForm() {
         guestCount: eventData.guestCount,
         ticketType: eventData.ticketType,
         paymentMethod: eventData.paymentMethod,
-        // FOOD PREFERENCE - Commented out
-        // foodPreference: eventData.foodPreference,
-        // isMorningFood: eventData.isMorningFood,
+        foodGuest: eventData.guestCount + 1, // Total people for food
+        ageGuest: eventData.guestCount,      // Just guests for age groups
+        isMorningFood: eventData.isMorningFood,
       }
 
       const result = await registerParticipant(payload)
@@ -328,7 +343,8 @@ export function RegisterForm() {
                     guestCount: existingParticipant?.guestCount || 0,
                     ticketType: existingParticipant?.ticketType || "",
                     paymentMethod: existingParticipant?.paymentMethod || "cash",
-                    foodPreference: existingParticipant?.foodPreference || { veg: 0, nonVeg: 0 },
+                    foodGuest: existingParticipant?.foodPreference?.guest || 0,
+                    ageGuest: existingParticipant?.ageGroups?.guest || 0,
                     isMorningFood: existingParticipant?.isMorningFood || false
                   })
                   personalForm.reset({

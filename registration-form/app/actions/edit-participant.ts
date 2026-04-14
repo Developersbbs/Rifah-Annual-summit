@@ -40,10 +40,14 @@ export async function updateParticipant(id: string, data: Partial<IParticipant>)
         
         if (guestCount !== undefined) {
             existingParticipant.guestCount = guestCount
-            existingParticipant.ageGroups = { adults: guestCount + 1, children: 0 }
+            existingParticipant.ageGroups = { guest: guestCount }
+            // Automatically update foodPreference if not provided separately
+            if (!foodPreference) {
+                existingParticipant.foodPreference = { guest: guestCount + 1 }
+            }
         } else if (ageGroups) {
             existingParticipant.ageGroups = ageGroups
-            existingParticipant.guestCount = Math.max(0, (ageGroups.adults || 1) + (ageGroups.children || 0) - 1)
+            existingParticipant.guestCount = ageGroups.guest || 0
         }
 
         if (foodPreference) existingParticipant.foodPreference = foodPreference

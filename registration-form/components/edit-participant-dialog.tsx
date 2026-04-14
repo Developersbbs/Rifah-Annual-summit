@@ -47,7 +47,8 @@ export function EditParticipantDialog({ participant, open, onOpenChange, onSucce
     // Event Data State
     const [eventData, setEventData] = useState({
         guestCount: participant.guestCount || 0,
-        foodPreference: participant.foodPreference || { veg: 1, nonVeg: 0 },
+        ageGuest: participant.ageGroups?.guest || 0,
+        foodGuest: participant.foodPreference?.guest || 1,
         isMorningFood: participant.isMorningFood || false,
     })
 
@@ -65,7 +66,8 @@ export function EditParticipantDialog({ participant, open, onOpenChange, onSucce
         if (open && participant) {
             setEventData({
                 guestCount: participant.guestCount || 0,
-                foodPreference: participant.foodPreference || { veg: 1, nonVeg: 0 },
+                ageGuest: participant.ageGroups?.guest || 0,
+                foodGuest: participant.foodPreference?.guest || 1,
                 isMorningFood: participant.isMorningFood || false,
             })
             form.reset({
@@ -82,17 +84,14 @@ export function EditParticipantDialog({ participant, open, onOpenChange, onSucce
         return 1 + eventData.guestCount
     }, [eventData.guestCount])
 
-    // Update Food Prefs when total guests changes
+    // Update Guest Counts when total guests changes
     useEffect(() => {
-        // Only auto-adjust valid numbers
         setEventData(prev => ({
             ...prev,
-            foodPreference: {
-                veg: Math.max(0, totalGuests - (prev.foodPreference.nonVeg || 0)),
-                nonVeg: prev.foodPreference.nonVeg || 0
-            }
+            ageGuest: prev.guestCount,
+            foodGuest: prev.guestCount + 1
         }))
-    }, [totalGuests])
+    }, [eventData.guestCount])
 
     // --- Handlers ---
 
@@ -104,7 +103,8 @@ export function EditParticipantDialog({ participant, open, onOpenChange, onSucce
             const payload = {
                 ...data,
                 guestCount: eventData.guestCount,
-                foodPreference: eventData.foodPreference,
+                ageGroups: { guest: eventData.ageGuest },
+                foodPreference: { guest: eventData.foodGuest },
                 isMorningFood: eventData.isMorningFood,
             }
 
@@ -201,38 +201,8 @@ export function EditParticipantDialog({ participant, open, onOpenChange, onSucce
                             <div className="space-y-4">
                                 <div className="flex items-center gap-2">
                                     <Utensils className="h-4 w-4 text-primary" />
-                                    <h3 className="text-sm font-medium text-muted-foreground">Food Preference</h3>
+                                    <h3 className="text-sm font-medium text-muted-foreground">Morning Food</h3>
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="edit-non-veg">Non-Veg</Label>
-                                        <Input
-                                            id="edit-non-veg"
-                                            inputMode="numeric"
-                                            value={eventData.foodPreference.nonVeg.toString()}
-                                            onChange={(e) => {
-                                                const value = e.target.value;
-                                                if (value === "") {
-                                                    setEventData(prev => ({ ...prev, foodPreference: { nonVeg: 0, veg: totalGuests } }))
-                                                    return;
-                                                }
-                                                const val = parseInt(value);
-                                                if (!isNaN(val) && val <= totalGuests) {
-                                                    setEventData(prev => ({
-                                                        ...prev,
-                                                        foodPreference: { nonVeg: val, veg: totalGuests - val }
-                                                    }))
-                                                }
-                                            }}
-                                            className="h-8"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="edit-veg">Veg</Label>
-                                        <Input id="edit-veg" value={eventData.foodPreference.veg} readOnly className="h-8 bg-muted" />
-                                    </div>
-                                </div>
-
                                 <div className="flex items-center space-x-2 border p-3 rounded-lg bg-muted/20">
                                     <Checkbox
                                         id="edit-morning-food"

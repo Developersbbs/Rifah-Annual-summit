@@ -12,10 +12,12 @@ interface RegisterParticipantData {
     businessCategory?: string
     location?: string
     paymentMethod?: string
-    foodPreference?: { veg: number; nonVeg: number }
+    // Simplified food preference
+    foodGuest?: number
     isMorningFood?: boolean
     guestCount?: number
-    ageGroups?: { adults: number; children: number }
+    // Simplified age groups
+    ageGuest?: number
     ticketType: string
     isMember?: boolean
 }
@@ -32,17 +34,17 @@ export async function registerParticipant(data: RegisterParticipantData) {
             businessCategory,
             location,
             paymentMethod = "cash",
-            // FOOD PREFERENCE - Commented out
-            // foodPreference,
-            // isMorningFood = false,
+            foodGuest = 0,
+            isMorningFood = false,
             guestCount = 0,
-            ageGroups,
+            ageGuest = 0,
             ticketType,
             isMember = false
         } = data
 
-        const finalAgeGroups = ageGroups || { adults: 1 + (guestCount || 0), children: 0 }
-        const totalPeople = (finalAgeGroups.adults || 0) + (finalAgeGroups.children || 0)
+        const totalPeople = 1 + (guestCount || 0)
+        const finalAgeGroups = { guest: ageGuest || guestCount || 0 }
+        const finalFoodPreference = { guest: foodGuest || totalPeople }
 
         // COMPREHENSIVE VALIDATION
         if (!mobileNumber || !name || !ticketType) {
@@ -73,8 +75,7 @@ export async function registerParticipant(data: RegisterParticipantData) {
         }
 
         // Validate guest counts
-        if ((finalAgeGroups.adults || 0) < 0 || (finalAgeGroups.children || 0) < 0 || 
-            !Number.isInteger(finalAgeGroups.adults) || !Number.isInteger(finalAgeGroups.children)) {
+        if (totalPeople < 1 || !Number.isInteger(totalPeople)) {
             return {
                 success: false,
                 error: "Invalid guest counts"
@@ -188,14 +189,13 @@ export async function registerParticipant(data: RegisterParticipantData) {
             paymentMethod,
             paymentStatus,
             approvalStatus,
-            // FOOD PREFERENCE - Commented out
-            // foodPreference: normalizedFoodPreference,
-            // isMorningFood,
+            foodPreference: finalFoodPreference,
+            isMorningFood,
             isRegistered: true,
             eventId: activeEvent._id,
             eventDate: activeEvent.startDate,
             ageGroups: finalAgeGroups,
-            guestCount: Math.max(0, totalPeople - 1),
+            guestCount: totalPeople - 1,
             ticketType,
             ticketPrice: pricePerPerson,
             totalAmount,
