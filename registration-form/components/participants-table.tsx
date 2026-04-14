@@ -334,14 +334,14 @@ export function ParticipantsTable<TData, TValue>({
                     <DatePickerWithRange date={dateRange} setDate={setDateRange} />
 
                     {/* Morning Food Switch */}
-                    <div className="flex items-center space-x-2 border p-2 rounded-md h-10 px-3 bg-background">
+                    {/* <div className="flex items-center space-x-2 border p-2 rounded-md h-10 px-3 bg-background">
                         <Switch
                             id="morning-food"
                             checked={showMorningFoodOnly}
                             onCheckedChange={setShowMorningFoodOnly}
                         />
                         <Label htmlFor="morning-food" className="whitespace-nowrap cursor-pointer">Morning Food</Label>
-                    </div>
+                    </div> */}
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -372,11 +372,11 @@ export function ParticipantsTable<TData, TValue>({
                         </DropdownMenuContent>
                     </DropdownMenu>
                     <Button variant="outline" onClick={downloadCSV}>
-                        <Download className="h-4 w-4 mr-2" /> CSV
+                        <Download className="h-4 w-4 mr-2" /> Excel
                     </Button>
-                    <Button variant="outline" onClick={downloadPDF}>
+                    {/* <Button variant="outline" onClick={downloadPDF}>
                         <FileText className="h-4 w-4 mr-2" /> PDF
-                    </Button>
+                    </Button> */}
                 </div>
             </div>
 
