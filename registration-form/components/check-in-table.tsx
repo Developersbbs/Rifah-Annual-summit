@@ -306,9 +306,9 @@ export function CheckInTable() {
                                 <TableHead className="w-[250px]">Participant</TableHead>
                                 <TableHead className="text-center">Registered</TableHead>
                                 <TableHead className="text-center">Member</TableHead>
-                                <TableHead className="text-center">Secondary</TableHead>
-                                <TableHead className="text-center">Guests</TableHead>
-                                <TableHead className="text-right">Action</TableHead>
+                                <TableHead className="text-center">Check In</TableHead>
+                                {/* <TableHead className="text-center">Guests</TableHead> */}
+                                {/* <TableHead className="text-right">Action</TableHead> */}
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -405,7 +405,7 @@ function CheckInRow({ participant, onRefresh }: { participant: IParticipant, onR
                 </TableCell>
                 <TableCell className="text-center">
                     <div className="text-sm font-medium">
-                        Guests: {regGuestsCount}
+                        Member: {regGuestsCount}
                     </div>
                     <div className="text-[10px] text-muted-foreground">Total: {regGuestsCount + 1}</div>
                 </TableCell>
@@ -436,7 +436,7 @@ function CheckInRow({ participant, onRefresh }: { participant: IParticipant, onR
                     />
                 </TableCell>
 
-                <TableCell className="text-center">
+                {/* <TableCell className="text-center">
                     <div className="flex items-center justify-center gap-2">
                         <Button
                             variant="outline" size="icon" className="h-6 w-6"
@@ -454,11 +454,11 @@ function CheckInRow({ participant, onRefresh }: { participant: IParticipant, onR
                         </Button>
                     </div>
                     <div className="text-[10px] text-muted-foreground mt-1">Max Guests: {maxGuests}</div>
-                </TableCell>
+                </TableCell> */}
 
-                <TableCell className="text-center text-muted-foreground font-mono text-xs">
+                {/* <TableCell className="text-center text-muted-foreground font-mono text-xs">
                     <div>Guests: {balanceGuests}</div>
-                </TableCell>
+                </TableCell> */}
 
                 <TableCell className="text-right">
                     <Button

@@ -549,7 +549,7 @@ export function RegisterForm() {
           )}
 
           {/* Guest Count */}
-          <div className="space-y-3">
+          {/* <div className="space-y-3">
             <div className="flex items-center gap-2">
               <Users className="h-5 w-5 text-primary" />
               <h3 className="font-semibold">Guest Count</h3>
@@ -577,7 +577,7 @@ export function RegisterForm() {
                 Total: {totalGuests} person{totalGuests !== 1 ? 's' : ''} (Including you)
               </span>
             </div>
-          </div>
+          </div> */}
 
           <Separator />
 
@@ -1003,7 +1003,7 @@ export function RegisterForm() {
           <div className="p-4 bg-muted rounded-lg text-left text-sm space-y-2">
             <div className="flex justify-between"><span>Name:</span><span className="font-medium">{personalData.name}</span></div>
             <div className="flex justify-between"><span>Mobile:</span><span className="font-medium">{verifiedPhone}</span></div>
-            <div className="flex justify-between"><span>Guest Count:</span><span className="font-medium">{eventData.guestCount}</span></div>
+            {/* <div className="flex justify-between"><span>Guest Count:</span><span className="font-medium">{eventData.guestCount}</span></div> */}
             <div className="flex justify-between"><span>Secondary Members:</span><span className="font-medium">{secondaryMembers.length}</span></div>
             <div className="flex justify-between"><span>Total Members:</span><span className="font-medium">{totalGuests}</span></div>
             <div className="flex justify-between"><span>Ticket Type:</span><span className="font-medium">{eventData.ticketType}</span></div>
