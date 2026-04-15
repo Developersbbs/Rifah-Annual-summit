@@ -252,23 +252,23 @@ export function CheckInTable() {
             {/* Stats Row */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
-                    <div className="text-sm text-muted-foreground">Registered Members</div>
+                    <div className="text-sm text-muted-foreground">Total Primary Members</div>
                     <div className="text-2xl font-bold">{stats.registeredMembers}</div>
                 </div>
                 <div className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
-                    <div className="text-sm text-muted-foreground">Registered Participants</div>
+                    <div className="text-sm text-muted-foreground">Total Secondary Members</div>
                     <div className="text-2xl font-bold">{stats.registeredParticipants}</div>
                 </div>
                 <div className="p-4 rounded-lg border bg-green-50 text-green-900 border-green-100 dark:bg-green-900/20 dark:text-green-100 dark:border-green-900">
-                    <div className="text-sm opacity-80">Checked-in Members</div>
+                    <div className="text-sm opacity-80">Checked-in Primary</div>
                     <div className="text-2xl font-bold">{stats.checkedInMembers}</div>
                 </div>
                 <div className="p-4 rounded-lg border bg-green-50 text-green-900 border-green-100 dark:bg-green-900/20 dark:text-green-100 dark:border-green-900">
-                    <div className="text-sm opacity-80">Checked-in Participants</div>
+                    <div className="text-sm opacity-80">Checked-in Secondary</div>
                     <div className="flex items-baseline gap-2">
                         <div className="text-2xl font-bold">{stats.checkedInParticipants}</div>
                         <div className="text-sm font-medium opacity-80">
-                            (Total Headcount: {stats.checkedInMembers + stats.checkedInParticipants})
+                            (Total: {stats.checkedInMembers + stats.checkedInParticipants})
                         </div>
                     </div>
                 </div>
@@ -344,9 +344,13 @@ function CheckInRow({ participant, onRefresh }: { participant: IParticipant, onR
     // Derive state from actual data (primary + secondary)
     const primaryCheckedIn = participant.checkIn?.memberPresent || false
     const secondaryCheckedIn = participant.secondaryMembers?.filter((m: any) => m.isCheckedIn).length || 0
+    const totalSecondary = participant.memberCount || 0
+    const balanceSecondary = totalSecondary - secondaryCheckedIn
     const totalCheckedIn = (primaryCheckedIn ? 1 : 0) + secondaryCheckedIn
-    const totalRegistered = 1 + (participant.memberCount || 0) // Using only primary + secondary members
+    const totalRegistered = 1 + totalSecondary
     const isAllChecked = totalCheckedIn === totalRegistered
+    const isPrimaryComplete = primaryCheckedIn
+    const isSecondaryComplete = secondaryCheckedIn === totalSecondary && totalSecondary > 0
 
     return (
         <>
@@ -361,10 +365,21 @@ function CheckInRow({ participant, onRefresh }: { participant: IParticipant, onR
                     </div>
                 </TableCell>
                 <TableCell className="text-center">
-                    <div className="text-sm font-medium">
-                        {primaryCheckedIn ? "✓" : "○"}
+                    <div className="space-y-1">
+                        <div className="text-sm font-medium">
+                            {isPrimaryComplete ? "✓" : "○"} Primary
+                        </div>
+                        {totalSecondary > 0 && (
+                            <div className="text-xs text-muted-foreground">
+                                {isSecondaryComplete ? "✓" : "○"} Secondary
+                            </div>
+                        )}
+                        {totalSecondary > 0 && balanceSecondary > 0 && (
+                            <div className="text-[10px] text-orange-600 font-medium">
+                                Balance: {balanceSecondary}
+                            </div>
+                        )}
                     </div>
-                    <div className="text-[10px] text-muted-foreground">Primary</div>
                 </TableCell>
 
                 <TableCell className="text-center">

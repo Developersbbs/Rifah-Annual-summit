@@ -203,18 +203,17 @@ export async function getCheckInStats() {
 
         (participants as unknown as IParticipant[]).forEach((p) => {
             registeredMembers++
-            const totalRegGuests = p.guestCount ?? p.ageGroups?.guest ?? 0
-            registeredParticipants += totalRegGuests
+            // Use memberCount for secondary members, not guestCount
+            const totalSecondary = p.memberCount || 0
+            registeredParticipants += totalSecondary
 
             if (p.checkIn?.isCheckedIn) {
                 if (p.checkIn.memberPresent) {
                     checkedInMembers++
                 }
-                const totalActual = p.checkIn?.actualGuests || 0
-
-                // Checked-in Participants: Total Actual - (Member Present ? 1 : 0)
-                const memberCount = p.checkIn.memberPresent ? 1 : 0
-                checkedInParticipants += Math.max(0, totalActual - memberCount)
+                // Count checked-in secondary members from secondaryMembers array
+                const secondaryCheckedIn = p.secondaryMembers?.filter((m: any) => m.isCheckedIn).length || 0
+                checkedInParticipants += secondaryCheckedIn
             }
         })
 
