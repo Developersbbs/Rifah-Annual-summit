@@ -1,8 +1,10 @@
 "use client"
 
 import * as React from "react"
+import { useMemo } from "react"
 import { Download, Users, CheckCircle2, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import {
     Table,
     TableBody,
@@ -29,6 +31,15 @@ interface DashboardRecord {
     checkedIn: boolean
     eventDate: string
     location: string
+    primaryMember: string
+    primaryPhone: string
+}
+
+interface PaginationData {
+    page: number
+    limit: number
+    total: number
+    totalPages: number
 }
 
 export default function DashboardPage() {
@@ -36,6 +47,10 @@ export default function DashboardPage() {
     const [records, setRecords] = React.useState<DashboardRecord[]>([])
     const [loading, setLoading] = React.useState(true)
     const [filter, setFilter] = React.useState<"all" | "checked-in" | "not-checked-in">("all")
+    const [type, setType] = React.useState<"all" | "primary" | "secondary">("all")
+    const [search, setSearch] = React.useState("")
+    const [page, setPage] = React.useState(1)
+    const [pagination, setPagination] = React.useState<PaginationData | null>(null)
     const [downloading, setDownloading] = React.useState(false)
 
     const loadStats = React.useCallback(async () => {
@@ -51,23 +66,34 @@ export default function DashboardPage() {
     const loadRecords = React.useCallback(async () => {
         setLoading(true)
         try {
-            const res = await fetch(`/api/dashboard/records?filter=${filter}`)
+            const params = new URLSearchParams({
+                filter,
+                type,
+                page: page.toString(),
+                limit: "20",
+                search
+            })
+            const res = await fetch(`/api/dashboard/records?${params}`)
             const data = await res.json()
-            setRecords(data)
+            setRecords(data.records || [])
+            setPagination(data.pagination || null)
         } catch (error) {
             console.error("Failed to load records:", error)
         } finally {
             setLoading(false)
         }
-    }, [filter])
+    }, [filter, type, page, search])
 
     React.useEffect(() => {
         loadStats()
     }, [loadStats])
 
+    // Memoize records for performance
+    const memoizedRecords = useMemo(() => records, [records])
+
     React.useEffect(() => {
         loadRecords()
-    }, [loadRecords, filter])
+    }, [loadRecords, filter, type, page, search])
 
     const downloadExcel = async () => {
         setDownloading(true)
@@ -127,14 +153,38 @@ export default function DashboardPage() {
 
             {/* Table */}
             <div className="rounded-md border bg-card">
-                <div className="flex items-center justify-between p-4">
-                    <Tabs value={filter} onValueChange={(v) => setFilter(v as any)}>
+                <div className="flex items-center justify-between p-4 gap-4">
+                    <Tabs value={filter} onValueChange={(v) => {
+                        setFilter(v as any)
+                        setPage(1)
+                    }}>
                         <TabsList>
                             <TabsTrigger value="all">All</TabsTrigger>
                             <TabsTrigger value="checked-in">Checked-in</TabsTrigger>
                             <TabsTrigger value="not-checked-in">Not Checked-in</TabsTrigger>
                         </TabsList>
                     </Tabs>
+                    <Tabs value={type} onValueChange={(v) => {
+                        setType(v as any)
+                        setPage(1)
+                    }}>
+                        <TabsList>
+                            <TabsTrigger value="all">All Types</TabsTrigger>
+                            <TabsTrigger value="primary">Primary</TabsTrigger>
+                            <TabsTrigger value="secondary">Secondary</TabsTrigger>
+                        </TabsList>
+                    </Tabs>
+                </div>
+                <div className="px-4 pb-4">
+                    <Input
+                        placeholder="Search by name or phone..."
+                        value={search}
+                        onChange={(e) => {
+                            setSearch(e.target.value)
+                            setPage(1)
+                        }}
+                        className="max-w-sm"
+                    />
                 </div>
                 <Table>
                     <TableHeader>
@@ -143,6 +193,7 @@ export default function DashboardPage() {
                             <TableHead>Type</TableHead>
                             <TableHead>Phone</TableHead>
                             <TableHead>Email</TableHead>
+                            <TableHead>Primary Member</TableHead>
                             <TableHead>Location</TableHead>
                             <TableHead>Checked-in</TableHead>
                         </TableRow>
@@ -150,33 +201,51 @@ export default function DashboardPage() {
                     <TableBody>
                         {loading ? (
                             <TableRow>
-                                <TableCell colSpan={6} className="text-center py-8">
+                                <TableCell colSpan={7} className="text-center py-8">
                                     <Loader2 className="h-6 w-6 animate-spin mx-auto" />
                                 </TableCell>
                             </TableRow>
                         ) : records.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                                     No records found
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            records.map((record, index) => (
+                            memoizedRecords.map((record, index) => (
                                 <TableRow key={index}>
-                                    <TableCell className="font-medium">{record.name}</TableCell>
+                                    <TableCell className="font-medium">
+                                        {search && (record.name.toLowerCase().includes(search.toLowerCase()) || record.phone.includes(search)) ? (
+                                            <span className="bg-yellow-200 dark:bg-yellow-800">{record.name}</span>
+                                        ) : record.name}
+                                    </TableCell>
                                     <TableCell>
-                                        <Badge variant={record.type === "Primary" ? "default" : "secondary"}>
+                                        <Badge variant={record.checkedIn ? "default" : "outline"} className={record.checkedIn ? "bg-green-600" : "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300"}>
                                             {record.type}
                                         </Badge>
                                     </TableCell>
-                                    <TableCell>{record.phone}</TableCell>
+                                    <TableCell>
+                                        {search && record.phone.includes(search) ? (
+                                            <span className="bg-yellow-200 dark:bg-yellow-800">{record.phone}</span>
+                                        ) : record.phone}
+                                    </TableCell>
                                     <TableCell>{record.email || "-"}</TableCell>
+                                    <TableCell>
+                                        {record.type === "Secondary" ? (
+                                            <div className="text-xs">
+                                                <div>{record.primaryMember}</div>
+                                                <div className="text-muted-foreground">({record.primaryPhone})</div>
+                                            </div>
+                                        ) : (
+                                            <span className="text-muted-foreground text-xs">Self</span>
+                                        )}
+                                    </TableCell>
                                     <TableCell>{record.location || "-"}</TableCell>
                                     <TableCell>
                                         {record.checkedIn ? (
                                             <CheckCircle2 className="h-4 w-4 text-green-600" />
                                         ) : (
-                                            <span className="text-muted-foreground">○</span>
+                                            <span className="text-gray-400">○</span>
                                         )}
                                     </TableCell>
                                 </TableRow>
@@ -184,6 +253,34 @@ export default function DashboardPage() {
                         )}
                     </TableBody>
                 </Table>
+                {pagination && pagination.totalPages > 1 && (
+                    <div className="flex items-center justify-between p-4 border-t">
+                        <div className="text-sm text-muted-foreground">
+                            Showing {((page - 1) * pagination.limit) + 1} to {Math.min(page * pagination.limit, pagination.total)} of {pagination.total} records
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setPage(p => Math.max(1, p - 1))}
+                                disabled={page === 1}
+                            >
+                                Previous
+                            </Button>
+                            <span className="text-sm">
+                                Page {page} of {pagination.totalPages}
+                            </span>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))}
+                                disabled={page === pagination.totalPages}
+                            >
+                                Next
+                            </Button>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     )

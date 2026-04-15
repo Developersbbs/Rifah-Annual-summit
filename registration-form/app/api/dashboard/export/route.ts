@@ -19,7 +19,9 @@ export async function GET() {
                 Email: p.email || "",
                 CheckedIn: p.checkIn?.isCheckedIn ? "Yes" : "No",
                 EventDate: p.eventDate || "",
-                Location: p.location || ""
+                Location: p.location || "",
+                PrimaryMember: "",
+                PrimaryPhone: ""
             })
 
             // secondary
@@ -31,7 +33,9 @@ export async function GET() {
                     Email: m.email || "",
                     CheckedIn: m.isCheckedIn ? "Yes" : "No",
                     EventDate: p.eventDate || "",
-                    Location: p.location || ""
+                    Location: p.location || "",
+                    PrimaryMember: p.name,
+                    PrimaryPhone: p.mobileNumber
                 })
             })
         })

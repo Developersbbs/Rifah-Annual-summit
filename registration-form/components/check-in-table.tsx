@@ -160,6 +160,8 @@ function MembersDialog({ participant, open, onOpenChange, onRefresh }: MembersDi
                                     <div className="text-sm space-y-1">
                                         <p><span className="font-medium">Name:</span> {member.name}</p>
                                         {member.mobileNumber && <p><span className="font-medium">Mobile:</span> {member.mobileNumber}</p>}
+                                        <p><span className="font-medium">Primary Member:</span> {participant.name}</p>
+                                        <p><span className="font-medium">Primary Mobile:</span> {participant.mobileNumber}</p>
                                     </div>
                                     {!member.isCheckedIn && member.mobileNumber && (
                                         <Button
