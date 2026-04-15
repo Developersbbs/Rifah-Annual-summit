@@ -4,6 +4,12 @@ import dbConnect from "@/lib/db"
 import Participant from "@/models/Participant"
 import Event from "@/models/Event"
 
+// Helper function for input sanitization
+function sanitizeInput(input: string): string {
+    if (!input) return ""
+    return input.trim().replace(/[<>"'&]/g, "")
+}
+
 interface SecondaryMemberInput {
     name: string
     mobileNumber?: string
@@ -11,6 +17,7 @@ interface SecondaryMemberInput {
     businessName?: string
     businessCategory?: string
     location?: string
+    isMember?: boolean
 }
 
 interface RegisterParticipantData {
@@ -189,31 +196,33 @@ export async function registerParticipant(data: RegisterParticipantData) {
             approvalStatus = "approved"
         }
 
-        // Build secondary members array with defaults
+        // Build secondary members array with defaults and sanitization
         const formattedSecondaryMembers = secondaryMembers
             .filter(member => member.name && member.name.trim() !== '') // Only include members with names
             .map(member => ({
-                name: member.name.trim(),
-                mobileNumber: member.mobileNumber?.trim(),
-                email: member.email?.trim(),
-                businessName: member.businessName?.trim(),
-                businessCategory: member.businessCategory?.trim(),
-                location: member.location?.trim(),
+                name: sanitizeInput(member.name),
+                mobileNumber: member.mobileNumber ? sanitizeInput(member.mobileNumber) : undefined,
+                email: member.email ? sanitizeInput(member.email) : undefined,
+                businessName: member.businessName ? sanitizeInput(member.businessName) : undefined,
+                businessCategory: member.businessCategory ? sanitizeInput(member.businessCategory) : undefined,
+                location: member.location ? sanitizeInput(member.location) : undefined,
+                isMember: member.isMember || false,
                 isCheckedIn: false
             }))
 
         const actualMemberCount = formattedSecondaryMembers.length
-        const actualTotalPeople = 1 + actualMemberCount
+        // guestCount is for primary registrant's additional guests, memberCount is for secondary members
+        const actualTotalPeople = 1 + (guestCount || 0) + actualMemberCount
         const finalTotalAmount = actualTotalPeople * pricePerPerson
 
-        // Create participant with validated data
+        // Create participant with validated and sanitized data
         const participant = await Participant.create({
-            mobileNumber: mobileNumber.trim(),
-            name: name.trim(),
-            email: email?.trim(),
-            businessName: businessName?.trim(),
-            businessCategory: businessCategory?.trim(),
-            location: location?.trim(),
+            mobileNumber: sanitizeInput(mobileNumber),
+            name: sanitizeInput(name),
+            email: email ? sanitizeInput(email) : undefined,
+            businessName: businessName ? sanitizeInput(businessName) : undefined,
+            businessCategory: businessCategory ? sanitizeInput(businessCategory) : undefined,
+            location: location ? sanitizeInput(location) : undefined,
             paymentMethod,
             paymentStatus,
             approvalStatus,
@@ -223,7 +232,7 @@ export async function registerParticipant(data: RegisterParticipantData) {
             eventId: activeEvent._id,
             eventDate: activeEvent.startDate,
             ageGroups: finalAgeGroups,
-            guestCount: actualMemberCount,
+            guestCount: guestCount || 0,
             memberCount: actualMemberCount,
             ticketType,
             ticketPrice: pricePerPerson,

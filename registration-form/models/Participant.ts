@@ -161,6 +161,19 @@ const ParticipantSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
+    secondaryMembers: [
+        {
+            name: { type: String, required: true },
+            mobileNumber: { type: String },
+            email: { type: String },
+            businessName: String,
+            businessCategory: String,
+            location: String,
+            isMember: { type: Boolean, default: false },
+            isCheckedIn: { type: Boolean, default: false },
+            checkedInAt: { type: Date }
+        }
+    ],
 
     checkIn: {
         isCheckedIn: { type: Boolean, default: false },
@@ -172,18 +185,7 @@ const ParticipantSchema = new mongoose.Schema({
         checkedInBy: String,
     },
 
-    secondaryMembers: [
-        {
-            name: { type: String, required: true },
-            mobileNumber: { type: String },
-            email: { type: String },
-            businessName: String,
-            businessCategory: String,
-            location: String,
-            isCheckedIn: { type: Boolean, default: false },
-            checkedInAt: { type: Date }
-        }
-    ]
+    
 
 }, { timestamps: true })
 

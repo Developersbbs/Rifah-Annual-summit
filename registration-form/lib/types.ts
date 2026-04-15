@@ -29,6 +29,7 @@ export interface ISecondaryMember {
     businessName?: string;
     businessCategory?: string;
     location?: string;
+    isMember?: boolean;
     isCheckedIn: boolean;
     checkedInAt?: Date | string;
 }

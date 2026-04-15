@@ -20,7 +20,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Check } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Loader2, CheckCircle2, AlertCircle, Plus, Minus, Phone, Users, Utensils, Receipt, Info, UserPlus, Trash2 } from "lucide-react"
+import { Loader2, CheckCircle2, AlertCircle, Plus, Minus, Phone, Users, Utensils, Receipt, Info, UserPlus, Trash2, X, Edit } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Separator } from "@/components/ui/separator"
 
@@ -86,7 +86,9 @@ export function RegisterForm() {
     ageGuest: 0,
     isMorningFood: false,
   })
-  const [secondaryMembers, setSecondaryMembers] = useState<{ name: string; mobileNumber: string; email: string; businessName: string; businessCategory: string; location: string; showCustomLocation?: boolean; customLocation?: string }[]>([])
+  const [secondaryMembers, setSecondaryMembers] = useState<{ name: string; mobileNumber: string; email: string; businessName: string; businessCategory: string; location: string; isMember?: boolean; showCustomLocation?: boolean; customLocation?: string }[]>([])
+  const [currentMember, setCurrentMember] = useState<{ name: string; mobileNumber: string; email: string; businessName: string; businessCategory: string; location: string; isMember?: boolean; showCustomLocation?: boolean; customLocation?: string }>({ name: '', mobileNumber: '', email: '', businessName: '', businessCategory: '', location: '', isMember: false, showCustomLocation: false, customLocation: '' })
+  const [showAddMemberForm, setShowAddMemberForm] = useState(false)
   const [primaryLocationOpen, setPrimaryLocationOpen] = useState(false)
   const [primaryCustomLocation, setPrimaryCustomLocation] = useState("")
   const [showPrimaryCustomInput, setShowPrimaryCustomInput] = useState(false)
@@ -133,11 +135,10 @@ export function RegisterForm() {
   })
 
   // --- Derived State (Pricing) ---
-  // Calculate total guests based on secondary members length to ensure accurate pricing
+  // Calculate total guests: 1 (primary) + guestCount (primary's additional guests) + memberCount (secondary members)
   const totalGuests = useMemo(() => {
-    // 1 (primary registrant) + number of secondary members
-    return 1 + secondaryMembers.length
-  }, [secondaryMembers.length])
+    return 1 + (eventData.guestCount || 0) + secondaryMembers.length
+  }, [eventData.guestCount, secondaryMembers.length])
 
   const pricePerPerson = useMemo(() => {
     if (!activeEvent || !eventData.ticketType) return 0
@@ -592,18 +593,62 @@ export function RegisterForm() {
               </span>
             </div>
               
+              {/* Show list of added members */}
               {secondaryMembers.map((member, index) => (
                 <div key={index} className="border rounded-lg p-4 space-y-3 bg-muted/30">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-muted-foreground">Member {index + 1}</span>
+                    <div className="flex gap-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        onClick={() => {
+                          setCurrentMember(member)
+                          setShowAddMemberForm(true)
+                          setSecondaryMembers(prev => prev.filter((_, i) => i !== index))
+                        }}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
+                        onClick={() => setSecondaryMembers(prev => prev.filter((_, i) => i !== index))}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="text-sm space-y-1">
+                    <p><span className="font-medium">Name:</span> {member.name}</p>
+                    {member.mobileNumber && <p><span className="font-medium">Mobile:</span> {member.mobileNumber}</p>}
+                    {member.email && <p><span className="font-medium">Email:</span> {member.email}</p>}
+                    {member.businessName && <p><span className="font-medium">Business:</span> {member.businessName}</p>}
+                    {member.location && <p><span className="font-medium">Location:</span> {member.location}</p>}
+                  </div>
+                </div>
+              ))}
+              
+              {/* Add Member Form - Shows one at a time */}
+              {showAddMemberForm && (
+                <div className="border rounded-lg p-4 space-y-3 bg-primary/5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Add Member {secondaryMembers.length + 1}</span>
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
-                      onClick={() => setSecondaryMembers(prev => prev.filter((_, i) => i !== index))}
+                      className="h-8 w-8 p-0"
+                      onClick={() => {
+                        setShowAddMemberForm(false)
+                        setCurrentMember({ name: '', mobileNumber: '', email: '', businessName: '', businessCategory: '', location: '', isMember: false, showCustomLocation: false, customLocation: '' })
+                      }}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <X className="h-4 w-4" />
                     </Button>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -611,8 +656,8 @@ export function RegisterForm() {
                       <Label className="text-xs">Name *</Label>
                       <Input
                         placeholder="Full name"
-                        value={member.name}
-                        onChange={(e) => setSecondaryMembers(prev => prev.map((m, i) => i === index ? { ...m, name: e.target.value } : m))}
+                        value={currentMember.name}
+                        onChange={(e) => setCurrentMember(prev => ({ ...prev, name: e.target.value }))}
                         className="h-9"
                       />
                     </div>
@@ -620,8 +665,8 @@ export function RegisterForm() {
                       <Label className="text-xs">Mobile</Label>
                       <Input
                         placeholder="+91..."
-                        value={member.mobileNumber}
-                        onChange={(e) => setSecondaryMembers(prev => prev.map((m, i) => i === index ? { ...m, mobileNumber: e.target.value } : m))}
+                        value={currentMember.mobileNumber}
+                        onChange={(e) => setCurrentMember(prev => ({ ...prev, mobileNumber: e.target.value }))}
                         className="h-9"
                       />
                     </div>
@@ -630,8 +675,8 @@ export function RegisterForm() {
                       <Input
                         type="email"
                         placeholder="email@example.com"
-                        value={member.email}
-                        onChange={(e) => setSecondaryMembers(prev => prev.map((m, i) => i === index ? { ...m, email: e.target.value } : m))}
+                        value={currentMember.email}
+                        onChange={(e) => setCurrentMember(prev => ({ ...prev, email: e.target.value }))}
                         className="h-9"
                       />
                     </div>
@@ -639,8 +684,8 @@ export function RegisterForm() {
                       <Label className="text-xs">Business Name</Label>
                       <Input
                         placeholder="Business name"
-                        value={member.businessName}
-                        onChange={(e) => setSecondaryMembers(prev => prev.map((m, i) => i === index ? { ...m, businessName: e.target.value } : m))}
+                        value={currentMember.businessName}
+                        onChange={(e) => setCurrentMember(prev => ({ ...prev, businessName: e.target.value }))}
                         className="h-9"
                       />
                     </div>
@@ -648,18 +693,18 @@ export function RegisterForm() {
                       <Label className="text-xs">Business Category</Label>
                       <Input
                         placeholder="Category"
-                        value={member.businessCategory}
-                        onChange={(e) => setSecondaryMembers(prev => prev.map((m, i) => i === index ? { ...m, businessCategory: e.target.value } : m))}
+                        value={currentMember.businessCategory}
+                        onChange={(e) => setCurrentMember(prev => ({ ...prev, businessCategory: e.target.value }))}
                         className="h-9"
                       />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-xs">Location</Label>
                       <Popover
-                        open={member.showCustomLocation ? false : undefined}
+                        open={currentMember.showCustomLocation ? false : undefined}
                         onOpenChange={(open) => {
-                          if (!member.showCustomLocation) {
-                            setSecondaryMembers(prev => prev.map((m, i) => i === index ? { ...m, showCustomLocation: false } : m))
+                          if (!currentMember.showCustomLocation) {
+                            setCurrentMember(prev => ({ ...prev, showCustomLocation: false }))
                           }
                         }}
                       >
@@ -669,15 +714,15 @@ export function RegisterForm() {
                             role="combobox"
                             className={cn(
                               "w-full justify-between h-9",
-                              !member.location && "text-muted-foreground"
+                              !currentMember.location && "text-muted-foreground"
                             )}
                             onClick={() => {
-                              if (member.showCustomLocation) {
-                                setSecondaryMembers(prev => prev.map((m, i) => i === index ? { ...m, showCustomLocation: false } : m))
+                              if (currentMember.showCustomLocation) {
+                                setCurrentMember(prev => ({ ...prev, showCustomLocation: false }))
                               }
                             }}
                           >
-                            {member.showCustomLocation ? member.customLocation || "Enter custom location" : member.location || "Select district"}
+                            {currentMember.showCustomLocation ? currentMember.customLocation || "Enter custom location" : currentMember.location || "Select district"}
                             <Check className="ml-2 h-4 w-4 opacity-50" />
                           </Button>
                         </PopoverTrigger>
@@ -691,13 +736,13 @@ export function RegisterForm() {
                                   key={district}
                                   value={district}
                                   onSelect={() => {
-                                    setSecondaryMembers(prev => prev.map((m, i) => i === index ? { ...m, location: district, showCustomLocation: false } : m))
+                                    setCurrentMember(prev => ({ ...prev, location: district, showCustomLocation: false }))
                                   }}
                                 >
                                   <Check
                                     className={cn(
                                       "mr-2 h-4 w-4",
-                                      member.location === district ? "opacity-100" : "opacity-0"
+                                      currentMember.location === district ? "opacity-100" : "opacity-0"
                                     )}
                                   />
                                   {district}
@@ -706,13 +751,13 @@ export function RegisterForm() {
                               <CommandItem
                                 value="other"
                                 onSelect={() => {
-                                  setSecondaryMembers(prev => prev.map((m, i) => i === index ? { ...m, showCustomLocation: true, location: '' } : m))
+                                  setCurrentMember(prev => ({ ...prev, showCustomLocation: true, location: '' }))
                                 }}
                               >
                                 <Check
                                   className={cn(
                                     "mr-2 h-4 w-4",
-                                    member.showCustomLocation ? "opacity-100" : "opacity-0"
+                                    currentMember.showCustomLocation ? "opacity-100" : "opacity-0"
                                   )}
                                 />
                                 Other (enter manually)
@@ -721,34 +766,64 @@ export function RegisterForm() {
                           </Command>
                         </PopoverContent>
                       </Popover>
-                      {member.showCustomLocation && (
+                      {currentMember.showCustomLocation && (
                         <Input
                           placeholder="Enter location"
-                          value={member.customLocation || ''}
+                          value={currentMember.customLocation || ''}
                           onChange={(e) => {
-                            setSecondaryMembers(prev => prev.map((m, i) => i === index ? { ...m, customLocation: e.target.value, location: e.target.value } : m))
+                            setCurrentMember(prev => ({ ...prev, customLocation: e.target.value, location: e.target.value }))
                           }}
                           className="mt-2 h-9"
                         />
                       )}
                     </div>
                   </div>
+                  <Button
+                    type="button"
+                    className="w-full"
+                    disabled={!currentMember.name.trim()}
+                    onClick={() => {
+                      // Validate required fields
+                      if (!currentMember.name.trim()) {
+                        setDbError("Member name is required")
+                        return
+                      }
+                      
+                      // Validate mobile number format if provided
+                      if (currentMember.mobileNumber && !/^\+?[1-9]\d{1,14}$/.test(currentMember.mobileNumber)) {
+                        setDbError("Invalid mobile number format for member")
+                        return
+                      }
+                      
+                      // Validate email format if provided
+                      if (currentMember.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(currentMember.email)) {
+                        setDbError("Invalid email format for member")
+                        return
+                      }
+                      
+                      setSecondaryMembers(prev => [...prev, { ...currentMember }])
+                      setCurrentMember({ name: '', mobileNumber: '', email: '', businessName: '', businessCategory: '', location: '', isMember: false, showCustomLocation: false, customLocation: '' })
+                      setShowAddMemberForm(false)
+                      setDbError(null)
+                    }}
+                  >
+                    <Check className="h-4 w-4 mr-2" />
+                    Add Member
+                  </Button>
                 </div>
-              ))}
+              )}
               
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              onClick={() => {
-                setSecondaryMembers(prev => [...prev, { name: '', mobileNumber: '', email: '', businessName: '', businessCategory: '', location: '', showCustomLocation: false, customLocation: '' }])
-                // Auto-increase guest count when adding a member
-                setEventData(prev => ({ ...prev, guestCount: prev.guestCount + 1 }))
-              }}
-            >
-              <UserPlus className="h-4 w-4 mr-2" />
-              Add Member
-            </Button>
+              {!showAddMemberForm && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setShowAddMemberForm(true)}
+                >
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Add Member
+                </Button>
+              )}
           </div>
 
           {eventData.guestCount > 0 && <Separator />}
@@ -928,7 +1003,9 @@ export function RegisterForm() {
           <div className="p-4 bg-muted rounded-lg text-left text-sm space-y-2">
             <div className="flex justify-between"><span>Name:</span><span className="font-medium">{personalData.name}</span></div>
             <div className="flex justify-between"><span>Mobile:</span><span className="font-medium">{verifiedPhone}</span></div>
-            <div className="flex justify-between"><span>Total Guests:</span><span className="font-medium">{totalGuests}</span></div>
+            <div className="flex justify-between"><span>Guest Count:</span><span className="font-medium">{eventData.guestCount}</span></div>
+            <div className="flex justify-between"><span>Secondary Members:</span><span className="font-medium">{secondaryMembers.length}</span></div>
+            <div className="flex justify-between"><span>Total Members:</span><span className="font-medium">{totalGuests}</span></div>
             <div className="flex justify-between"><span>Ticket Type:</span><span className="font-medium">{eventData.ticketType}</span></div>
             <div className="flex justify-between"><span>Total Amount:</span><span className="font-bold text-primary">₹{totalAmount}</span></div>
             {/* FOOD PREFERENCE - Commented out */}
