@@ -37,6 +37,23 @@ interface MembersDialogProps {
 
 function MembersDialog({ participant, open, onOpenChange, onRefresh }: MembersDialogProps) {
     const [checkingIn, setCheckingIn] = React.useState<string | null>(null)
+    const [searchQuery, setSearchQuery] = React.useState("")
+
+    const handlePrimaryCheckIn = async () => {
+        setCheckingIn("primary")
+        const res = await performCheckIn(participant._id, {
+            memberPresent: !participant.checkIn?.memberPresent,
+            guestCount: participant.checkIn?.actualGuests ? (participant.checkIn.actualGuests - (participant.checkIn.memberPresent ? 1 : 0)) : 0
+        })
+        setCheckingIn(null)
+        
+        if (res.success) {
+            onRefresh()
+            toast.success("Primary member check-in updated")
+        } else {
+            toast.error(res.error)
+        }
+    }
 
     const handleSecondaryMemberCheckIn = async (member: ISecondaryMember) => {
         if (!member.mobileNumber) {
@@ -59,6 +76,14 @@ function MembersDialog({ participant, open, onOpenChange, onRefresh }: MembersDi
         }
     }
 
+    // Filter secondary members based on search query
+    const filteredSecondaryMembers = participant.secondaryMembers?.filter((member: any) => {
+        if (!searchQuery) return true
+        const query = searchQuery.toLowerCase()
+        return member.name.toLowerCase().includes(query) || 
+               (member.mobileNumber && member.mobileNumber.toLowerCase().includes(query))
+    }) || []
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
@@ -71,6 +96,17 @@ function MembersDialog({ participant, open, onOpenChange, onRefresh }: MembersDi
                         View and manage check-in status for all members
                     </DialogDescription>
                 </DialogHeader>
+                
+                {/* Search Input */}
+                <div className="relative">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        placeholder="Search by name or mobile number..."
+                        className="pl-9"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                </div>
                 
                 <div className="space-y-4 mt-4">
                     {/* Primary Member */}
@@ -87,9 +123,20 @@ function MembersDialog({ participant, open, onOpenChange, onRefresh }: MembersDi
                         <div className="text-sm space-y-1">
                             <p><span className="font-medium">Name:</span> {participant.name}</p>
                             <p><span className="font-medium">Mobile:</span> {participant.mobileNumber}</p>
-                            {participant.email && <p><span className="font-medium">Email:</span> {participant.email}</p>}
-                            {participant.location && <p><span className="font-medium">Location:</span> {participant.location}</p>}
                         </div>
+                        {!participant.checkIn?.memberPresent && (
+                            <Button
+                                className="w-full mt-3"
+                                onClick={handlePrimaryCheckIn}
+                                disabled={checkingIn === "primary"}
+                            >
+                                {checkingIn === "primary" ? (
+                                    <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Checking In...</>
+                                ) : (
+                                    <><CheckCircle2 className="h-4 w-4 mr-2" /> Check In Primary Member</>
+                                )}
+                            </Button>
+                        )}
                     </div>
 
                     {/* Secondary Members */}
@@ -99,7 +146,7 @@ function MembersDialog({ participant, open, onOpenChange, onRefresh }: MembersDi
                                 <Users className="h-4 w-4" />
                                 Secondary Members ({participant.secondaryMembers.length})
                             </h4>
-                            {participant.secondaryMembers.map((member, index) => (
+                            {filteredSecondaryMembers.map((member: any, index: number) => (
                                 <div key={index} className="border rounded-lg p-4 bg-muted/30">
                                     <div className="flex items-center justify-between mb-2">
                                         <div className="flex items-center gap-2">
@@ -113,10 +160,6 @@ function MembersDialog({ participant, open, onOpenChange, onRefresh }: MembersDi
                                     <div className="text-sm space-y-1">
                                         <p><span className="font-medium">Name:</span> {member.name}</p>
                                         {member.mobileNumber && <p><span className="font-medium">Mobile:</span> {member.mobileNumber}</p>}
-                                        {member.email && <p><span className="font-medium">Email:</span> {member.email}</p>}
-                                        {member.businessName && <p><span className="font-medium">Business:</span> {member.businessName}</p>}
-                                        {member.location && <p><span className="font-medium">Location:</span> {member.location}</p>}
-                                        {member.checkedInAt && <p><span className="font-medium">Checked In At:</span> {new Date(member.checkedInAt).toLocaleString()}</p>}
                                     </div>
                                     {!member.isCheckedIn && member.mobileNumber && (
                                         <Button
@@ -136,7 +179,7 @@ function MembersDialog({ participant, open, onOpenChange, onRefresh }: MembersDi
                         </div>
                     ) : (
                         <div className="text-center text-muted-foreground py-4">
-                            No secondary members added
+                            {searchQuery ? "No members match your search" : "No secondary members added"}
                         </div>
                     )}
                 </div>
@@ -327,6 +370,12 @@ function CheckInRow({ participant, onRefresh }: { participant: IParticipant, onR
     const balanceGuests = regGuestsCount - guestsCheckedIn
     const isFullCheckIn = balanceGuests === 0 && memberPresent
 
+    // Calculate total check-in count (primary + secondary)
+    const primaryCheckedIn = participant.checkIn?.memberPresent || false
+    const secondaryCheckedIn = participant.secondaryMembers?.filter((m: any) => m.isCheckedIn).length || 0
+    const totalCheckedIn = (primaryCheckedIn ? 1 : 0) + secondaryCheckedIn + guestsCheckedIn
+    const totalRegistered = 1 + (participant.guestCount || 0) + (participant.memberCount || 0)
+
     const handleSave = async () => {
         setSaving(true)
         const res = await performCheckIn(participant._id, {
@@ -349,6 +398,10 @@ function CheckInRow({ participant, onRefresh }: { participant: IParticipant, onR
                     <div className="font-semibold">{participant.name}</div>
                     <div className="text-xs text-muted-foreground">{participant.mobileNumber}</div>
                     <Badge variant="outline" className="mt-1">{participant.location || "Unassigned"}</Badge>
+                    <div className="mt-2 text-xs">
+                        <span className="text-muted-foreground">Checked In:</span>{" "}
+                        <span className="font-bold text-green-600">{totalCheckedIn}/{totalRegistered}</span>
+                    </div>
                 </TableCell>
                 <TableCell className="text-center">
                     <div className="text-sm font-medium">

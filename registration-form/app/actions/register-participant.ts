@@ -210,6 +210,21 @@ export async function registerParticipant(data: RegisterParticipantData) {
                 isCheckedIn: false
             }))
 
+        // Check for duplicate mobile numbers in secondary members
+        const mobileNumbers = formattedSecondaryMembers
+            .map(m => m.mobileNumber)
+            .filter((n): n is string => n !== undefined)
+        
+        const uniqueMobileNumbers = new Set(mobileNumbers)
+        if (mobileNumbers.length !== uniqueMobileNumbers.size) {
+            return { success: false, error: "Duplicate mobile numbers found in secondary members" }
+        }
+        
+        // Check if secondary member mobile number matches primary registrant
+        if (mobileNumbers.includes(mobileNumber.trim())) {
+            return { success: false, error: "Secondary member mobile number cannot match primary registrant" }
+        }
+
         const actualMemberCount = formattedSecondaryMembers.length
         // guestCount is for primary registrant's additional guests, memberCount is for secondary members
         const actualTotalPeople = 1 + (guestCount || 0) + actualMemberCount

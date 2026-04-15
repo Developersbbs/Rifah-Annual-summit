@@ -56,6 +56,16 @@ export async function performSecondaryMemberCheckIn(data: SecondaryMemberCheckIn
             return { success: false, error: "Participant not found" }
         }
 
+        // Negative Test Case 2: Block check-in for non-approved participants
+        if (participant.approvalStatus !== 'approved') {
+            return { success: false, error: "Participant is not approved for check-in" }
+        }
+
+        // Negative Test Case 5: Block check-in for unregistered users
+        if (!participant.isRegistered) {
+            return { success: false, error: "User is not registered" }
+        }
+
         // Find the secondary member by mobile number
         const memberIndex = participant.secondaryMembers.findIndex(
             (m: any) => m.mobileNumber === data.memberMobileNumber
@@ -67,9 +77,19 @@ export async function performSecondaryMemberCheckIn(data: SecondaryMemberCheckIn
 
         const member = participant.secondaryMembers[memberIndex]
 
-        // Prevent duplicate check-in
+        // Negative Test Case 1: Prevent duplicate check-in
         if (member.isCheckedIn) {
             return { success: false, error: "Member already checked in" }
+        }
+
+        // Negative Test Case 6: Prevent over check-in
+        const primaryCheckedIn = participant.checkIn?.memberPresent || false
+        const secondaryCheckedIn = participant.secondaryMembers.filter((m: any) => m.isCheckedIn).length
+        const totalCheckedIn = (primaryCheckedIn ? 1 : 0) + secondaryCheckedIn
+        const totalRegistered = 1 + (participant.guestCount || 0) + (participant.memberCount || 0)
+        
+        if (totalCheckedIn >= totalRegistered) {
+            return { success: false, error: "All registered members already checked in" }
         }
 
         // Check-in the secondary member
@@ -116,9 +136,26 @@ export async function performCheckIn(id: string, data: CheckInData) {
             return { success: false, error: "Participant not found" }
         }
 
+        // Negative Test Case 2: Block check-in for non-approved participants
+        if (participant.approvalStatus !== 'approved') {
+            return { success: false, error: "Participant is not approved for check-in" }
+        }
+
+        // Negative Test Case 5: Block check-in for unregistered users
+        if (!participant.isRegistered) {
+            return { success: false, error: "User is not registered" }
+        }
+
+        // Negative Test Case 6: Prevent over check-in
+        const totalRegistered = 1 + (participant.guestCount || 0) + (participant.memberCount || 0)
+        const actualGuests = (data.memberPresent ? 1 : 0) + data.guestCount
+        
+        if (actualGuests > totalRegistered) {
+            return { success: false, error: `Cannot check-in more than registered (${totalRegistered})` }
+        }
+
         // Calculate Totals based on Logic:
         // actualGuests = (MemberPresent ? 1 : 0) + GuestCount
-        const actualGuests = (data.memberPresent ? 1 : 0) + data.guestCount
         const isCheckedIn = actualGuests > 0
 
         participant.checkIn = {
