@@ -189,8 +189,6 @@ export async function registerParticipant(data: RegisterParticipantData) {
             pricePerPerson = Math.max(0, pricePerPerson - 200)
         }
 
-        const initialTotalAmount = totalPeople * pricePerPerson
-
         // PAYMENT LOGIC
         let paymentStatus = "pending"
         let approvalStatus = "pending"

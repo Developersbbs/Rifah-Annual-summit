@@ -225,6 +225,7 @@ export function CheckInTable() {
                 if (type === 'primary') {
                     return {
                         ...p,
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         checkIn: { ...p.checkIn, memberPresent: !p.checkIn?.memberPresent } as any
                     }
                 }

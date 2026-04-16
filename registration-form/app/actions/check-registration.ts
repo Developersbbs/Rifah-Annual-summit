@@ -15,12 +15,34 @@ export async function checkRegistration(mobileNumber: string) {
         // Or just existence if we treat any entry as "started/registered".
         // Let's stick to the model definition: `isRegistered` field.
 
-        const participant = await Participant.findOne({ mobileNumber })
+        const participant = await Participant.findOne({ mobileNumber }).lean()
 
         if (participant && participant.isRegistered) {
             return {
                 exists: true,
-                participant: JSON.parse(JSON.stringify(participant)), // Ensure plain object for client serialization
+                participant: {
+                    ...participant,
+                    _id: participant._id.toString(),
+                    eventId: participant.eventId?.toString(),
+                    rescheduledTo: participant.rescheduledTo?.toString(),
+                    approvedBy: participant.approvedBy?.toString(),
+                    createdAt: participant.createdAt?.toISOString(),
+                    updatedAt: participant.updatedAt?.toISOString(),
+                    eventDate: participant.eventDate?.toISOString(),
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    approvalLogs: participant.approvalLogs?.map((log: any) => ({
+                        ...log,
+                        _id: log._id?.toString(),
+                        approvedBy: log.approvedBy?.toString(),
+                        timestamp: log.timestamp instanceof Date ? log.timestamp.toISOString() : log.timestamp
+                    })),
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    secondaryMembers: participant.secondaryMembers?.map((member: any) => ({
+                        ...member,
+                        _id: member._id?.toString(),
+                        checkedInAt: member.checkedInAt instanceof Date ? member.checkedInAt.toISOString() : member.checkedInAt
+                    }))
+                },
                 message: "This mobile number is already registered."
             }
         }

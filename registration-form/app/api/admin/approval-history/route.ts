@@ -26,8 +26,9 @@ export async function GET(request: Request) {
         const endDate = searchParams.get('endDate')
 
         // Build query
-        let query: any = {}
-        
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const query: any = {}
+
         // Add date range filter if provided
         if (startDate || endDate) {
             query["approvalLogs.timestamp"] = {}
@@ -44,12 +45,15 @@ export async function GET(request: Request) {
             .lean()
 
         // Flatten approval logs into records
-        let records: any[] = []
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const records: any[] = []
 
         console.log("DEBUG: Total participants found:", participants.length)
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         participants.forEach((participant: any) => {
             console.log("DEBUG: Participant:", participant.name, "Logs:", participant.approvalLogs?.length)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             participant.approvalLogs?.forEach((log: any) => {
                 console.log("DEBUG: Log entry:", {
                     role: log.role,

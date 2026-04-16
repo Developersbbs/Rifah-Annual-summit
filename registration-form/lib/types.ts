@@ -34,6 +34,14 @@ export interface ISecondaryMember {
     checkedInAt?: Date | string;
 }
 
+export interface IApprovalLog {
+    approvedBy?: string;
+    approvedByEmail?: string;
+    role?: "admin" | "super-admin";
+    status?: "approved" | "rejected";
+    timestamp?: string | Date;
+}
+
 export interface IParticipant {
     _id: string;
     mobileNumber: string;
@@ -61,6 +69,22 @@ export interface IParticipant {
     updatedAt: string | Date;
     checkIn?: ICheckIn;
     secondaryMembers?: ISecondaryMember[];
+    eventId?: string;
+    rescheduledTo?: string;
+    eventDate?: string | Date;
+    isRescheduled?: boolean;
+    taxRate?: number;
+    taxAmount?: number;
+    baseAmount?: number;
+    primaryAmount?: {
+        baseAmount?: number;
+        taxAmount?: number;
+        totalAmount?: number;
+    };
+    gstNumber?: string;
+    gender?: string;
+    rejectionReason?: string;
+    approvalLogs?: IApprovalLog[];
 }
 
 export interface IEvent {

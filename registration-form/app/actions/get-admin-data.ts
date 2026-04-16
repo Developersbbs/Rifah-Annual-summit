@@ -79,15 +79,32 @@ export async function getAdminData() {
         })
 
         // Serializing MongoDB IDs and dates for client components
-        const safeParticipants = (participants as unknown as IParticipant[]).map((p) => ({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const safeParticipants = (participants as unknown as IParticipant[]).map((p: any) => ({
             ...p,
             _id: p._id.toString(),
+            eventId: p.eventId?.toString(),
+            rescheduledTo: p.rescheduledTo?.toString(),
+            approvedBy: p.approvedBy?.toString(),
             createdAt: p.createdAt instanceof Date ? p.createdAt.toISOString() : p.createdAt,
             updatedAt: p.updatedAt instanceof Date ? p.updatedAt.toISOString() : p.updatedAt,
             checkIn: p.checkIn ? {
                 ...p.checkIn,
                 checkInTime: p.checkIn.timestamp instanceof Date ? p.checkIn.timestamp.toISOString() : p.checkIn.timestamp
-            } : undefined
+            } : undefined,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            approvalLogs: p.approvalLogs?.map((log: any) => ({
+                ...log,
+                _id: log._id?.toString(),
+                approvedBy: log.approvedBy?.toString(),
+                timestamp: log.timestamp instanceof Date ? log.timestamp.toISOString() : log.timestamp
+            })),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            secondaryMembers: p.secondaryMembers?.map((member: any) => ({
+                ...member,
+                _id: member._id?.toString(),
+                checkedInAt: member.checkedInAt instanceof Date ? member.checkedInAt.toISOString() : member.checkedInAt
+            }))
         }))
 
         return { success: true, participants: safeParticipants, stats }
@@ -117,8 +134,9 @@ export async function getLocationStats(from?: string, to?: string) {
         const participants = await Participant.find(matchStage).lean()
 
         // Build stats object
-        let stats: { [key: string]: GroupStat } = {}
+        const stats: { [key: string]: GroupStat } = {}
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         participants.forEach((p: any) => {
             const primaryLocation = p.location || 'Unknown'
 
@@ -147,6 +165,7 @@ export async function getLocationStats(from?: string, to?: string) {
 
             // Count secondary members
             const secondaryMembers = p.secondaryMembers || []
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             secondaryMembers.forEach((m: any) => {
                 const secondaryLocation = m.location || primaryLocation
 

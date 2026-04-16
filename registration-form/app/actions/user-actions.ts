@@ -195,15 +195,6 @@ export async function setupAccount(token: string, formData: FormData) {
         // console.log("DEBUG SETUP - User token expiry:", user?.inviteTokenExpiry)
 
         if (!user) {
-            // Try to find user by token without expiry check to see if it exists
-            const userWithoutExpiry = await User.findOne({ inviteToken: token })
-            // console.log("DEBUG SETUP - User without expiry check:", userWithoutExpiry?.email)
-            // console.log("DEBUG SETUP - User token expiry without check:", userWithoutExpiry?.inviteTokenExpiry)
-
-            // Also check if any user has this token at all
-            const allUsersWithToken = await User.find({ inviteToken: { $exists: true } })
-            // console.log("DEBUG SETUP - All users with invite tokens:", allUsersWithToken.map(u => ({ email: u.email, token: u.inviteToken?.substring(0, 8) + '...' })))
-
             return { success: false, error: "Invalid or expired token" }
         }
 

@@ -22,9 +22,27 @@ export async function searchParticipants(query: string) {
             ]
         }).sort({ createdAt: -1 }).limit(10).lean()
 
-        return (participants as unknown as IParticipant[]).map((p) => ({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return (participants as unknown as IParticipant[]).map((p: any) => ({
             ...p,
-            _id: p._id.toString()
+            _id: p._id.toString(),
+            eventId: p.eventId?.toString(),
+            approvedBy: p.approvedBy?.toString(),
+            createdAt: p.createdAt instanceof Date ? p.createdAt.toISOString() : p.createdAt,
+            updatedAt: p.updatedAt instanceof Date ? p.updatedAt.toISOString() : p.updatedAt,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            secondaryMembers: p.secondaryMembers?.map((member: any) => ({
+                ...member,
+                _id: member._id?.toString(),
+                checkedInAt: member.checkedInAt instanceof Date ? member.checkedInAt.toISOString() : member.checkedInAt
+            })),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            approvalLogs: p.approvalLogs?.map((log: any) => ({
+                ...log,
+                _id: log._id?.toString(),
+                approvedBy: log.approvedBy?.toString(),
+                timestamp: log.timestamp instanceof Date ? log.timestamp.toISOString() : log.timestamp
+            }))
         }))
     } catch (error) {
         console.error("Search error:", error)
@@ -272,9 +290,27 @@ export async function getParticipantsByStatus(status: 'all' | 'checked-in' | 'pe
             .limit(limit)
             .lean()
 
-        return (participants as unknown as IParticipant[]).map((p) => ({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return (participants as unknown as IParticipant[]).map((p: any) => ({
             ...p,
-            _id: p._id.toString()
+            _id: p._id.toString(),
+            eventId: p.eventId?.toString(),
+            approvedBy: p.approvedBy?.toString(),
+            createdAt: p.createdAt instanceof Date ? p.createdAt.toISOString() : p.createdAt,
+            updatedAt: p.updatedAt instanceof Date ? p.updatedAt.toISOString() : p.updatedAt,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            secondaryMembers: p.secondaryMembers?.map((member: any) => ({
+                ...member,
+                _id: member._id?.toString(),
+                checkedInAt: member.checkedInAt instanceof Date ? member.checkedInAt.toISOString() : member.checkedInAt
+            })),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            approvalLogs: p.approvalLogs?.map((log: any) => ({
+                ...log,
+                _id: log._id?.toString(),
+                approvedBy: log.approvedBy?.toString(),
+                timestamp: log.timestamp instanceof Date ? log.timestamp.toISOString() : log.timestamp
+            }))
         }))
     } catch (error) {
         console.error("List error:", error)

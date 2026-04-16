@@ -13,8 +13,10 @@ export async function POST() {
 
         let updatedCount = 0
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         for (const participant of participants as any[]) {
             let needsUpdate = false
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const updatedLogs = participant.approvalLogs.map((log: any) => {
                 if (!log.approvedBy && participant.approvedBy) {
                     needsUpdate = true
