@@ -17,6 +17,7 @@ interface SecondaryMemberInput {
     businessName?: string
     businessCategory?: string
     location?: string
+    gender?: string
     isMember?: boolean
 }
 
@@ -27,6 +28,7 @@ interface RegisterParticipantData {
     businessName?: string
     businessCategory?: string
     location?: string
+    gender?: string
     paymentMethod?: string
     // Simplified food preference
     foodGuest?: number
@@ -51,6 +53,7 @@ export async function registerParticipant(data: RegisterParticipantData) {
             businessName,
             businessCategory,
             location,
+            gender,
             paymentMethod = "cash",
             foodGuest = 0,
             isMorningFood = false,
@@ -207,6 +210,7 @@ export async function registerParticipant(data: RegisterParticipantData) {
                 businessName: member.businessName ? sanitizeInput(member.businessName) : undefined,
                 businessCategory: member.businessCategory ? sanitizeInput(member.businessCategory) : undefined,
                 location: member.location ? sanitizeInput(member.location) : undefined,
+                gender: member.gender || undefined,
                 isMember: member.isMember || false,
                 isCheckedIn: false
             }))
@@ -266,6 +270,7 @@ export async function registerParticipant(data: RegisterParticipantData) {
             businessName: businessName ? sanitizeInput(businessName) : undefined,
             businessCategory: businessCategory ? sanitizeInput(businessCategory) : undefined,
             location: location ? sanitizeInput(location) : undefined,
+            gender: gender || undefined,
             paymentMethod,
             paymentStatus,
             approvalStatus,

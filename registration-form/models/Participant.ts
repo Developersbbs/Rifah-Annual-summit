@@ -158,6 +158,12 @@ const ParticipantSchema = new mongoose.Schema({
         type: String,
     },
 
+    //  GENDER (OPTIONAL)
+    gender: {
+        type: String,
+        enum: ["male", "female", "other", "prefer-not-to-say"],
+    },
+
     //  ADD THIS (APPROVAL)
     approvalStatus: {
         type: String,
@@ -210,7 +216,12 @@ const ParticipantSchema = new mongoose.Schema({
             //  PER-MEMBER TAX BREAKDOWN
             baseAmount: { type: Number, default: 0 },
             taxAmount: { type: Number, default: 0 },
-            totalAmount: { type: Number, default: 0 }
+            totalAmount: { type: Number, default: 0 },
+            //  GENDER (OPTIONAL)
+            gender: {
+                type: String,
+                enum: ["male", "female", "other", "prefer-not-to-say"],
+            }
         }
     ],
 

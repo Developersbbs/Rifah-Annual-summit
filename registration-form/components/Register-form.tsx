@@ -56,6 +56,7 @@ const personalDetailsSchema = z.object({
   businessName: z.string().min(2, "Business name is required"),
   businessCategory: z.string().min(1, "Please enter a business category"),
   location: z.string().min(1, "Please select a location"),
+  gender: z.string().optional(),
 })
 
 export function RegisterForm() {
@@ -69,10 +70,17 @@ export function RegisterForm() {
 
   // Registration Data State
   const [verifiedPhone, setVerifiedPhone] = useState("")
-  const [personalData, setPersonalData] = useState({ 
+  const [personalData, setPersonalData] = useState<{
+    name: string
+    email: string
+    businessName: string
+    businessCategory: string
+    location: string
+    gender?: string
+  }>({
     name: "",
     email: "",
-    businessName: "", 
+    businessName: "",
     businessCategory: "",
     location: ""
   })
@@ -83,8 +91,8 @@ export function RegisterForm() {
     isMorningFood: false,
   })
   const [gstNumber, setGstNumber] = useState("")
-  const [secondaryMembers, setSecondaryMembers] = useState<{ name: string; mobileNumber: string; email: string; businessName: string; businessCategory: string; location: string; isMember?: boolean; showCustomLocation?: boolean; customLocation?: string }[]>([])
-  const [currentMember, setCurrentMember] = useState<{ name: string; mobileNumber: string; email: string; businessName: string; businessCategory: string; location: string; isMember?: boolean; showCustomLocation?: boolean; customLocation?: string }>({ name: '', mobileNumber: '', email: '', businessName: '', businessCategory: '', location: '', isMember: false, showCustomLocation: false, customLocation: '' })
+  const [secondaryMembers, setSecondaryMembers] = useState<{ name: string; mobileNumber: string; email: string; businessName: string; businessCategory: string; location: string; gender?: string; isMember?: boolean; showCustomLocation?: boolean; customLocation?: string }[]>([])
+  const [currentMember, setCurrentMember] = useState<{ name: string; mobileNumber: string; email: string; businessName: string; businessCategory: string; location: string; gender?: string; isMember?: boolean; showCustomLocation?: boolean; customLocation?: string }>({ name: '', mobileNumber: '', email: '', businessName: '', businessCategory: '', location: '', isMember: false, showCustomLocation: false, customLocation: '' })
   const [showAddMemberForm, setShowAddMemberForm] = useState(false)
   const [primaryLocationOpen, setPrimaryLocationOpen] = useState(false)
   const [primaryCustomLocation, setPrimaryCustomLocation] = useState("")
@@ -519,6 +527,26 @@ export function RegisterForm() {
                 </FormItem>
               )} />
 
+              <FormField control={personalForm.control} name="gender" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Gender (Optional)</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select gender" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="male">Male</SelectItem>
+                      <SelectItem value="female">Female</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                      {/* <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem> */}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )} />
+
 
               <div className="flex gap-3">
                 <Button type="button" variant="outline" className="flex-1" onClick={() => setStep(Step.OTP_VERIFICATION)}>Back</Button>
@@ -764,6 +792,23 @@ export function RegisterForm() {
                         />
                       )}
                     </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs">Gender (Optional)</Label>
+                      <Select
+                        value={currentMember.gender}
+                        onValueChange={(value) => setCurrentMember(prev => ({ ...prev, gender: value }))}
+                      >
+                        <SelectTrigger className="h-9">
+                          <SelectValue placeholder="Select gender" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="male">Male</SelectItem>
+                          <SelectItem value="female">Female</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                          {/* <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem> */}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                   <Button
                     type="button"
@@ -841,26 +886,26 @@ export function RegisterForm() {
             {eventData.ticketType && pricePerPerson > 0 && (
               <div className="bg-muted/50 rounded-lg p-4 space-y-3">
                 <div className="text-center mb-3">
-                  <h4 className="font-semibold text-lg">Per-Member Tax Breakdown</h4>
-                  <p className="text-xs text-muted-foreground">Individual member pricing details</p>
+                  <h4 className="font-semibold text-lg">Pricing Summary</h4>
+                  <p className="text-xs text-muted-foreground">Total amount for all members</p>
                 </div>
-                
+
                 {/* Primary Member */}
-                <div className="bg-blue-50 rounded p-3 space-y-2">
-                  <div className="font-semibold text-blue-800 text-sm mb-2">Primary Member</div>
+                <div className="bg-white rounded p-3 space-y-2 border">
+                  <div className="font-semibold text-sm mb-2">Primary Member</div>
                   <div className="flex justify-between items-center text-sm">
-                    <span className="text-blue-700">Base Amount:</span>
-                    <span className="font-medium text-blue-800">₹{pricePerPerson}</span>
+                    <span>Ticket Price:</span>
+                    <span className="font-medium">₹{pricePerPerson}</span>
                   </div>
                   {taxCalculation.taxRate > 0 && (
                     <>
                       <div className="flex justify-between items-center text-sm">
-                        <span className="text-blue-700">GST ({taxCalculation.taxRate}%):</span>
-                        <span className="font-medium text-blue-800">₹{Math.round((pricePerPerson * taxCalculation.taxRate) / 100)}</span>
+                        <span>Tax Amount ({taxCalculation.taxRate}%):</span>
+                        <span className="font-medium">₹{Math.round((pricePerPerson * taxCalculation.taxRate) / 100)}</span>
                       </div>
                       <div className="flex justify-between items-center text-sm font-semibold">
-                        <span className="text-blue-700">Total:</span>
-                        <span className="font-bold text-blue-800">₹{pricePerPerson + Math.round((pricePerPerson * taxCalculation.taxRate) / 100)}</span>
+                        <span>Total:</span>
+                        <span className="font-bold">₹{pricePerPerson + Math.round((pricePerPerson * taxCalculation.taxRate) / 100)}</span>
                       </div>
                     </>
                   )}
@@ -869,25 +914,25 @@ export function RegisterForm() {
                 {/* Secondary Members */}
                 {secondaryMembers.length > 0 && (
                   <div className="space-y-2">
-                    <div className="font-semibold text-purple-800 text-sm mb-2">Secondary Members ({secondaryMembers.length})</div>
+                    <div className="font-semibold text-sm mb-2">Secondary Members ({secondaryMembers.length})</div>
                     {secondaryMembers.map((member, index) => (
-                      <div key={index} className="bg-purple-50 rounded p-3 space-y-2">
+                      <div key={index} className="bg-white rounded p-3 space-y-2 border">
                         <div className="flex justify-between items-center text-sm">
-                          <span className="text-purple-700 font-medium">{member.name || `Member ${index + 1}`}</span>
+                          <span className="font-medium">{member.name || `Member ${index + 1}`}</span>
                         </div>
                         <div className="flex justify-between items-center text-sm">
-                          <span className="text-purple-700">Base Amount:</span>
-                          <span className="font-medium text-purple-800">₹{pricePerPerson}</span>
+                          <span>Ticket Price:</span>
+                          <span className="font-medium">₹{pricePerPerson}</span>
                         </div>
                         {taxCalculation.taxRate > 0 && (
                           <>
                             <div className="flex justify-between items-center text-sm">
-                              <span className="text-purple-700">GST ({taxCalculation.taxRate}%):</span>
-                              <span className="font-medium text-purple-800">₹{Math.round((pricePerPerson * taxCalculation.taxRate) / 100)}</span>
+                              <span>Tax Amount ({taxCalculation.taxRate}%):</span>
+                              <span className="font-medium">₹{Math.round((pricePerPerson * taxCalculation.taxRate) / 100)}</span>
                             </div>
                             <div className="flex justify-between items-center text-sm font-semibold">
-                              <span className="text-purple-700">Total:</span>
-                              <span className="font-bold text-purple-800">₹{pricePerPerson + Math.round((pricePerPerson * taxCalculation.taxRate) / 100)}</span>
+                              <span>Total:</span>
+                              <span className="font-bold">₹{pricePerPerson + Math.round((pricePerPerson * taxCalculation.taxRate) / 100)}</span>
                             </div>
                           </>
                         )}
