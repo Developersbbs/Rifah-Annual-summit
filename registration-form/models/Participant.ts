@@ -137,6 +137,22 @@ const ParticipantSchema = new mongoose.Schema({
         default: 0,
     },
 
+    //  PRIMARY MEMBER TAX BREAKDOWN
+    primaryAmount: {
+        baseAmount: {
+            type: Number,
+            default: 0,
+        },
+        taxAmount: {
+            type: Number,
+            default: 0,
+        },
+        totalAmount: {
+            type: Number,
+            default: 0,
+        },
+    },
+
     //  GST INFORMATION
     gstNumber: {
         type: String,
@@ -190,7 +206,11 @@ const ParticipantSchema = new mongoose.Schema({
             location: String,
             isMember: { type: Boolean, default: false },
             isCheckedIn: { type: Boolean, default: false },
-            checkedInAt: { type: Date }
+            checkedInAt: { type: Date },
+            //  PER-MEMBER TAX BREAKDOWN
+            baseAmount: { type: Number, default: 0 },
+            taxAmount: { type: Number, default: 0 },
+            totalAmount: { type: Number, default: 0 }
         }
     ],
 

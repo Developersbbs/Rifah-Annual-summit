@@ -231,15 +231,32 @@ export async function registerParticipant(data: RegisterParticipantData) {
         
         // Force recalculation in backend (never trust frontend)
         const backendTotalMembers = 1 + actualMemberCount
-        const baseAmount = backendTotalMembers * pricePerPerson
-        
-        // Calculate tax based on event tax rate
         const taxRate = activeEvent.taxRate || 0
-        const taxAmount = Math.round((baseAmount * taxRate) / 100)
-        const totalAmount = baseAmount + taxAmount
-        
-        // Use backend-calculated amount with tax
-        const finalAmount = totalAmount
+
+        // Calculate per-person amounts
+        const perPersonBase = pricePerPerson
+        const perPersonTax = Math.round((perPersonBase * taxRate) / 100)
+        const perPersonTotal = perPersonBase + perPersonTax
+
+        // Primary member tax breakdown
+        const primaryAmount = {
+            baseAmount: perPersonBase,
+            taxAmount: perPersonTax,
+            totalAmount: perPersonTotal
+        }
+
+        // Secondary members with per-person tax breakdown
+        const formattedSecondaryMembersWithTax = formattedSecondaryMembers.map(member => ({
+            ...member,
+            baseAmount: perPersonBase,
+            taxAmount: perPersonTax,
+            totalAmount: perPersonTotal
+        }))
+
+        // Calculate totals by summing all individual amounts
+        const totalBaseAmount = primaryAmount.baseAmount + formattedSecondaryMembersWithTax.reduce((sum, m) => sum + m.baseAmount, 0)
+        const totalTaxAmount = primaryAmount.taxAmount + formattedSecondaryMembersWithTax.reduce((sum, m) => sum + m.taxAmount, 0)
+        const totalAmount = totalBaseAmount + totalTaxAmount
 
         // Create participant with validated and sanitized data
         const participant = await Participant.create({
@@ -259,16 +276,17 @@ export async function registerParticipant(data: RegisterParticipantData) {
             eventDate: activeEvent.startDate,
             ageGroups: finalAgeGroups,
             guestCount: 0,
-            memberCount: actualMemberCount,
+            memberCount: backendTotalMembers,
             ticketType,
             ticketPrice: pricePerPerson,
-            totalAmount: finalAmount,
+            totalAmount: totalAmount,
             taxRate,
-            taxAmount,
-            baseAmount,
+            taxAmount: totalTaxAmount,
+            baseAmount: totalBaseAmount,
+            primaryAmount,
             gstNumber: gstNumber ? sanitizeInput(gstNumber) : undefined,
             isMember,
-            secondaryMembers: formattedSecondaryMembers
+            secondaryMembers: formattedSecondaryMembersWithTax
         })
 
         // Update event counts atomically

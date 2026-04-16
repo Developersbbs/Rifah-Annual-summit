@@ -23,7 +23,11 @@ export async function GET() {
                 EventDate: p.eventDate || "",
                 Location: p.location || "",
                 PrimaryMember: "",
-                PrimaryPhone: ""
+                PrimaryPhone: "",
+                BaseAmount: p.primaryAmount?.baseAmount || 0,
+                TaxAmount: p.primaryAmount?.taxAmount || 0,
+                TotalAmount: p.primaryAmount?.totalAmount || 0,
+                TaxRate: p.taxRate || 0
             })
 
             // secondary
@@ -38,7 +42,11 @@ export async function GET() {
                     EventDate: p.eventDate || "",
                     Location: m.location || p.location || "",
                     PrimaryMember: p.name,
-                    PrimaryPhone: p.mobileNumber
+                    PrimaryPhone: p.mobileNumber,
+                    BaseAmount: m.baseAmount || 0,
+                    TaxAmount: m.taxAmount || 0,
+                    TotalAmount: m.totalAmount || 0,
+                    TaxRate: p.taxRate || 0
                 })
             })
         })
