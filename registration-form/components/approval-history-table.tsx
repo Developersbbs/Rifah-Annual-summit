@@ -209,8 +209,9 @@ export function ApprovalHistoryTable() {
 
     const handleExport = async () => {
         try {
+            const searchValue = table.getColumn("participantName")?.getFilterValue() as string || ""
             const params = new URLSearchParams({
-                search: columnFilters.find(f => f.id === "global")?.value?.toString() || "",
+                search: searchValue,
                 role: roleFilter,
                 status: statusFilter,
             })
