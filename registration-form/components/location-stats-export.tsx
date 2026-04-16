@@ -6,14 +6,12 @@ import { Download } from "lucide-react"
 interface LocationStatsExportProps {
     data: Array<{
         _id: string
-        membersCount: number
-        adultsCount: number
-        childrenCount: number
-        totalGuest: number
-        checkedInMembers: number
-        checkedInGuestAdults: number
-        checkedInChildren: number
-        totalCheckedIn: number
+        primaryReg: number
+        secondaryReg: number
+        totalReg: number
+        primaryIn: number
+        secondaryIn: number
+        totalIn: number
     }>
 }
 
@@ -22,27 +20,23 @@ export function LocationStatsExport({ data }: LocationStatsExportProps) {
         // Define headers
         const headers = [
             "Location",
-            "Members (Reg)",
-            "Adults (Reg)",
-            "Children (Reg)",
+            "Primary (Reg)",
+            "Secondary (Reg)",
             "Total (Reg)",
-            "Members (In)",
-            "Adults (In)",
-            "Children (In)",
+            "Primary (In)",
+            "Secondary (In)",
             "Total (In)"
         ]
 
         // Map data to CSV rows
         const rows = data.map(item => [
             item._id || "Unknown",
-            item.membersCount,
-            item.adultsCount,
-            item.childrenCount,
-            item.membersCount + item.totalGuest,
-            item.checkedInMembers || 0,
-            item.checkedInGuestAdults || 0,
-            item.checkedInChildren || 0,
-            item.totalCheckedIn || 0
+            item.primaryReg,
+            item.secondaryReg,
+            item.totalReg,
+            item.primaryIn,
+            item.secondaryIn,
+            item.totalIn
         ])
 
         // Combine headers and rows

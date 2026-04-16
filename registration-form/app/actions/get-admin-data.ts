@@ -7,15 +7,12 @@ import { IParticipant } from "@/lib/types"
 
 interface GroupStat {
     _id: string
-    membersCount: number
-    adultsCount: number
-    childrenCount: number
-    totalGuest: number
-    checkedInMembers: number
-    checkedInGuestAdults: number
-    checkedInChildren: number
-    checkedInParticipants: number
-    totalCheckedIn: number
+    primaryReg: number
+    secondaryReg: number
+    totalReg: number
+    primaryIn: number
+    secondaryIn: number
+    totalIn: number
 }
 
 export async function getAdminData() {
@@ -116,58 +113,70 @@ export async function getLocationStats(from?: string, to?: string) {
             }
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const pipeline: any[] = []
-        if (Object.keys(matchStage).length > 0) {
-            pipeline.push({ $match: matchStage })
-        }
+        // Get all participants with date filter
+        const participants = await Participant.find(matchStage).lean()
 
-        pipeline.push(
-            {
-                $group: {
-                    _id: "$location",
-                    membersCount: { $sum: 1 },
-                    adultsCount: { $sum: 0 },
-                    childrenCount: { $sum: 0 },
-                    totalGuest: { $sum: { $size: "$secondaryMembers" } },
-                    // Check-in Metrics
-                    checkedInMembers: {
-                        $sum: {
-                            $cond: [
-                                { $and: ["$checkIn.isCheckedIn", "$checkIn.memberPresent"] },
-                                1,
-                                0
-                            ]
-                        }
-                    },
-                    checkedInGuestAdults: { $sum: 0 },
-                    checkedInChildren: { $sum: 0 },
-                    checkedInParticipants: {
-                        $sum: {
-                            $cond: [
-                                "$checkIn.isCheckedIn",
-                                { 
-                                    $ifNull: ["$checkIn.actualGuests", 0] 
-                                },
-                                0
-                            ]
-                        }
+        // Build stats object
+        let stats: { [key: string]: GroupStat } = {}
+
+        participants.forEach((p: any) => {
+            const primaryLocation = p.location || 'Unknown'
+
+            // Initialize location if not exists
+            if (!stats[primaryLocation]) {
+                stats[primaryLocation] = {
+                    _id: primaryLocation,
+                    primaryReg: 0,
+                    secondaryReg: 0,
+                    totalReg: 0,
+                    primaryIn: 0,
+                    secondaryIn: 0,
+                    totalIn: 0
+                }
+            }
+
+            // Count primary member
+            stats[primaryLocation].primaryReg += 1
+            stats[primaryLocation].totalReg += 1
+
+            // Check primary member check-in
+            if (p.checkIn?.isCheckedIn && p.checkIn?.memberPresent) {
+                stats[primaryLocation].primaryIn += 1
+                stats[primaryLocation].totalIn += 1
+            }
+
+            // Count secondary members
+            const secondaryMembers = p.secondaryMembers || []
+            secondaryMembers.forEach((m: any) => {
+                const secondaryLocation = m.location || primaryLocation
+
+                // Initialize secondary location if not exists
+                if (!stats[secondaryLocation]) {
+                    stats[secondaryLocation] = {
+                        _id: secondaryLocation,
+                        primaryReg: 0,
+                        secondaryReg: 0,
+                        totalReg: 0,
+                        primaryIn: 0,
+                        secondaryIn: 0,
+                        totalIn: 0
                     }
                 }
-            },
-            {
-                $addFields: {
-                    totalCheckedIn: { $add: ["$checkedInMembers", "$checkedInParticipants"] }
+
+                // Count secondary member
+                stats[secondaryLocation].secondaryReg += 1
+                stats[secondaryLocation].totalReg += 1
+
+                // Check secondary member check-in
+                if (m.isCheckedIn) {
+                    stats[secondaryLocation].secondaryIn += 1
+                    stats[secondaryLocation].totalIn += 1
                 }
-            },
-            { $sort: { _id: 1 } }
-        )
+            })
+        })
 
-        const statsData = await Participant.aggregate(pipeline)
-
-        // Sorting numerically if possible, otherwise string sort from DB is used.
-        // Javascript sort to handle "1", "2", "10" correctly
-        const sortedStatsArr = (statsData as unknown as GroupStat[]).sort((a, b) => {
+        // Convert to array and sort
+        const statsArray = Object.values(stats).sort((a, b) => {
             const numA = parseInt(a._id) || 0
             const numB = parseInt(b._id) || 0
             
@@ -180,7 +189,7 @@ export async function getLocationStats(from?: string, to?: string) {
             return (a._id || "").localeCompare(b._id || "")
         })
 
-        return { success: true, stats: sortedStatsArr }
+        return { success: true, stats: statsArray }
     } catch (error) {
         console.error("Error fetching location stats:", error)
         return { success: false, error: "Failed to fetch location stats" }
