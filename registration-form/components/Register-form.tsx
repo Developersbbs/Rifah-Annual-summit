@@ -82,6 +82,7 @@ export function RegisterForm() {
     foodGuest: 0,
     isMorningFood: false,
   })
+  const [gstNumber, setGstNumber] = useState("")
   const [secondaryMembers, setSecondaryMembers] = useState<{ name: string; mobileNumber: string; email: string; businessName: string; businessCategory: string; location: string; isMember?: boolean; showCustomLocation?: boolean; customLocation?: string }[]>([])
   const [currentMember, setCurrentMember] = useState<{ name: string; mobileNumber: string; email: string; businessName: string; businessCategory: string; location: string; isMember?: boolean; showCustomLocation?: boolean; customLocation?: string }>({ name: '', mobileNumber: '', email: '', businessName: '', businessCategory: '', location: '', isMember: false, showCustomLocation: false, customLocation: '' })
   const [showAddMemberForm, setShowAddMemberForm] = useState(false)
@@ -142,9 +143,18 @@ export function RegisterForm() {
     return ticket?.price || 0
   }, [activeEvent, eventData.ticketType])
 
-  const totalAmount = useMemo(() => {
-    return totalMembers * pricePerPerson
-  }, [totalMembers, pricePerPerson])
+  const taxCalculation = useMemo(() => {
+    const baseAmount = totalMembers * pricePerPerson
+    const taxRate = (activeEvent as any)?.taxRate || 0
+    const taxAmount = Math.round((baseAmount * taxRate) / 100)
+    const totalAmount = baseAmount + taxAmount
+    return {
+      baseAmount,
+      taxRate,
+      taxAmount,
+      totalAmount
+    }
+  }, [totalMembers, pricePerPerson, activeEvent])
 
   // Fetch active event on mount
   useEffect(() => {
@@ -244,7 +254,8 @@ export function RegisterForm() {
         foodGuest: totalMembers, // Total people for food
         ageGuest: 0,
         isMorningFood: eventData.isMorningFood,
-        secondaryMembers: filteredSecondaryMembers
+        secondaryMembers: filteredSecondaryMembers,
+        gstNumber: gstNumber.trim() || undefined
       }
 
       const result = await registerParticipant(payload)
@@ -828,23 +839,82 @@ export function RegisterForm() {
             
             {/* Pricing Display */}
             {eventData.ticketType && pricePerPerson > 0 && (
-              <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-muted-foreground">Price per person:</span>
-                  <span className="font-semibold text-lg">₹{pricePerPerson}</span>
+              <div className="bg-muted/50 rounded-lg p-4 space-y-3">
+                <div className="text-center mb-3">
+                  <h4 className="font-semibold text-lg">Calculation Breakdown</h4>
+                  <p className="text-xs text-muted-foreground">Complete pricing details</p>
                 </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-muted-foreground">Total members:</span>
-                  <span className="font-medium">{totalMembers}</span>
+                
+                {/* Base Calculation */}
+                <div className="bg-blue-50 rounded p-3 space-y-2">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-blue-700 font-medium">Base Price (per person):</span>
+                    <span className="font-semibold text-blue-800">₹{pricePerPerson}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-blue-700">Number of Members:</span>
+                    <span className="font-medium text-blue-800">{totalMembers}</span>
+                  </div>
+                  <Separator className="bg-blue-200" />
+                  <div className="flex justify-between items-center">
+                    <span className="text-blue-700 font-semibold">Base Amount:</span>
+                    <span className="font-bold text-blue-800">₹{taxCalculation.baseAmount}</span>
+                  </div>
                 </div>
-                <Separator />
-                <div className="flex justify-between items-center">
-                  <span className="font-semibold">Total Amount:</span>
-                  <span className="font-bold text-xl text-primary">₹{totalAmount}</span>
+
+                {/* Tax Calculation */}
+                {taxCalculation.taxRate > 0 && (
+                  <div className="bg-orange-50 rounded p-3 space-y-2">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-orange-700 font-medium">GST Rate:</span>
+                      <span className="font-semibold text-orange-800">{taxCalculation.taxRate}%</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-orange-700">Tax Calculation:</span>
+                      <span className="font-medium text-orange-800">₹{taxCalculation.baseAmount} × {taxCalculation.taxRate}%</span>
+                    </div>
+                    <Separator className="bg-orange-200" />
+                    <div className="flex justify-between items-center">
+                      <span className="text-orange-700 font-semibold">GST Amount:</span>
+                      <span className="font-bold text-orange-800">₹{taxCalculation.taxAmount}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Final Total */}
+                <div className="bg-green-50 rounded p-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-green-700 font-bold text-lg">Total Amount:</span>
+                    <span className="font-bold text-xl text-green-800">₹{taxCalculation.totalAmount}</span>
+                  </div>
+                  <p className="text-xs text-green-600 mt-1">
+                    {taxCalculation.taxRate > 0 
+                      ? `₹${taxCalculation.baseAmount} + ₹${taxCalculation.taxAmount} (GST)`
+                      : `₹${taxCalculation.baseAmount} (No GST)`
+                    }
+                  </p>
                 </div>
               </div>
             )}
           </div>
+
+          {/* GST Number Input */}
+          {taxCalculation.taxRate > 0 && (
+            <div className="space-y-2">
+              <Label htmlFor="gstNumber" className="text-sm">GST Number (Optional)</Label>
+              <Input
+                id="gstNumber"
+                type="text"
+                placeholder="Enter GST Number"
+                value={gstNumber}
+                onChange={(e) => setGstNumber(e.target.value)}
+                className="w-full"
+              />
+              <p className="text-xs text-muted-foreground">
+                GST will be applied at {taxCalculation.taxRate}%
+              </p>
+            </div>
+          )}
 
           <Separator />
 
@@ -981,7 +1051,7 @@ export function RegisterForm() {
             <div className="flex justify-between"><span>Secondary Members:</span><span className="font-medium">{secondaryMembers.length}</span></div>
             <div className="flex justify-between"><span>Total Members:</span><span className="font-medium">{totalMembers}</span></div>
             <div className="flex justify-between"><span>Ticket Type:</span><span className="font-medium">{eventData.ticketType}</span></div>
-            <div className="flex justify-between"><span>Total Amount:</span><span className="font-bold text-primary">₹{totalAmount}</span></div>
+            <div className="flex justify-between"><span>Total Amount:</span><span className="font-bold text-primary">₹{taxCalculation.totalAmount}</span></div>
             {/* FOOD PREFERENCE - Commented out */}
             {/* <div className="flex justify-between"><span>Morning Food:</span><span className="font-medium">{eventData.isMorningFood ? "Yes" : "No"}</span></div> */}
           </div>

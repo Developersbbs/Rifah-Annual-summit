@@ -59,6 +59,7 @@ export async function POST(request: NextRequest) {
       endDate,
       location,
       maxCapacity,
+      taxRate = 0,
     } = body
 
     // VALIDATION
@@ -99,6 +100,7 @@ export async function POST(request: NextRequest) {
       location,
       maxCapacity: maxCapacity || 100,
       ticketsPrice: finalTickets, // ✅ Fixed
+      taxRate, // Add tax rate field
       createdBy: userId
     })
 

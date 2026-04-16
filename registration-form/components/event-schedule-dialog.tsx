@@ -31,6 +31,7 @@ interface Event {
   maxCapacity: number
   isActive: boolean
   ticketsPrice?: TicketPrice[]
+  taxRate?: number
 }
 
 interface EventScheduleDialogProps {
@@ -52,6 +53,7 @@ export function EventScheduleDialog({ event, onSuccess, children }: EventSchedul
     ticketsPrice: event?.ticketsPrice || [
       { name: "General", price: 0, soldCount: 0 }
     ],
+    taxRate: event?.taxRate || 0,
   })
 
   const [tickets, setTickets] = useState<TicketPrice[]>(
@@ -291,6 +293,23 @@ export function EventScheduleDialog({ event, onSuccess, children }: EventSchedul
                   </div>
                 </div>
               ))}
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="taxRate">Tax Rate (%)</Label>
+              <Input
+                id="taxRate"
+                type="number"
+                value={formData.taxRate || 0}
+                onChange={(e) => handleInputChange("taxRate", parseFloat(e.target.value) || 0)}
+                min="0"
+                max="100"
+                step="0.1"
+                placeholder="e.g., 18"
+              />
+              <p className="text-xs text-muted-foreground">
+                Enter tax percentage (0-100%). This will be applied to all ticket sales.
+              </p>
             </div>
 
             <div className="flex items-center space-x-2">

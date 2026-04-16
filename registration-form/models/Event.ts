@@ -54,6 +54,14 @@ const eventSchema = new mongoose.Schema({
         }
     ],
 
+    //  TAX CONFIGURATION
+    taxRate: {
+        type: Number,
+        default: 0, // Default to 0% tax
+        min: 0,
+        max: 100,
+    },
+
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",

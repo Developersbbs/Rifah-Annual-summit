@@ -123,6 +123,25 @@ const ParticipantSchema = new mongoose.Schema({
         type: Number,
     },
 
+    //  TAX CALCULATION FIELDS
+    taxRate: {
+        type: Number,
+        default: 0,
+    },
+    taxAmount: {
+        type: Number,
+        default: 0,
+    },
+    baseAmount: {
+        type: Number,
+        default: 0,
+    },
+
+    //  GST INFORMATION
+    gstNumber: {
+        type: String,
+    },
+
     //  ADD THIS (APPROVAL)
     approvalStatus: {
         type: String,

@@ -37,6 +37,7 @@ interface RegisterParticipantData {
     ticketType: string
     isMember?: boolean
     secondaryMembers?: SecondaryMemberInput[]
+    gstNumber?: string
 }
 
 export async function registerParticipant(data: RegisterParticipantData) {
@@ -56,7 +57,8 @@ export async function registerParticipant(data: RegisterParticipantData) {
             ageGuest = 0,
             ticketType,
             isMember = false,
-            secondaryMembers = []
+            secondaryMembers = [],
+            gstNumber
         } = data
 
         const totalPeople = 1 + secondaryMembers.length
@@ -184,7 +186,7 @@ export async function registerParticipant(data: RegisterParticipantData) {
             pricePerPerson = Math.max(0, pricePerPerson - 200)
         }
 
-        const totalAmount = totalPeople * pricePerPerson
+        const initialTotalAmount = totalPeople * pricePerPerson
 
         // PAYMENT LOGIC
         let paymentStatus = "pending"
@@ -229,10 +231,15 @@ export async function registerParticipant(data: RegisterParticipantData) {
         
         // Force recalculation in backend (never trust frontend)
         const backendTotalMembers = 1 + actualMemberCount
-        const backendTotalAmount = backendTotalMembers * pricePerPerson
+        const baseAmount = backendTotalMembers * pricePerPerson
         
-        // Use backend-calculated amount
-        const finalAmount = backendTotalAmount
+        // Calculate tax based on event tax rate
+        const taxRate = activeEvent.taxRate || 0
+        const taxAmount = Math.round((baseAmount * taxRate) / 100)
+        const totalAmount = baseAmount + taxAmount
+        
+        // Use backend-calculated amount with tax
+        const finalAmount = totalAmount
 
         // Create participant with validated and sanitized data
         const participant = await Participant.create({
@@ -256,6 +263,10 @@ export async function registerParticipant(data: RegisterParticipantData) {
             ticketType,
             ticketPrice: pricePerPerson,
             totalAmount: finalAmount,
+            taxRate,
+            taxAmount,
+            baseAmount,
+            gstNumber: gstNumber ? sanitizeInput(gstNumber) : undefined,
             isMember,
             secondaryMembers: formattedSecondaryMembers
         })
