@@ -134,7 +134,7 @@ export async function createUser(prevState: unknown, formData: FormData) {
                 await transporter.sendMail({
                     from: fromEmail || user,
                     to: email,
-                    subject: "Welcome to Pongal Vizha Admin Panel",
+                    subject: "Welcome to Rifah Annual Summit",
                     html: `
                         <p>You have been invited to join the Rifah Annual Summit.</p>
                         <p>Click the link below to set your password and access your account:</p>
