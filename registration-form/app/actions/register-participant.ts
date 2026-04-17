@@ -303,7 +303,7 @@ export async function registerParticipant(data: RegisterParticipantData) {
 
         return {
             success: true,
-            id: participant._id.toString(),
+            participantId: participant._id.toString(),
             totalAmount
         }
 

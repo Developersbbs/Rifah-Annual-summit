@@ -118,6 +118,10 @@ const ParticipantSchema = new mongoose.Schema({
         default: "pending",
     },
 
+    paymentId: {
+        type: String,
+    },
+
     //  ADD THIS (TRACK AMOUNT)
     totalAmount: {
         type: Number,

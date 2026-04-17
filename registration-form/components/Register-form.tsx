@@ -223,6 +223,114 @@ export function RegisterForm() {
     setStep(Step.EVENT_DETAILS)
   }
 
+  const handleOnlinePayment = async (participantId: string | null) => {
+    try {
+      console.log("Starting online payment")
+
+      // Create Razorpay order without participant ID
+      const res = await fetch("/api/payment/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: taxCalculation.totalAmount,
+          participantId: null,
+        }),
+      })
+
+      const order = await res.json()
+      console.log("Order response:", order)
+
+      if (!order.id) {
+        console.error("Order ID missing:", order)
+        throw new Error("Failed to create payment order")
+      }
+
+      // Check if Razorpay is loaded
+      if (typeof (window as any).Razorpay === 'undefined') {
+        console.error("Razorpay not loaded")
+        throw new Error("Payment gateway not loaded. Please refresh the page.")
+      }
+
+      const razorpayKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY
+      if (!razorpayKey) {
+        console.error("Razorpay key not configured")
+        throw new Error("Payment configuration error. Please contact support.")
+      }
+
+      console.log("Razorpay key configured, opening checkout...")
+
+      // Prepare registration data to pass to verification
+      const registrationData = {
+        mobileNumber: verifiedPhone,
+        ...personalData,
+        ...eventData,
+        eventId: activeEvent._id,
+        eventDate: activeEvent.startDate,
+        guestCount: secondaryMembers.length,
+        memberCount: totalMembers,
+        ticketPrice: pricePerPerson,
+        isMember: false,
+        paymentMethod: 'online',
+        paymentStatus: 'completed',
+        totalAmount: taxCalculation.totalAmount,
+        taxRate: taxCalculation.taxRate,
+        taxAmount: taxCalculation.taxAmount,
+        baseAmount: taxCalculation.baseAmount,
+        gstNumber: gstNumber || undefined,
+        secondaryMembers,
+      }
+
+      const options = {
+        key: razorpayKey,
+        amount: order.amount,
+        currency: "INR",
+        name: "RIFAH ANNUAL SUMMIT",
+        description: "Event Ticket",
+        order_id: order.id,
+
+        handler: async function (response: any) {
+          console.log("Payment successful:", response)
+          // Verify payment and create participant
+          await fetch("/api/payment/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              ...response,
+              registrationData,
+            }),
+          })
+
+          setStep(Step.SUCCESS)
+        },
+
+        modal: {
+          ondismiss: function() {
+            console.log("Payment modal dismissed")
+            setDbError("Payment was cancelled. Please try again.")
+            setIsSubmitting(false)
+          }
+        },
+
+        prefill: {
+          name: personalData.name,
+          email: personalData.email,
+          contact: verifiedPhone.replace("+91", ""),
+        },
+
+        theme: {
+          color: "#C45A2D",
+        },
+      }
+
+      const rzp = new (window as any).Razorpay(options)
+      rzp.open()
+    } catch (error) {
+      console.error("Payment error:", error)
+      setDbError(error instanceof Error ? error.message : "Payment failed. Please try again.")
+      setIsSubmitting(false)
+    }
+  }
+
   const onFinalSubmit = async () => {
     // Client-side validation before submission
     if (!eventData.ticketType) {
@@ -235,13 +343,17 @@ export function RegisterForm() {
       return
     }
 
-    // FOOD PREFERENCE - Commented out
-    // const totalFoodCount = (eventData.foodPreference.veg || 0) + (eventData.foodPreference.nonVeg || 0)
-    // if (totalFoodCount > totalGuests) {
-    //   setDbError(`Total food count (${totalFoodCount}) cannot exceed total guests (${totalGuests})`)
-    //   return
-    // }
+    // For online payment, trigger payment first (participant created after successful payment)
+    if (eventData.paymentMethod === 'online') {
+      setIsSubmitting(true)
+      setDbError(null)
 
+      // Trigger Razorpay payment without creating participant first
+      await handleOnlinePayment(null)
+      return
+    }
+
+    // For cash payment, proceed with normal flow
     setIsSubmitting(true)
     setDbError(null)
     try {
@@ -866,8 +978,8 @@ export function RegisterForm() {
               <Receipt className="h-5 w-5 text-primary" />
               <h3 className="font-semibold">Ticket Type</h3>
             </div>
-            <Select 
-              value={eventData.ticketType} 
+            <Select
+              value={eventData.ticketType || ""}
               onValueChange={(value) => setEventData(prev => ({ ...prev, ticketType: value }))}
               disabled={isLoadingEvent}
             >
@@ -1002,11 +1114,10 @@ export function RegisterForm() {
                 variant={eventData.paymentMethod === 'online' ? 'default' : 'outline'}
                 className="w-full h-14"
                 onClick={() => setEventData(prev => ({ ...prev, paymentMethod: 'online' }))}
-                disabled
               >
                 <div className="flex flex-col items-center">
                   <span className="font-semibold">Online</span>
-                  <span className="text-xs opacity-80">Coming Soon</span>
+                  <span className="text-xs opacity-80">Pay Now</span>
                 </div>
               </Button>
             </div>
@@ -1015,6 +1126,14 @@ export function RegisterForm() {
                 <Info className="h-4 w-4 text-blue-600" />
                 <AlertDescription className="text-blue-700 text-sm">
                   Cash payment requires admin approval. Please pay at the venue.
+                </AlertDescription>
+              </Alert>
+            )}
+            {eventData.paymentMethod === 'online' && (
+              <Alert className="border-green-200 bg-green-50">
+                <Info className="h-4 w-4 text-green-600" />
+                <AlertDescription className="text-green-700 text-sm">
+                  Secure online payment via Razorpay. You'll be redirected to complete payment.
                 </AlertDescription>
               </Alert>
             )}
