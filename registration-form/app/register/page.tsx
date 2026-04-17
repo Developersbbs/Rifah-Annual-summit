@@ -1,6 +1,6 @@
 "use client"
 
-import { Earth, AlertCircle, ArrowLeft } from "lucide-react"
+import { AlertCircle, ArrowLeft } from "lucide-react"
 import { RegisterForm } from "@/components/Register-form"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
@@ -100,7 +100,7 @@ export default function RegisterPage() {
           <div className="flex justify-center gap-2 md:justify-start">
             <Link href="/" className="flex items-center gap-2 font-medium">
               <div className="flex  items-center justify-center rounded-md">
-               <img src="/assets/logo.png" alt="RIFAH" className="w-10 h-10"  />
+               <Image src="/assets/logo.png" alt="RIFAH" width={40} height={40} className="w-10 h-10" />
               </div>
               RIFAH ANNUAL SUMMIT
             </Link>
@@ -130,7 +130,7 @@ export default function RegisterPage() {
           <div className="flex justify-center gap-2 md:justify-start">
             <Link href="/" className="flex items-center gap-2 font-medium">
               <div className="flex items-center justify-center rounded-md">
-               <img src="/assets/logo.png" alt="RIFAH" className="w-10 h-10"  />
+               <Image src="/assets/logo.png" alt="RIFAH" width={40} height={40} className="w-10 h-10" />
               </div>
               RIFAH ANNUAL SUMMIT
             </Link>
@@ -175,7 +175,7 @@ export default function RegisterPage() {
         <div className="flex justify-center gap-2 md:justify-start">
           <Link href="/" className="flex items-center gap-2 font-medium">
             <div className="foreground flex items-center justify-center rounded-md">
-             <img src="/assets/logo.png" alt="RIFAH" className="w-10 h-10" />
+             <Image src="/assets/logo.png" alt="RIFAH" width={40} height={40} className="w-10 h-10" />
             </div>
             RIFAH ANNUAL SUMMIT
           </Link>

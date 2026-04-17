@@ -1,11 +1,10 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Calendar, MapPin, Menu, ArrowRight, Instagram, Facebook, Twitter, Mail, Clock, AlertCircle, Earth, Phone } from "lucide-react"
+import { Calendar, MapPin, Menu, ArrowRight, Instagram, Facebook, Twitter, Mail, Clock, AlertCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
@@ -114,7 +113,7 @@ export default function PongalLandingPage() {
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
             {/* <Earth className="h-6 w-6 text-primary animate-spin-slow" /> */}
-            <img src="/assets/logo.png" alt="RIFAH" className="h-7 sm:h-12 w-auto" />
+            <Image src="/assets/logo.png" alt="RIFAH" width={48} height={48} className="h-7 sm:h-12 w-auto" />
             <span className="text-xl font-bold tracking-tight">RIFAH ANNUAL SUMMIT</span>
           </div>
 
@@ -147,7 +146,7 @@ export default function PongalLandingPage() {
                 {/* Sheet Header */}
                 <div className="px-6 py-5 border-b border-border/50">
                   <div className="flex items-center gap-2">
-                    <img src="/assets/logo.png" alt="RIFAH" className="h-7 w-auto" />
+                    <Image src="/assets/logo.png" alt="RIFAH" width={28} height={28} className="h-7 w-auto" />
                     <span className="font-semibold text-sm tracking-wide">RIFAH ANNUAL SUMMIT</span>
                   </div>
                 </div>
@@ -682,7 +681,7 @@ export default function PongalLandingPage() {
           {/* Brand */}
           <div className="mb-8">
             <div className="flex items-center justify-center gap-2 text-primary-foreground mb-4">
-              <img src="/assets/logo.png" alt="RIFAH" className="h-7 sm:h-12 w-auto" />
+              <Image src="/assets/logo.png" alt="RIFAH" width={48} height={48} className="h-7 sm:h-12 w-auto" />
               <span className="text-xl font-bold tracking-tight">RIFAH ANNUAL SUMMIT</span>
             </div>
             <p className="text-sm leading-relaxed text-primary-foreground/80">
