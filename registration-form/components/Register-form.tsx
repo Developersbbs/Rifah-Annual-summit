@@ -246,7 +246,7 @@ export function RegisterForm() {
       }
 
       // Check if Razorpay is loaded
-      if (typeof (window as { Razorpay?: unknown }).Razorpay === 'undefined') {
+      if (!window.Razorpay) {
         console.error("Razorpay not loaded")
         throw new Error("Payment gateway not loaded. Please refresh the page.")
       }
@@ -322,7 +322,7 @@ export function RegisterForm() {
         },
       }
 
-      const rzp = new (window as { Razorpay: new (options: unknown) => unknown }).Razorpay(options)
+      const rzp = new window.Razorpay(options)
       rzp.open()
     } catch (error) {
       console.error("Payment error:", error)
@@ -349,7 +349,7 @@ export function RegisterForm() {
       setDbError(null)
 
       // Trigger Razorpay payment without creating participant first
-      await handleOnlinePayment(null)
+      await handleOnlinePayment()
       return
     }
 
