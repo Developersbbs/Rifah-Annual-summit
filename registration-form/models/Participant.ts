@@ -202,6 +202,36 @@ const ParticipantSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
+    qrSignature: {
+        type: String,
+    },
+    qrVersion: {
+        type: Number,
+        default: 1,
+    },
+    scanLogs: {
+        type: [new mongoose.Schema({
+            type: {
+                type: String,
+                enum: ["primary", "secondary"],
+            },
+            memberId: String,
+            scannedBy: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User",
+            },
+            deviceId: String,
+            timestamp: {
+                type: Date,
+                default: Date.now,
+            },
+            status: {
+                type: String,
+                enum: ["success", "duplicate", "invalid", "expired"],
+            },
+        })],
+        default: [],
+    },
     secondaryMembers: [
         {
             name: { type: String, required: true },

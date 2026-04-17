@@ -3,6 +3,8 @@
 import dbConnect from "@/lib/db"
 import Participant from "@/models/Participant"
 import Event from "@/models/Event"
+import { generateQR, generateSecondaryMemberQR } from "@/lib/qr-generator"
+import * as crypto from "crypto"
 
 // Helper function for input sanitization
 function sanitizeInput(input: string): string {
@@ -301,10 +303,42 @@ export async function registerParticipant(data: RegisterParticipantData) {
             { $inc: { registeredCount: actualTotalPeople } }
         )
 
+        // Generate QR codes
+        const primaryQR = await generateQR(participant._id.toString())
+        
+        // Generate QR for secondary members
+        const secondaryMemberQRs: { id: string; name: string; email: string; qr: string }[] = []
+        for (const member of participant.secondaryMembers) {
+            const memberQR = await generateSecondaryMemberQR(
+                participant._id.toString(),
+                member._id.toString()
+            )
+            secondaryMemberQRs.push({
+                id: member._id.toString(),
+                name: member.name,
+                email: member.email || "",
+                qr: memberQR
+            })
+        }
+
+        // Store QR signature for audit
+        participant.qrSignature = crypto
+            .createHmac("sha256", process.env.QR_SECRET || "default-secret")
+            .update(participant._id.toString())
+            .digest("hex")
+        participant.qrVersion = 1
+        if (!participant.scanLogs) {
+            participant.scanLogs = []
+        }
+        await participant.save()
+
         return {
             success: true,
             id: participant._id.toString(),
-            totalAmount
+            totalAmount,
+            qrCode: primaryQR,
+            primaryEmail: email || "",
+            secondaryMemberQRs
         }
 
     } catch (error: unknown) {

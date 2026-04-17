@@ -10,6 +10,7 @@ import {
   IconDatabase,
   IconListDetails,
   IconHistory,
+  IconQrcode,
 } from "@tabler/icons-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -59,6 +60,11 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
       title: "Check-in",
       url: "/admin/checkin",
       icon: IconListDetails,
+    },
+    {
+      title: "QR Scanner",
+      url: "/admin/checkin/qr-scanner",
+      icon: IconQrcode,
     },
     ...(user?.role === 'super-admin' ? [
       {
