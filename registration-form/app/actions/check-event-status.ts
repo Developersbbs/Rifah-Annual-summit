@@ -8,9 +8,16 @@ export interface EventStatus {
   event?: {
     _id: string
     eventName: string
-    startDate: Date
-    endDate: Date
-    location: string
+    registrationStart: Date
+    registrationEnd: Date
+    eventDate: Date
+    startTime: Date
+    endTime: Date
+    venue: {
+      name: string
+      address: string
+      city: string
+    }
     maxCapacity: number
     registeredCount: number
   }
@@ -24,16 +31,16 @@ export async function getEventStatus(): Promise<EventStatus> {
     const now = new Date()
     const activeEvent = await Event.findOne({
       isActive: true,
-      startDate: { $lte: now },
-      endDate: { $gte: now }
+      registrationStart: { $lte: now },
+      registrationEnd: { $gte: now }
     }).sort({ createdAt: -1 })
     
     if (!activeEvent) {
       // Check if there's any upcoming event
       const upcomingEvent = await Event.findOne({
         isActive: true,
-        startDate: { $gt: now }
-      }).sort({ startDate: 1 })
+        registrationStart: { $gt: now }
+      }).sort({ registrationStart: 1 })
       
       if (upcomingEvent) {
         return {
@@ -43,13 +50,16 @@ export async function getEventStatus(): Promise<EventStatus> {
           event: {
             _id: upcomingEvent._id.toString(),
             eventName: upcomingEvent.eventName,
-            startDate: upcomingEvent.startDate,
-            endDate: upcomingEvent.endDate,
-            location: upcomingEvent.location,
+            registrationStart: upcomingEvent.registrationStart,
+            registrationEnd: upcomingEvent.registrationEnd,
+            eventDate: upcomingEvent.eventDate,
+            startTime: upcomingEvent.startTime,
+            endTime: upcomingEvent.endTime,
+            venue: upcomingEvent.venue || { name: "", address: "", city: "" },
             maxCapacity: upcomingEvent.maxCapacity,
             registeredCount: upcomingEvent.registeredCount
           },
-          message: `Registration will open on ${upcomingEvent.startDate.toLocaleDateString('en-IN', {
+          message: `Registration will open on ${upcomingEvent.registrationStart.toLocaleDateString('en-IN', {
             day: '2-digit',
             month: 'short',
             year: 'numeric',
@@ -76,9 +86,12 @@ export async function getEventStatus(): Promise<EventStatus> {
         event: {
           _id: activeEvent._id.toString(),
           eventName: activeEvent.eventName,
-          startDate: activeEvent.startDate,
-          endDate: activeEvent.endDate,
-          location: activeEvent.location,
+          registrationStart: activeEvent.registrationStart,
+          registrationEnd: activeEvent.registrationEnd,
+          eventDate: activeEvent.eventDate,
+          startTime: activeEvent.startTime,
+          endTime: activeEvent.endTime,
+          venue: activeEvent.venue || { name: "", address: "", city: "" },
           maxCapacity: activeEvent.maxCapacity,
           registeredCount: activeEvent.registeredCount
         },
@@ -93,9 +106,12 @@ export async function getEventStatus(): Promise<EventStatus> {
       event: {
         _id: activeEvent._id.toString(),
         eventName: activeEvent.eventName,
-        startDate: activeEvent.startDate,
-        endDate: activeEvent.endDate,
-        location: activeEvent.location,
+        registrationStart: activeEvent.registrationStart,
+        registrationEnd: activeEvent.registrationEnd,
+        eventDate: activeEvent.eventDate,
+        startTime: activeEvent.startTime,
+        endTime: activeEvent.endTime,
+        venue: activeEvent.venue || { name: "", address: "", city: "" },
         maxCapacity: activeEvent.maxCapacity,
         registeredCount: activeEvent.registeredCount
       }

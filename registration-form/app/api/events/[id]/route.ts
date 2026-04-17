@@ -38,9 +38,19 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     // ✅ Await params in Next.js 15
     const { id } = await params
     
+    // Convert dates to Date objects if they're strings
+    const updateData = {
+      ...eventData,
+      ...(eventData.registrationStart && { registrationStart: new Date(eventData.registrationStart) }),
+      ...(eventData.registrationEnd && { registrationEnd: new Date(eventData.registrationEnd) }),
+      ...(eventData.eventDate && { eventDate: new Date(eventData.eventDate) }),
+      ...(eventData.startTime && { startTime: new Date(eventData.startTime) }),
+      ...(eventData.endTime && { endTime: new Date(eventData.endTime) }),
+    }
+    
     const event = await Event.findByIdAndUpdate(
       id,
-      { ...eventData, updatedBy: user.id.toString() },
+      updateData,
       { new: true, runValidators: true }
     )
     

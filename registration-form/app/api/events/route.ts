@@ -95,12 +95,15 @@ export async function POST(request: NextRequest) {
     // ✅ CLEAN EVENT CREATION
     const event = new Event({
       eventName,
-      startDate,
-      endDate,
-      location,
+      registrationStart,
+      registrationEnd,
+      eventDate,
+      startTime,
+      endTime,
+      venue,
       maxCapacity: maxCapacity || 100,
-      ticketsPrice: finalTickets, // ✅ Fixed
-      taxRate, // Add tax rate field
+      ticketsPrice: finalTickets,
+      taxRate,
       createdBy: userId
     })
 

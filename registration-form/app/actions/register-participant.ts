@@ -276,7 +276,7 @@ export async function registerParticipant(data: RegisterParticipantData) {
             isMorningFood,
             isRegistered: true,
             eventId: activeEvent._id,
-            eventDate: activeEvent.startDate,
+            eventDate: activeEvent.eventDate,
             ageGroups: finalAgeGroups,
             guestCount: 0,
             memberCount: backendTotalMembers,

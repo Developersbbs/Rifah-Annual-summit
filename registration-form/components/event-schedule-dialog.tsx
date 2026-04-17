@@ -22,12 +22,25 @@ interface TicketPrice {
   soldCount: number
 }
 
+interface Venue {
+  name: string
+  address: string
+  city: string
+}
+
 interface Event {
   _id?: string
   eventName: string
-  startDate: string
-  endDate: string
-  location: string
+  registrationStart?: string
+  registrationEnd?: string
+  eventDate?: string
+  startTime?: string
+  endTime?: string
+  venue?: Venue
+  // Backward compatibility
+  startDate?: string
+  endDate?: string
+  location?: string
   maxCapacity: number
   isActive: boolean
   ticketsPrice?: TicketPrice[]
@@ -43,17 +56,31 @@ interface EventScheduleDialogProps {
 export function EventScheduleDialog({ event, onSuccess, children }: EventScheduleDialogProps) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [step, setStep] = useState(1)
   const [formData, setFormData] = useState<Event>({
     eventName: event?.eventName || "",
-    startDate: event?.startDate ? new Date(event.startDate).toISOString().slice(0, 16) : "",
-    endDate: event?.endDate ? new Date(event.endDate).toISOString().slice(0, 16) : "",
-    location: event?.location || "",
+    registrationStart: event?.registrationStart ? new Date(event.registrationStart).toISOString().slice(0, 16) : 
+                       (event?.startDate ? new Date(event.startDate).toISOString().slice(0, 16) : ""),
+    registrationEnd: event?.registrationEnd ? new Date(event.registrationEnd).toISOString().slice(0, 16) : 
+                     (event?.endDate ? new Date(event.endDate).toISOString().slice(0, 16) : ""),
+    eventDate: event?.eventDate ? new Date(event.eventDate).toISOString().slice(0, 10) : "",
+    startTime: event?.startTime ? new Date(event.startTime).toISOString().slice(0, 16) : "",
+    endTime: event?.endTime ? new Date(event.endTime).toISOString().slice(0, 16) : "",
+    venue: event?.venue || { 
+      name: "", 
+      address: event?.location || "", 
+      city: "" 
+    },
     maxCapacity: event?.maxCapacity || 100,
     isActive: event?.isActive ?? true,
     ticketsPrice: event?.ticketsPrice || [
       { name: "General", price: 0, soldCount: 0 }
     ],
     taxRate: event?.taxRate || 0,
+    // Backward compatibility fields
+    startDate: event?.startDate,
+    endDate: event?.endDate,
+    location: event?.location,
   })
 
   const [tickets, setTickets] = useState<TicketPrice[]>(
@@ -96,9 +123,12 @@ export function EventScheduleDialog({ event, onSuccess, children }: EventSchedul
         },
         body: JSON.stringify({
           ...formData,
-          startDate: new Date(formData.startDate),
-          endDate: new Date(formData.endDate),
-          ticketsPrice: cleanedTickets, // ✅ Send cleaned tickets
+          registrationStart: new Date(formData.registrationStart || ""),
+          registrationEnd: new Date(formData.registrationEnd || ""),
+          eventDate: new Date(formData.eventDate || ""),
+          startTime: new Date(formData.startTime || ""),
+          endTime: new Date(formData.endTime || ""),
+          ticketsPrice: cleanedTickets,
         }),
       })
 
@@ -115,12 +145,18 @@ export function EventScheduleDialog({ event, onSuccess, children }: EventSchedul
       if (!event?._id) {
         setFormData({
           eventName: "",
-          startDate: "",
-          endDate: "",
-          location: "",
+          registrationStart: "",
+          registrationEnd: "",
+          eventDate: "",
+          startTime: "",
+          endTime: "",
+          venue: { name: "", address: "", city: "" },
           maxCapacity: 100,
           isActive: true,
           ticketsPrice: [{ name: "General", price: 0, soldCount: 0 }],
+          startDate: "",
+          endDate: "",
+          location: "",
         })
         setTickets([{ name: "General", price: 0, soldCount: 0 }])
       }
@@ -165,7 +201,7 @@ export function EventScheduleDialog({ event, onSuccess, children }: EventSchedul
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {event?._id ? "Edit Event" : "Schedule New Event"}
@@ -176,161 +212,256 @@ export function EventScheduleDialog({ event, onSuccess, children }: EventSchedul
               : "Create a new event and set registration dates."
             }
           </DialogDescription>
+          <div className="flex items-center gap-2 mt-2">
+            <div className={`flex-1 h-1 rounded-full ${step >= 1 ? "bg-primary" : "bg-muted"}`} />
+            <div className={`flex-1 h-1 rounded-full ${step >= 2 ? "bg-primary" : "bg-muted"}`} />
+          </div>
+          <div className="flex justify-between text-xs text-muted-foreground mt-1">
+            <span>Event Details</span>
+            <span>Registration & Tickets</span>
+          </div>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="eventName">Event Name</Label>
-              <Input
-                id="eventName"
-                value={formData.eventName}
-                onChange={(e) => handleInputChange("eventName", e.target.value)}
-                placeholder="e.g., Pongal Vizha 2026"
-                required
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="location">Location</Label>
-              <Input
-                id="location"
-                value={formData.location}
-                onChange={(e) => handleInputChange("location", e.target.value)}
-                placeholder="Enter location"
-                required
-              />
-            </div>
+            {step === 1 && (
+              <>
+                <div className="grid gap-2">
+                  <Label htmlFor="eventName">Event Name</Label>
+                  <Input
+                    id="eventName"
+                    value={formData.eventName}
+                    onChange={(e) => handleInputChange("eventName", e.target.value)}
+                    placeholder="e.g., Pongal Vizha 2026"
+                    required
+                  />
+                </div>
+                
+                <div className="grid gap-2">
+                  <Label htmlFor="venueName">Venue Name</Label>
+                  <Input
+                    id="venueName"
+                    value={formData.venue?.name || ""}
+                    onChange={(e) => setFormData(prev => ({
+                      ...prev,
+                      venue: { ...prev.venue, name: e.target.value, address: prev.venue?.address || "", city: prev.venue?.city || "" }
+                    }))}
+                    placeholder="e.g., Convention Center"
+                    required
+                  />
+                </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="startDate">Registration Start</Label>
-                <Input
-                  id="startDate"
-                  type="datetime-local"
-                  value={formData.startDate}
-                  onChange={(e) => handleInputChange("startDate", e.target.value)}
-                  required
-                />
-              </div>
-              
-              <div className="grid gap-2">
-                <Label htmlFor="endDate">Registration End</Label>
-                <Input
-                  id="endDate"
-                  type="datetime-local"
-                  value={formData.endDate}
-                  onChange={(e) => handleInputChange("endDate", e.target.value)}
-                  required
-                />
-              </div>
-            </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="venueAddress">Venue Address</Label>
+                  <Input
+                    id="venueAddress"
+                    value={formData.venue?.address || ""}
+                    onChange={(e) => setFormData(prev => ({
+                      ...prev,
+                      venue: { ...prev.venue, address: e.target.value, name: prev.venue?.name || "", city: prev.venue?.city || "" }
+                    }))}
+                    placeholder="Enter full address"
+                    required
+                  />
+                </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="maxCapacity">Maximum Capacity</Label>
-              <Input
-                id="maxCapacity"
-                type="number"
-                value={formData.maxCapacity}
-                onChange={(e) => handleInputChange("maxCapacity", parseInt(e.target.value))}
-                min="1"
-                required
-              />
-            </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="venueCity">City</Label>
+                  <Input
+                    id="venueCity"
+                    value={formData.venue?.city || ""}
+                    onChange={(e) => setFormData(prev => ({
+                      ...prev,
+                      venue: { ...prev.venue, city: e.target.value, name: prev.venue?.name || "", address: prev.venue?.address || "" }
+                    }))}
+                    placeholder="e.g., Chennai"
+                    required
+                  />
+                </div>
 
-            {/* 🎫 Ticket Pricing Section */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label>Ticket Pricing</Label>
-                <Button type="button" variant="outline" size="sm" onClick={addTicket}>
-                  <Plus className="h-4 w-4 mr-1" />
-                  Add Ticket
-                </Button>
-              </div>
-              
-              {tickets.map((ticket, index) => (
-                <div key={index} className="grid grid-cols-3 gap-2 items-end">
-                  <div className="grid gap-1">
-                    <Label className="text-xs">Name</Label>
+                <div className="grid gap-2">
+                  <Label htmlFor="eventDate">Event Date</Label>
+                  <Input
+                    id="eventDate"
+                    type="date"
+                    value={formData.eventDate}
+                    onChange={(e) => handleInputChange("eventDate", e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="startTime">Start Time</Label>
                     <Input
-                      placeholder="e.g., General"
-                      value={ticket.name}
-                      onChange={(e) => updateTicket(index, "name", e.target.value)}
+                      id="startTime"
+                      type="datetime-local"
+                      value={formData.startTime}
+                      onChange={(e) => handleInputChange("startTime", e.target.value)}
                       required
                     />
                   </div>
-                  <div className="grid gap-1">
-                    <Label className="text-xs">Price (₹)</Label>
+                  
+                  <div className="grid gap-2">
+                    <Label htmlFor="endTime">End Time</Label>
                     <Input
-                      type="number"
-                      placeholder="0"
-                      value={ticket.price}
-                      onChange={(e) => updateTicket(index, "price", parseFloat(e.target.value) || 0)}
-                      min="0"
+                      id="endTime"
+                      type="datetime-local"
+                      value={formData.endTime}
+                      onChange={(e) => handleInputChange("endTime", e.target.value)}
                       required
                     />
-                  </div>
-                  <div className="flex gap-1">
-                    <div className="grid gap-1 flex-1">
-                      <Label className="text-xs">Sold</Label>
-                      <Input
-                        type="number"
-                        value={ticket.soldCount}
-                        disabled
-                        className="bg-muted"
-                      />
-                    </div>
-                    {tickets.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => removeTicket(index)}
-                        className="mt-5"
-                      >
-                        <Minus className="h-4 w-4" />
-                      </Button>
-                    )}
                   </div>
                 </div>
-              ))}
-            </div>
+              </>
+            )}
 
-            <div className="grid gap-2">
-              <Label htmlFor="taxRate">Tax Rate (%)</Label>
-              <Input
-                id="taxRate"
-                type="number"
-                value={formData.taxRate || 0}
-                onChange={(e) => handleInputChange("taxRate", parseFloat(e.target.value) || 0)}
-                min="0"
-                max="100"
-                step="0.1"
-                placeholder="e.g., 18"
-              />
-              <p className="text-xs text-muted-foreground">
-                Enter tax percentage (0-100%). This will be applied to all ticket sales.
-              </p>
-            </div>
+            {step === 2 && (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="registrationStart">Registration Start</Label>
+                    <Input
+                      id="registrationStart"
+                      type="datetime-local"
+                      value={formData.registrationStart}
+                      onChange={(e) => handleInputChange("registrationStart", e.target.value)}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="grid gap-2">
+                    <Label htmlFor="registrationEnd">Registration End</Label>
+                    <Input
+                      id="registrationEnd"
+                      type="datetime-local"
+                      value={formData.registrationEnd}
+                      onChange={(e) => handleInputChange("registrationEnd", e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
 
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="isActive"
-                checked={formData.isActive}
-                onChange={(e) => handleInputChange("isActive", e.target.checked)}
-                className="rounded"
-              />
-              <Label htmlFor="isActive">Event is active</Label>
-            </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="maxCapacity">Maximum Capacity</Label>
+                  <Input
+                    id="maxCapacity"
+                    type="number"
+                    value={formData.maxCapacity}
+                    onChange={(e) => handleInputChange("maxCapacity", parseInt(e.target.value))}
+                    min="1"
+                    required
+                  />
+                </div>
+
+                {/* 🎫 Ticket Pricing Section */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label>Ticket Pricing</Label>
+                    <Button type="button" variant="outline" size="sm" onClick={addTicket}>
+                      <Plus className="h-4 w-4 mr-1" />
+                      Add Ticket
+                    </Button>
+                  </div>
+                  
+                  {tickets.map((ticket, index) => (
+                    <div key={index} className="grid grid-cols-3 gap-2 items-end">
+                      <div className="grid gap-1">
+                        <Label className="text-xs">Name</Label>
+                        <Input
+                          placeholder="e.g., General"
+                          value={ticket.name}
+                          onChange={(e) => updateTicket(index, "name", e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="grid gap-1">
+                        <Label className="text-xs">Price (₹)</Label>
+                        <Input
+                          type="number"
+                          placeholder="0"
+                          value={ticket.price}
+                          onChange={(e) => updateTicket(index, "price", parseFloat(e.target.value) || 0)}
+                          min="0"
+                          required
+                        />
+                      </div>
+                      <div className="flex gap-1">
+                        <div className="grid gap-1 flex-1">
+                          <Label className="text-xs">Sold</Label>
+                          <Input
+                            type="number"
+                            value={ticket.soldCount}
+                            disabled
+                            className="bg-muted"
+                          />
+                        </div>
+                        {tickets.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => removeTicket(index)}
+                            className="mt-5"
+                          >
+                            <Minus className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="taxRate">Tax Rate (%)</Label>
+                  <Input
+                    id="taxRate"
+                    type="number"
+                    value={formData.taxRate || 0}
+                    onChange={(e) => handleInputChange("taxRate", parseFloat(e.target.value) || 0)}
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    placeholder="e.g., 18"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Enter tax percentage (0-100%). This will be applied to all ticket sales.
+                  </p>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="isActive"
+                    checked={formData.isActive}
+                    onChange={(e) => handleInputChange("isActive", e.target.checked)}
+                    className="rounded"
+                  />
+                  <Label htmlFor="isActive">Event is active</Label>
+                </div>
+              </>
+            )}
           </div>
           
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? "Saving..." : event?._id ? "Update Event" : "Create Event"}
-            </Button>
+            {step === 1 ? (
+              <>
+                <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="button" onClick={(e) => { e.preventDefault(); setStep(2); }}>
+                  Next
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button type="button" variant="outline" onClick={() => setStep(1)}>
+                  Back
+                </Button>
+                <Button type="submit" disabled={loading}>
+                  {loading ? "Saving..." : event?._id ? "Update Event" : "Create Event"}
+                </Button>
+              </>
+            )}
           </DialogFooter>
         </form>
       </DialogContent>

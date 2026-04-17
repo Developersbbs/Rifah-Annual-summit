@@ -38,8 +38,8 @@ export default function PongalLandingPage() {
 
         if (data) {
           const now = new Date()
-          const start = new Date(data.startDate)
-          const end = new Date(data.endDate)
+          const registrationStart = new Date(data.registrationStart || data.startDate)
+          const registrationEnd = new Date(data.registrationEnd || data.endDate)
 
           const status: EventStatus = {
             isActive: false,
@@ -48,15 +48,15 @@ export default function PongalLandingPage() {
             event: data
           }
 
-          if (data.isActive && now >= start && now <= end) {
+          if (data.isActive && now >= registrationStart && now <= registrationEnd) {
             status.isActive = true
             if (data.registeredCount >= data.maxCapacity) {
               status.isActive = false
               status.message = "Registration is closed due to maximum capacity"
             }
-          } else if (now < start) {
+          } else if (now < registrationStart) {
             status.isUpcoming = true
-            status.message = `Registration opens on ${start.toLocaleDateString('en-IN', {
+            status.message = `Registration opens on ${registrationStart.toLocaleDateString('en-IN', {
               day: '2-digit',
               month: 'short',
               year: 'numeric',
@@ -166,18 +166,19 @@ export default function PongalLandingPage() {
             {/* <Badge variant="outline" className="mb-6 px-4 py-1 border-primary/20 text-primary bg-primary/5 uppercase tracking-widest text-xs">
               தமிழ் பாரம்பரியத்தைப் போற்றும்
             </Badge> */}
-            <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter mb-4 bg-gradient-to-b from-foreground to-foreground/70 bg-clip-text text-transparent h-auto py-2">
-              RIFAH ANNUAL SUMMIT <span className="text-primary block md:inline">2026</span>
+            <h1 className="text-3xl sm:text-5xl md:text-7xl lg:text-7xl font-black tracking-tighter mb-4 bg-gradient-to-b from-foreground to-foreground/70 bg-clip-text text-transparent h-auto py-2">
+              Building Connections Creating Opportunities Driving Business Growth 
+              {/* <span className="text-primary block md:inline">2026</span> */}
             </h1>
             <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mb-10 leading-relaxed px-4">
-              Rifah Annual Summit 2026 <br />
-              Together For Sustainable Future
+              Join 400+ entrepreneurs, professionals, and business leaders for a day of 
+              networking, collaboration, and growth.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
               <Button
                 onClick={handleRegistrationClick}
                 size="lg"
-                className="rounded-full text-base h-12 px-8 shadow-lg shadow-primary/20"
+                className="rounded-full text-base h-12 sm:px-8 shadow-lg shadow-primary/20"
                 disabled={loading || !eventStatus?.isActive}
               >
                 {loading ? "Loading..." : eventStatus?.isActive ? "Open Registration" : "Registration Closed"}
@@ -192,9 +193,9 @@ export default function PongalLandingPage() {
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-primary shrink-0" />
                   <span className="text-center md:text-left">
-                    {new Date(eventStatus.event.startDate).toLocaleDateString('en-US', {
-                      month: 'short',
+                    {new Date(eventStatus.event.eventDate).toLocaleDateString('en-IN', {
                       day: '2-digit',
+                      month: 'short',
                       year: 'numeric'
                     })}
                   </span>
@@ -203,11 +204,11 @@ export default function PongalLandingPage() {
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-primary shrink-0" />
                   <span className="text-center md:text-left">
-                    {new Date(eventStatus.event.startDate).toLocaleTimeString('en-US', {
+                    {new Date(eventStatus.event.startTime).toLocaleTimeString('en-IN', {
                       hour: '2-digit',
                       minute: '2-digit',
                       hour12: true
-                    })} - {new Date(eventStatus.event.endDate).toLocaleTimeString('en-US', {
+                    })} - {new Date(eventStatus.event.endTime).toLocaleTimeString('en-IN', {
                       hour: '2-digit',
                       minute: '2-digit',
                       hour12: true
@@ -217,7 +218,7 @@ export default function PongalLandingPage() {
                 <div className="hidden md:block h-4 w-px bg-border"></div>
                 <div className="flex items-center gap-2 text-center md:text-left">
                   <MapPin className="h-4 w-4 text-primary shrink-0" />
-                  <span className="break-words max-w-[250px] md:max-w-none">{eventStatus.event.location}</span>
+                  <span className="break-words max-w-[250px] md:max-w-none">{eventStatus.event.venue?.city || eventStatus.event.venue?.name || 'TBD'}</span>
                 </div>
               </div>
             )}
