@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { cn } from "@/lib/utils"
 import { usePhoneAuth } from "@/hooks/use-phone-auth"
+import { useDebounce } from "@/hooks/use-debounce"
 import { checkRegistration } from "@/app/actions/check-registration"
 import { registerParticipant } from "@/app/actions/register-participant"
 import { getActiveEvent } from "@/app/actions/get-active-event"
@@ -91,6 +92,19 @@ export function RegisterForm() {
     isMorningFood: false,
   })
   const [gstNumber, setGstNumber] = useState("")
+  const [invoiceLink, setInvoiceLink] = useState<string | null>(null)
+  const [gstValidation, setGstValidation] = useState<{
+    isValid: boolean | null
+    isLoading: boolean
+    gstName: string | null
+    error: string | null
+  }>({
+    isValid: null,
+    isLoading: false,
+    gstName: null,
+    error: null
+  })
+  const debouncedGstNumber = useDebounce(gstNumber, 800)
   const [termsAccepted, setTermsAccepted] = useState(false)
   const [secondaryMembers, setSecondaryMembers] = useState<{ name: string; mobileNumber: string; email: string; businessName: string; businessCategory: string; location: string; gender?: string; isMember?: boolean; showCustomLocation?: boolean; customLocation?: string }[]>([])
   const [currentMember, setCurrentMember] = useState<{ name: string; mobileNumber: string; email: string; businessName: string; businessCategory: string; location: string; gender?: string; isMember?: boolean; showCustomLocation?: boolean; customLocation?: string }>({ name: '', mobileNumber: '', email: '', businessName: '', businessCategory: '', location: '', isMember: false, showCustomLocation: false, customLocation: '' })
@@ -151,6 +165,56 @@ export function RegisterForm() {
     const ticket = activeEvent.ticketsPrice?.find((t: { name: string; price: number }) => t.name === eventData.ticketType)
     return ticket?.price || 0
   }, [activeEvent, eventData.ticketType])
+
+  useEffect(() => {
+    const validateGst = async () => {
+      if (!debouncedGstNumber || debouncedGstNumber.length < 15) {
+        setGstValidation({
+          isValid: null,
+          isLoading: false,
+          gstName: null,
+          error: null
+        })
+        return
+      }
+
+      setGstValidation(prev => ({ ...prev, isLoading: true, error: null }))
+
+      try {
+        const response = await fetch("/api/payment/verify-gst", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            gstNumber: debouncedGstNumber,
+            eventId: activeEvent?._id
+          }),
+        })
+
+        const data = await response.json()
+
+        setGstValidation({
+          isValid: data.valid,
+          isLoading: false,
+          gstName: data.gstName || null,
+          error: data.error || null
+        })
+
+        // Autofill business name if GST is valid and returns gstName
+        if (data.valid && data.gstName) {
+          setPersonalData(prev => ({ ...prev, businessName: data.gstName }))
+        }
+      } catch (error) {
+        setGstValidation({
+          isValid: false,
+          isLoading: false,
+          gstName: null,
+          error: "Failed to validate GST number"
+        })
+      }
+    }
+
+    validateGst()
+  }, [debouncedGstNumber, activeEvent?._id])
 
   const taxCalculation = useMemo(() => {
     const baseAmount = totalMembers * pricePerPerson
@@ -294,7 +358,7 @@ export function RegisterForm() {
         handler: async function (response: { razorpay_payment_id: string; razorpay_order_id: string; razorpay_signature: string }) {
           console.log("Payment successful:", response)
           // Verify payment and create participant
-          await fetch("/api/payment/verify", {
+          const verifyRes = await fetch("/api/payment/verify", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -303,7 +367,19 @@ export function RegisterForm() {
             }),
           })
 
-          setStep(Step.SUCCESS)
+          const verifyData = await verifyRes.json()
+
+          if (verifyData.success) {
+            // Store invoice link if available
+            if (verifyData.invoiceUrl) {
+              setInvoiceLink(verifyData.invoiceUrl)
+            }
+            setStep(Step.SUCCESS)
+          } else {
+            console.error("Payment verification failed:", verifyData.error)
+            setDbError(verifyData.error || "Payment verification failed")
+            setIsSubmitting(false)
+          }
         },
 
         modal: {
@@ -346,10 +422,22 @@ export function RegisterForm() {
       return
     }
 
-    // Terms & Conditions validation
-    if (!termsAccepted) {
+    // Terms & Conditions validation - only for online payment
+    if (eventData.paymentMethod === 'online' && !termsAccepted) {
       setDbError("Please accept the Terms & Conditions to proceed with registration.")
       return
+    }
+
+    // GST validation check for online payment
+    if (eventData.paymentMethod === 'online' && gstNumber && gstNumber.trim()) {
+      if (gstValidation.isValid === false) {
+        setDbError("Invalid GST number. Please enter a valid GST number to proceed with online payment.")
+        return
+      }
+      if (gstValidation.isLoading) {
+        setDbError("Please wait for GST validation to complete.")
+        return
+      }
     }
 
     // For online payment, trigger payment first (participant created after successful payment)
@@ -1082,18 +1170,52 @@ export function RegisterForm() {
             )}
           </div>
 
-          {/* GST Number Input */}
+          {/* GST Number Input with Real-time Validation */}
           {taxCalculation.taxRate > 0 && (
             <div className="space-y-2">
               <Label htmlFor="gstNumber" className="text-sm">GST Number (Optional)</Label>
-              <Input
-                id="gstNumber"
-                type="text"
-                placeholder="Enter GST Number"
-                value={gstNumber}
-                onChange={(e) => setGstNumber(e.target.value)}
-                className="w-full"
-              />
+              <div className="relative">
+                <Input
+                  id="gstNumber"
+                  type="text"
+                  placeholder="Enter GST Number (e.g., 22ABCDE1234F1Z5)"
+                  value={gstNumber}
+                  onChange={(e) => setGstNumber(e.target.value.toUpperCase())}
+                  className={cn(
+                    "w-full pr-10",
+                    gstValidation.isValid === true && "border-green-500 focus-visible:ring-green-500",
+                    gstValidation.isValid === false && "border-red-500 focus-visible:ring-red-500"
+                  )}
+                  disabled={gstValidation.isLoading}
+                />
+                {/* Validation Status Icon */}
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  {gstValidation.isLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  ) : gstValidation.isValid === true ? (
+                    <Check className="h-4 w-4 text-green-500" />
+                  ) : gstValidation.isValid === false ? (
+                    <X className="h-4 w-4 text-red-500" />
+                  ) : null}
+                </div>
+              </div>
+
+              {/* Validation Status Message */}
+              {gstValidation.error && (
+                <p className="text-xs text-red-500 flex items-center gap-1">
+                  <X className="h-3 w-3" />
+                  {gstValidation.error}
+                </p>
+              )}
+
+              {gstValidation.isValid === true && (
+                <p className="text-xs text-green-600 flex items-center gap-1">
+                  <Check className="h-3 w-3" />
+                  GST verified successfully
+                  {gstValidation.gstName && ` - ${gstValidation.gstName}`}
+                </p>
+              )}
+
               <p className="text-xs text-muted-foreground">
                 GST will be applied at {taxCalculation.taxRate}%
               </p>
@@ -1214,23 +1336,25 @@ export function RegisterForm() {
         <CardFooter className="flex justify-between">
           <Button variant="ghost" onClick={() => setStep(Step.PERSONAL_DETAILS)}>Back</Button>
           <div className="flex flex-col gap-3">
-            {/* Terms & Conditions Checkbox */}
-            <div className="flex items-start gap-2">
-              <input
-                type="checkbox"
-                id="terms"
-                checked={termsAccepted}
-                onChange={(e) => setTermsAccepted(e.target.checked)}
-                className="mt-1 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-              />
-              <label htmlFor="terms" className="text-xs text-muted-foreground leading-tight">
-                I agree to the <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Terms & Conditions</a> for event registration and payment processing.
-              </label>
-            </div>
+            {/* Terms & Conditions Checkbox - Only for Online Payment */}
+            {eventData.paymentMethod === 'online' && (
+              <div className="flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  id="terms"
+                  checked={termsAccepted}
+                  onChange={(e) => setTermsAccepted(e.target.checked)}
+                  className="mt-1 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                />
+                <label htmlFor="terms" className="text-xs text-muted-foreground leading-tight">
+                  I agree to the <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Terms & Conditions</a> for event registration and payment processing.
+                </label>
+              </div>
+            )}
 
             <Button
               onClick={onFinalSubmit}
-              disabled={isSubmitting || !eventData.ticketType || !activeEvent || !termsAccepted}
+              disabled={isSubmitting || !eventData.ticketType || !activeEvent || (eventData.paymentMethod === 'online' && !termsAccepted)}
             >
               {isSubmitting ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : "Complete Registration"}
             </Button>
@@ -1262,6 +1386,23 @@ export function RegisterForm() {
             {/* FOOD PREFERENCE - Commented out */}
             {/* <div className="flex justify-between"><span>Morning Food:</span><span className="font-medium">{eventData.isMorningFood ? "Yes" : "No"}</span></div> */}
           </div>
+
+          {/* Download Invoice Button */}
+          {invoiceLink && (
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => window.open(invoiceLink, '_blank')}
+            >
+              <Receipt className="mr-2 h-4 w-4" />
+              Download Invoice
+            </Button>
+          )}
+
+          {/* {!invoiceLink && (
+            <p className="text-xs text-muted-foreground">Invoice will be generated shortly. If not visible, please contact support.</p>
+          )} */}
+
           <Button className="w-full" onClick={() => window.location.reload()}>Register Another</Button>
         </CardContent>
       </Card>
