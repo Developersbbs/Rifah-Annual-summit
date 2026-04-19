@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import dbConnect from "@/lib/db"
 import Participant from "@/models/Participant"
 
-export async function POST(request: NextRequest) {
+export async function POST() {
     try {
         await dbConnect()
 

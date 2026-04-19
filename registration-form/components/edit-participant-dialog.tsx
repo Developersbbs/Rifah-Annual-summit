@@ -17,7 +17,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Loader2, Users, CheckCircle2, XCircle, AlertCircle, CreditCard, Shield } from "lucide-react"
+import { Loader2, Users, CheckCircle2, AlertCircle, CreditCard, Shield } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
@@ -67,7 +67,6 @@ export function EditParticipantDialog({ participant, open, onOpenChange, onSucce
         }
     }
 
-    const totalMembers = 1 + (participant.secondaryMembers?.length || 0)
     const isCheckedIn = participant.checkIn?.isCheckedIn
 
     return (

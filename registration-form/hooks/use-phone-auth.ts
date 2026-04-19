@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from "firebase/auth"
 import { app } from "@/lib/firebase"
 import { getAuth } from "firebase/auth"

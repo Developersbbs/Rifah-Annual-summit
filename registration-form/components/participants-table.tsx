@@ -64,7 +64,6 @@ export function ParticipantsTable<TData, TValue>({
 
     // Custom Filters State
     const [dateRange, setDateRange] = React.useState<DateRange | undefined>()
-    const [showMorningFoodOnly] = React.useState(false)
     const [locationFilter, setLocationFilter] = React.useState<string>("all")
 
     // Calculate Location Counts
@@ -160,11 +159,6 @@ export function ParticipantsTable<TData, TValue>({
         const csvContent = "data:text/csv;charset=utf-8,"
             + headers.join(",") + "\n"
             + (filteredData as unknown as IParticipant[]).map((row) => {
-                const isCheckedIn = row.checkIn?.isCheckedIn
-                const memberPresent = row.checkIn?.memberPresent
-                const actualGuests = row.checkIn?.actualGuests || 0
-
-                const regGuests = row.ageGroups?.guest || 0
                 const secondaryMembersCount = row.secondaryMembers?.length || 0
 
                 return [

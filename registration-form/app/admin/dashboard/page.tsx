@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useMemo } from "react"
-import { Download, CheckCircle2, Loader2, XCircle } from "lucide-react"
+import { Download, CheckCircle2, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -56,7 +56,6 @@ export default function DashboardPage() {
     const [page, setPage] = React.useState(1)
     const [pagination, setPagination] = React.useState<PaginationData | null>(null)
     const [downloading, setDownloading] = React.useState(false)
-    const [approving, setApproving] = React.useState<string | null>(null)
 
     const loadStats = React.useCallback(async () => {
         try {
@@ -118,49 +117,9 @@ export default function DashboardPage() {
         }
     }
 
-    const handleApprove = async (participantId: string) => {
-        setApproving(participantId)
-        try {
-            const res = await fetch("/api/approve-registration", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ participantId })
-            })
-            const result = await res.json()
-            if (result.success) {
-                loadRecords() // Refresh the table
-            } else {
-                alert(result.error || "Failed to approve registration")
-            }
-        } catch (error) {
-            console.error("Approval error:", error)
-            alert("Failed to approve registration")
-        } finally {
-            setApproving(null)
-        }
-    }
-
-    const handleReject = async (participantId: string) => {
-        setApproving(participantId)
-        try {
-            const res = await fetch("/api/reject-registration", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ participantId })
-            })
-            const result = await res.json()
-            if (result.success) {
-                loadRecords() // Refresh the table
-            } else {
-                alert(result.error || "Failed to reject registration")
-            }
-        } catch (error) {
-            console.error("Rejection error:", error)
-            alert("Failed to reject registration")
-        } finally {
-            setApproving(null)
-        }
-    }
+    React.useEffect(() => {
+        loadRecords()
+    }, [loadRecords, filter, type, page, search])
 
     return (
         <div className="space-y-6 p-5">

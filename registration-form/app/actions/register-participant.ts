@@ -140,8 +140,9 @@ export async function registerParticipant(data: RegisterParticipantData) {
         console.log("ACTIVE EVENT:", activeEvent ? {
             _id: activeEvent._id,
             eventName: activeEvent.eventName,
-            startDate: activeEvent.startDate,
-            endDate: activeEvent.endDate,
+            eventDate: activeEvent.eventDate,
+            startTime: activeEvent.startTime,
+            endTime: activeEvent.endTime,
             isActive: activeEvent.isActive
         } : "NOT FOUND")
 
@@ -199,6 +200,7 @@ export async function registerParticipant(data: RegisterParticipantData) {
         let approvalStatus = "pending"
 
         // Check if this is admin-created participant
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const createdBy = (data as any).createdBy
         const isAdmin = createdBy && (createdBy.role === 'admin' || createdBy.role === 'super-admin')
 
@@ -210,6 +212,10 @@ export async function registerParticipant(data: RegisterParticipantData) {
             approvalStatus = "approved"
         }
 
+        // Initialize approval logs array
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const approvalLogs: any[] = []
+
         // For online payments, auto-approve and add approval log with system role
         if (paymentMethod === "online" && approvalStatus === "approved") {
             approvalLogs.push({
@@ -217,6 +223,16 @@ export async function registerParticipant(data: RegisterParticipantData) {
                 status: "approved",
                 approvedBy: null,
                 timestamp: new Date()
+            })
+        }
+
+        // Add approval logs for admin-approved registrations
+        if (isAdmin) {
+            approvalLogs.push({
+                role: createdBy.role === 'super-admin' ? 'super-admin' : 'admin',
+                status: 'approved',
+                approvedBy: createdBy._id,
+                timestamp: new Date(),
             })
         }
 
@@ -283,16 +299,6 @@ export async function registerParticipant(data: RegisterParticipantData) {
         const totalAmount = totalBaseAmount + totalTaxAmount
 
         // Create participant with validated and sanitized data
-        // Add approval logs only for admin-approved registrations
-        const approvalLogs = isAdmin ? [
-            {
-                role: createdBy.role === 'super-admin' ? 'super-admin' : 'admin',
-                status: 'approved',
-                approvedBy: createdBy._id,
-                timestamp: new Date(),
-            }
-        ] : []
-
         const participant = await Participant.create({
             mobileNumber: sanitizeInput(mobileNumber),
             name: sanitizeInput(name),

@@ -20,7 +20,6 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Phone, Info, CheckCircle2, Loader2, AlertCircle, UserPlus, Edit, Trash2, X, Check, Receipt } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -195,6 +194,7 @@ export function QuickCreateForm({ createdBy }: QuickCreateFormProps = {}) {
 
     const taxCalculation = useMemo(() => {
         const baseAmount = totalMembers * pricePerPerson
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const taxRate = (activeEvent as any)?.taxRate || 0
         const taxAmount = Math.round((baseAmount * taxRate) / 100)
         const totalAmount = baseAmount + taxAmount

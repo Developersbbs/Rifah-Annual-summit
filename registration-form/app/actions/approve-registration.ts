@@ -25,6 +25,7 @@ export async function approveRegistration(participantId: string, markPaid?: bool
         }
 
         // Build update object
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const updateData: any = {
             $set: {
                 approvalStatus: "approved",
