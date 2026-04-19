@@ -590,7 +590,8 @@ export function RegisterForm() {
               This number is already registered.
             </AlertDescription>
             <div className="mt-4 flex gap-2">
-              <Button
+              {/* Edit Registration button commented out */}
+              {/* <Button
                 onClick={() => {
                   setVerifiedPhone(phoneForm.getValues("phoneNumber")) // Ensure phone is set
                   setPersonalData({
@@ -615,7 +616,7 @@ export function RegisterForm() {
                 }}
               >
                 Edit Registration
-              </Button>
+              </Button> */}
               <Button variant="outline" onClick={() => setStep(Step.PHONE_INPUT)}>Use Different Number</Button>
             </div>
           </Alert>

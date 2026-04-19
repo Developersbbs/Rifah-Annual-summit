@@ -10,11 +10,9 @@ export async function updateParticipant(id: string, data: Partial<IParticipant>)
         await dbConnect()
 
         const {
-            mobileNumber,
             name,
-            location,
-            guestCount,
-            ageGroups,
+            businessName,
+            secondaryMembers,
         } = data
 
         // Check if participant exists
@@ -23,33 +21,34 @@ export async function updateParticipant(id: string, data: Partial<IParticipant>)
             return { success: false, error: "Participant not found" }
         }
 
-        // Check if mobile number is being changed and if it conflicts
-        if (mobileNumber && mobileNumber !== existingParticipant.mobileNumber) {
-            const conflict = await Participant.findOne({ mobileNumber, _id: { $ne: id } })
-            if (conflict) {
-                return { success: false, error: "Mobile number already registered to another participant" }
-            }
-        }
+        // STRICT RULES: Only allow editing name and business name
+        // ❌ Prevent changing location, mobile number, ticket price, guest count
+        // ❌ Prevent adding/removing secondary members (only allow editing existing ones)
 
-        // Update fields
-        if (mobileNumber) existingParticipant.mobileNumber = mobileNumber
+        // Allow editing primary member name and business name
         if (name) existingParticipant.name = name
-        if (location) existingParticipant.location = location
-        
-        if (guestCount !== undefined) {
-            existingParticipant.guestCount = guestCount
-            existingParticipant.ageGroups = { guest: guestCount }
-        } else if (ageGroups) {
-            existingParticipant.ageGroups = ageGroups
-            existingParticipant.guestCount = ageGroups.guest || 0
-        }
+        if (businessName !== undefined) existingParticipant.businessName = businessName
 
-        // Recalculate totalAmount based on actual member count (backend-only)
-        const actualMemberCount = existingParticipant.secondaryMembers?.length || 0
-        const totalMembers = 1 + actualMemberCount
-        const ticketPrice = existingParticipant.ticketPrice || 0
-        existingParticipant.totalAmount = totalMembers * ticketPrice
-        existingParticipant.memberCount = actualMemberCount
+        // Allow editing secondary members' name and business name only
+        // Cannot add/remove secondary members, only edit existing ones
+        if (secondaryMembers && existingParticipant.secondaryMembers) {
+            // Check if number of members changed (adding/removing)
+            if (secondaryMembers.length !== existingParticipant.secondaryMembers.length) {
+                return { success: false, error: "Cannot add or remove secondary members. Only name and business name can be edited." }
+            }
+
+            // Update existing secondary members' name and business name
+            secondaryMembers.forEach((updatedMember, index) => {
+                if (existingParticipant.secondaryMembers && existingParticipant.secondaryMembers[index]) {
+                    if (updatedMember.name) {
+                        existingParticipant.secondaryMembers[index].name = updatedMember.name
+                    }
+                    if (updatedMember.businessName !== undefined) {
+                        existingParticipant.secondaryMembers[index].businessName = updatedMember.businessName
+                    }
+                }
+            })
+        }
 
         existingParticipant.updatedAt = new Date()
 
