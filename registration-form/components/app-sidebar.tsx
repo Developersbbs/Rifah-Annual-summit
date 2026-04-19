@@ -77,7 +77,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
 
   const userData = {
     name: user?.email?.split('@')[0] || "Admin",
-    email: user?.email || "admin@example.com",
+    email: user?.email || undefined,
     avatar: "/avatars/shadcn.jpg", // Placeholder
   }
 

@@ -325,27 +325,24 @@ export default function PongalLandingPage() {
                 </p>
               </div>
 
-              {/* Right: Parai Isai Card */}
-              <Card className="group overflow-hidden border-border/50 hover:border-primary/50 transition-colors">
-                <div className="relative w-full h-[400px] overflow-hidden">
+              {/* Right: RIFAH Annual Summit Card */}
+              <Card className="group overflow-hidden hover:border-primary/50 transition-colors p-0">
+                <div className="relative w-full aspect-[4/3] sm:aspect-[16/10] lg:aspect-[4/3] overflow-hidden">
                   <Image
                     src="/assets/register-banner.jpeg"
                     alt="RIFAH Annual Summit"
                     fill
-                    className="object-cover"
+                    className="object-cover object-center"
                   />
                 </div>
-                <CardHeader>
+                <CardHeader className="pt-4">
                   <CardTitle className="group-hover:text-red-700 transition-colors">RIFAH Annual Summit</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  {/* <p className="text-sm mb-4">
-                    grow together through meaningful connections and ethical business practices.
-                  </p> */}
+                {/* <CardContent>
                   <Link href="/register" className="text-sm font-medium hover:underline flex items-center gap-1">
                     Register Now <ArrowRight className="h-3 w-3" />
                   </Link>
-                </CardContent>
+                </CardContent> */}
               </Card>
             </div>
           </div>
