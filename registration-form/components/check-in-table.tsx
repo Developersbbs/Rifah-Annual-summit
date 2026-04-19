@@ -61,20 +61,16 @@ function MembersDialog({ participant, open, onOpenChange, onRefresh, onOptimisti
         }
     }
 
-    const handleSecondaryMemberCheckIn = async (member: ISecondaryMember) => {
-        if (!member.mobileNumber) {
-            toast.error("Member has no mobile number")
-            return
-        }
-
-        setCheckingIn(member.mobileNumber)
+    const handleSecondaryMemberCheckIn = async (member: ISecondaryMember, index: number) => {
+        setCheckingIn(member.mobileNumber || `index-${index}`)
 
         // Optimistic update
         onOptimisticCheckIn(participant._id, 'secondary', member.mobileNumber)
 
         const res = await performSecondaryMemberCheckIn({
             participantId: participant._id,
-            memberMobileNumber: member.mobileNumber
+            memberMobileNumber: member.mobileNumber,
+            memberIndex: index
         })
         setCheckingIn(null)
 
@@ -176,13 +172,13 @@ function MembersDialog({ participant, open, onOpenChange, onRefresh, onOptimisti
                                         <p><span className="font-medium">Primary Member:</span> {participant.name}</p>
                                         <p><span className="font-medium">Primary Mobile:</span> {participant.mobileNumber}</p>
                                     </div>
-                                    {!member.isCheckedIn && member.mobileNumber && (
+                                    {!member.isCheckedIn && (
                                         <Button
                                             className="w-full mt-3"
-                                            onClick={() => handleSecondaryMemberCheckIn(member)}
-                                            disabled={checkingIn === member.mobileNumber}
+                                            onClick={() => handleSecondaryMemberCheckIn(member, index)}
+                                            disabled={checkingIn === member.mobileNumber || checkingIn === `index-${index}`}
                                         >
-                                            {checkingIn === member.mobileNumber ? (
+                                            {checkingIn === member.mobileNumber || checkingIn === `index-${index}` ? (
                                                 <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Checking In...</>
                                             ) : (
                                                 <><CheckCircle2 className="h-4 w-4 mr-2" /> Check In Member</>

@@ -31,15 +31,16 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 export function AppSidebar({ user, ...props }: AppSidebarProps) {
   const navMain = [
     {
-      title: "Dashboard",
-      url: "/admin/dashboard",
-      icon: IconDashboard,
-    },
-    {
       title: "Records",
       url: "/admin",
       icon: IconDatabase,
     },
+    {
+      title: "Dashboard",
+      url: "/admin/dashboard",
+      icon: IconDashboard,
+    },
+    
     // {
     //   title: "Quick Create",
     //   url: "/admin/quick-create",

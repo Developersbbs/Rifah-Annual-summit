@@ -248,19 +248,18 @@ export default function DashboardPage() {
                             <TableHead>Location</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead>Checked-in</TableHead>
-                            <TableHead>Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {loading ? (
                             <TableRow>
-                                <TableCell colSpan={9} className="text-center py-8">
+                                <TableCell colSpan={8} className="text-center py-8">
                                     <Loader2 className="h-6 w-6 animate-spin mx-auto" />
                                 </TableCell>
                             </TableRow>
                         ) : records.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                                     No records found
                                 </TableCell>
                             </TableRow>
@@ -312,38 +311,6 @@ export default function DashboardPage() {
                                             <CheckCircle2 className="h-4 w-4 text-green-600" />
                                         ) : (
                                             <span className="text-gray-400">○</span>
-                                        )}
-                                    </TableCell>
-                                    <TableCell>
-                                        {record.approvalStatus === "pending" && (
-                                            <div className="flex gap-2">
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    className="h-8 w-8 p-0"
-                                                    onClick={() => handleApprove(record._id)}
-                                                    disabled={approving === record._id}
-                                                >
-                                                    {approving === record._id ? (
-                                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                                    ) : (
-                                                        <CheckCircle2 className="h-4 w-4 text-green-600" />
-                                                    )}
-                                                </Button>
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    className="h-8 w-8 p-0"
-                                                    onClick={() => handleReject(record._id)}
-                                                    disabled={approving === record._id}
-                                                >
-                                                    {approving === record._id ? (
-                                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                                    ) : (
-                                                        <XCircle className="h-4 w-4 text-red-600" />
-                                                    )}
-                                                </Button>
-                                            </div>
                                         )}
                                     </TableCell>
                                 </TableRow>

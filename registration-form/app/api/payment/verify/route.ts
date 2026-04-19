@@ -46,6 +46,9 @@ export async function POST(req: Request) {
       paymentMethod: "online",
       paymentId: razorpay_payment_id,
       approvalStatus: "approved",
+      isRegistered: true,
+      eventId: registrationData.eventId,
+      eventDate: registrationData.eventDate,
     })
 
     // Update event counts
