@@ -11,7 +11,10 @@ export async function updateParticipant(id: string, data: Partial<IParticipant>)
 
         const {
             name,
+            email,
             businessName,
+            businessCategory,
+            location,
             secondaryMembers,
         } = data
 
@@ -21,30 +24,42 @@ export async function updateParticipant(id: string, data: Partial<IParticipant>)
             return { success: false, error: "Participant not found" }
         }
 
-        // STRICT RULES: Only allow editing name and business name
-        // ❌ Prevent changing location, mobile number, ticket price, guest count
+        // STRICT RULES: Only allow editing name, email, business name, business category, location
+        // ❌ Prevent changing mobile number, ticket price, guest count
         // ❌ Prevent adding/removing secondary members (only allow editing existing ones)
 
-        // Allow editing primary member name and business name
+        // Allow editing primary member name, email, business name, business category, location
         if (name) existingParticipant.name = name
+        if (email !== undefined) existingParticipant.email = email
         if (businessName !== undefined) existingParticipant.businessName = businessName
+        if (businessCategory !== undefined) existingParticipant.businessCategory = businessCategory
+        if (location !== undefined) existingParticipant.location = location
 
-        // Allow editing secondary members' name and business name only
+        // Allow editing secondary members' name, email, business name, business category, location only
         // Cannot add/remove secondary members, only edit existing ones
         if (secondaryMembers && existingParticipant.secondaryMembers) {
             // Check if number of members changed (adding/removing)
             if (secondaryMembers.length !== existingParticipant.secondaryMembers.length) {
-                return { success: false, error: "Cannot add or remove secondary members. Only name and business name can be edited." }
+                return { success: false, error: "Cannot add or remove secondary members. Only name, email, business name, business category, and location can be edited." }
             }
 
-            // Update existing secondary members' name and business name
+            // Update existing secondary members' name, email, business name, business category, location
             secondaryMembers.forEach((updatedMember, index) => {
                 if (existingParticipant.secondaryMembers && existingParticipant.secondaryMembers[index]) {
                     if (updatedMember.name) {
                         existingParticipant.secondaryMembers[index].name = updatedMember.name
                     }
+                    if (updatedMember.email !== undefined) {
+                        existingParticipant.secondaryMembers[index].email = updatedMember.email
+                    }
                     if (updatedMember.businessName !== undefined) {
                         existingParticipant.secondaryMembers[index].businessName = updatedMember.businessName
+                    }
+                    if (updatedMember.businessCategory !== undefined) {
+                        existingParticipant.secondaryMembers[index].businessCategory = updatedMember.businessCategory
+                    }
+                    if (updatedMember.location !== undefined) {
+                        existingParticipant.secondaryMembers[index].location = updatedMember.location
                     }
                 }
             })

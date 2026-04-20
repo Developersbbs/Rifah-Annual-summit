@@ -114,10 +114,9 @@ export function ParticipantsTable<TData, TValue>({
                 cell: ({ row }: { row: { original: TData } }) => {
                     return (
                         <div className="flex justify-end">
-                            {/* Edit button commented out */}
-                            {/* <Button variant="ghost" size="icon" onClick={() => setEditingParticipant(row.original as unknown as IParticipant)}>
+                            <Button variant="ghost" size="icon" onClick={() => setEditingParticipant(row.original as unknown as IParticipant)}>
                                 <Pencil className="h-4 w-4" />
-                            </Button> */}
+                            </Button>
                         </div>
                     )
                 }

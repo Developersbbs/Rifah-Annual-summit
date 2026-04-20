@@ -487,7 +487,8 @@ export function QuickCreateForm({ createdBy }: QuickCreateFormProps = {}) {
                     </AlertDescription>
                 </Alert>
                 <div className="flex flex-col gap-2">
-                    <Button variant="outline" onClick={() => {
+                    {/* Edit button commented out */}
+                    {/* <Button variant="outline" onClick={() => {
                         setPersonalData({
                             name: existingParticipant?.name || "",
                             email: existingParticipant?.email || "",
@@ -509,7 +510,7 @@ export function QuickCreateForm({ createdBy }: QuickCreateFormProps = {}) {
                         setStep(Step.PERSONAL_DETAILS)
                     }}>
                         Edit
-                    </Button>
+                    </Button> */}
                     <Button variant="outline" onClick={() => setStep(Step.PHONE_INPUT)}>Use Different Number</Button>
                 </div>
             </div>

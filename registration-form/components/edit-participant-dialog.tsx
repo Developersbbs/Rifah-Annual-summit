@@ -24,7 +24,10 @@ import { IParticipant } from "@/lib/types"
 
 const personalDetailsSchema = z.object({
     name: z.string().min(2, "Name must be at least 2 characters"),
+    email: z.string().email("Invalid email format").optional(),
     businessName: z.string().optional(),
+    businessCategory: z.string().optional(),
+    location: z.string().optional(),
 })
 
 interface EditParticipantDialogProps {
@@ -37,12 +40,16 @@ interface EditParticipantDialogProps {
 export function EditParticipantDialog({ participant, open, onOpenChange, onSuccess }: EditParticipantDialogProps) {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [dbError, setDbError] = useState<string | null>(null)
+    const [secondaryMembers, setSecondaryMembers] = useState<Array<{ name: string; email: string; businessName: string; businessCategory: string; location: string; isCheckedIn: boolean }>>([])
 
     const form = useForm<z.infer<typeof personalDetailsSchema>>({
         resolver: zodResolver(personalDetailsSchema),
         defaultValues: {
             name: participant.name,
+            email: participant.email || "",
             businessName: participant.businessName || "",
+            businessCategory: participant.businessCategory || "",
+            location: participant.location || "",
         }
     })
 
@@ -51,8 +58,22 @@ export function EditParticipantDialog({ participant, open, onOpenChange, onSucce
         if (participant) {
             form.reset({
                 name: participant.name,
+                email: participant.email || "",
                 businessName: participant.businessName || "",
+                businessCategory: participant.businessCategory || "",
+                location: participant.location || "",
             })
+            // Initialize secondary members
+            setSecondaryMembers(
+                participant.secondaryMembers?.map((member) => ({
+                    name: member.name || "",
+                    email: member.email || "",
+                    businessName: member.businessName || "",
+                    businessCategory: member.businessCategory || "",
+                    location: member.location || "",
+                    isCheckedIn: member.isCheckedIn || false,
+                })) || []
+            )
         }
     }, [participant, form])
 
@@ -60,7 +81,7 @@ export function EditParticipantDialog({ participant, open, onOpenChange, onSucce
         setIsSubmitting(true)
         setDbError(null)
         try {
-            const result = await updateParticipant(participant._id, data)
+            const result = await updateParticipant(participant._id, { ...data, secondaryMembers })
             if (result.success) {
                 onOpenChange(false)
                 if (onSuccess) onSuccess()
@@ -110,8 +131,101 @@ export function EditParticipantDialog({ participant, open, onOpenChange, onSucce
                                             <FormMessage />
                                         </FormItem>
                                     )} />
+                                    <FormField control={form.control} name="email" render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Email</FormLabel>
+                                            <FormControl><Input type="email" placeholder="Email" {...field} /></FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )} />
+                                    <FormField control={form.control} name="businessCategory" render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Business Category</FormLabel>
+                                            <FormControl><Input placeholder="Business Category" {...field} /></FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )} />
+                                    <FormField control={form.control} name="location" render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Location</FormLabel>
+                                            <FormControl><Input placeholder="Location" {...field} /></FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )} />
                                 </div>
                             </div>
+
+                            {/* SECTION 2: Secondary Members */}
+                            {secondaryMembers.length > 0 && (
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-2">
+                                        <h3 className="font-semibold text-lg">Secondary Members</h3>
+                                    </div>
+                                    {secondaryMembers.map((member, index) => (
+                                        <div key={index} className="border rounded-lg p-4 space-y-3 bg-muted/30">
+                                            <span className="text-sm font-medium text-muted-foreground">Member {index + 1}</span>
+                                            <div className="space-y-3">
+                                                <div>
+                                                    <Label className="text-xs">Name</Label>
+                                                    <Input
+                                                        value={member.name}
+                                                        onChange={(e) => {
+                                                            const updated = [...secondaryMembers]
+                                                            updated[index] = { ...updated[index], name: e.target.value }
+                                                            setSecondaryMembers(updated)
+                                                        }}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <Label className="text-xs">Email</Label>
+                                                    <Input
+                                                        type="email"
+                                                        value={member.email}
+                                                        onChange={(e) => {
+                                                            const updated = [...secondaryMembers]
+                                                            updated[index] = { ...updated[index], email: e.target.value }
+                                                            setSecondaryMembers(updated)
+                                                        }}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <Label className="text-xs">Business Name</Label>
+                                                    <Input
+                                                        value={member.businessName}
+                                                        onChange={(e) => {
+                                                            const updated = [...secondaryMembers]
+                                                            updated[index] = { ...updated[index], businessName: e.target.value }
+                                                            setSecondaryMembers(updated)
+                                                        }}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <Label className="text-xs">Business Category</Label>
+                                                    <Input
+                                                        value={member.businessCategory}
+                                                        onChange={(e) => {
+                                                            const updated = [...secondaryMembers]
+                                                            updated[index] = { ...updated[index], businessCategory: e.target.value }
+                                                            setSecondaryMembers(updated)
+                                                        }}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <Label className="text-xs">Location</Label>
+                                                    <Input
+                                                        value={member.location}
+                                                        onChange={(e) => {
+                                                            const updated = [...secondaryMembers]
+                                                            updated[index] = { ...updated[index], location: e.target.value }
+                                                            setSecondaryMembers(updated)
+                                                        }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
 
                             {dbError && <Alert variant="destructive"><AlertCircle className="h-4 w-4" /><AlertTitle>Error</AlertTitle><AlertDescription>{dbError}</AlertDescription></Alert>}
 
