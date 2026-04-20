@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Image from "next/image"
 import {
   IconChartBar,
   IconDashboard,
@@ -40,7 +41,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
       url: "/admin/dashboard",
       icon: IconDashboard,
     },
-    
+
     // {
     //   title: "Quick Create",
     //   url: "/admin/quick-create",
@@ -90,10 +91,11 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
               asChild
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
-              <a href="#">
-                <IconWorld className="!size-5" />
-                <span className="text-base font-semibold">RIFAH ANNUAL SUMMIT</span>
-              </a>
+              <div className="flex items-center gap-2">
+                {/* <Earth className="h-6 w-6 text-primary animate-spin-slow" /> */}
+                <Image src="/assets/logo.png" alt="RIFAH" width={38} height={38} className="h-7 w-7 sm:h-8 sm:w-8" />
+                <span className=" font-bold tracking-tight">RIFAH ANNUAL SUMMIT</span>
+              </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Calendar, MapPin, Menu, ArrowRight, CheckCircle2, Clock, Mail } from "lucide-react"
+import { Calendar, MapPin, Menu, ArrowRight, CheckCircle2, Clock, Mail, Rocket, GraduationCap, TrendingUp } from "lucide-react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
@@ -128,12 +128,12 @@ export default function PongalLandingPage() {
               className="bg-red-700 hover:bg-red-700 text-white font-semibold rounded-full px-8"
               disabled={loading || !eventStatus?.isActive}
             >
-              {loading ? "Loading..." : eventStatus?.isActive ? "Registration Open" : "Registration Closed"}
+              {loading ? "Loading..." : eventStatus?.isActive ? "Register now" : "Registration Closed"}
             </Button>
           </nav>
 
           {/* Mobile Nav */}
-          <Sheet>
+          {/* <Sheet>
             <SheetTrigger asChild className="md:hidden">
               <Button variant="ghost" size="icon">
                 <Menu className="h-5 w-5" />
@@ -141,15 +141,15 @@ export default function PongalLandingPage() {
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-[280px] sm:w-[320px] p-0">
-              <div className="flex flex-col h-full">
+              <div className="flex flex-col h-full"> */}
 
                 {/* Sheet Header */}
-                <div className="px-6 py-5 border-b border-border/50">
+                {/* <div className="px-6 py-5 border-b border-border/50">
                   <div className="flex items-center gap-2">
                     <Image src="/assets/logo.png" alt="RIFAH" width={28} height={28} className="h-7 w-auto" />
                     <span className="font-semibold text-sm tracking-wide">RIFAH ANNUAL SUMMIT</span>
                   </div>
-                </div>
+                </div> */}
 
                 {/* Nav Links */}
                 {/* <nav className="flex flex-col px-4 py-6 gap-1 flex-1">
@@ -171,7 +171,7 @@ export default function PongalLandingPage() {
                 </nav> */}
 
                 {/* Bottom CTA */}
-                <div className="px-6 py-6 border-t border-border/50">
+                {/* <div className="px-6 py-6 border-t border-border/50">
                   <Button
                     onClick={handleRegistrationClick}
                     className="w-full h-11 text-sm font-semibold bg-red-800 rounded-full hover:bg-red-800"
@@ -190,7 +190,7 @@ export default function PongalLandingPage() {
 
               </div>
             </SheetContent>
-          </Sheet>
+          </Sheet> */}
         </div>
       </header>
 
@@ -286,7 +286,7 @@ export default function PongalLandingPage() {
                 {loading
                   ? "Loading..."
                   : eventStatus?.isActive
-                    ? "Registration Open"
+                    ? "Register now"
                     : "Registration Closed"}
               </Button>
             </div>
@@ -295,7 +295,7 @@ export default function PongalLandingPage() {
         </section>
 
         {/* Events Grid */}
-        <section id="events" className="py-12 sm:py-24">
+        {/* <section id="events" className="py-12 sm:py-24">
           <div className="container mx-auto px-4">
             <div className="text-center max-w-2xl mx-auto mb-16">
               <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">What is RIFAH Annual Summit 2026</h2>
@@ -304,9 +304,9 @@ export default function PongalLandingPage() {
               </p>
             </div>
 
-            {/* Top row: Text + Card */}
+         
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-              {/* Left: Description */}
+             
               <div className="flex flex-col justify-center">
                 <h2 className="text-2xl md:text-3xl font-bold mb-6 leading-snug">
                   RIFAH Annual Summit 2026 is a flagship business event that brings together
@@ -325,7 +325,7 @@ export default function PongalLandingPage() {
                 </p>
               </div>
 
-              {/* Right: RIFAH Annual Summit Card */}
+             
               <Card className="group overflow-hidden hover:border-primary/50 transition-colors p-0">
                 <div className="relative w-full aspect-[4/3] sm:aspect-[16/10] lg:aspect-[4/3] overflow-hidden">
                   <Image
@@ -338,61 +338,35 @@ export default function PongalLandingPage() {
                 <CardHeader className="pt-4">
                   <CardTitle className="group-hover:text-red-700 transition-colors">RIFAH Annual Summit</CardTitle>
                 </CardHeader>
-                {/* <CardContent>
+                <CardContent>
                   <Link href="/register" className="text-sm font-medium hover:underline flex items-center gap-1">
                     Register Now <ArrowRight className="h-3 w-3" />
                   </Link>
-                </CardContent> */}
+                </CardContent>
               </Card>
             </div>
           </div>
-        </section>
+        </section> */}
 
         {/* Introduction / About */}
         <section id="about" className="py-12 sm:py-24 bg-secondary/30">
           <div className="container mx-auto px-4">
-            <div className="grid md:grid-cols-2 gap-12 lg:gap-20 items-center">
+            <div className="flex flex-col md:grid md:grid-cols-2 gap-12 lg:gap-20 items-center">
 
-              {/* Left Content */}
-              <div className="space-y-6">
-                <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
-                  RIFAH Presence
-                  <span className="text-red-700"> Across India</span>
+              {/* Heading & Paragraph - always first */}
+              <div className="md:row-start-1 md:col-start-1 space-y-2">
+                <h2 className="text-3xl md:text-4xl font-bold">
+                  RIFAH Presence Across
+                  <span className="text-red-700"> States and <br />Tamil Nadu</span>
                 </h2>
                 <p className="leading-relaxed">
                   RIFAH has established a strong and expanding network across multiple states, connecting businesses nationwide.
                 </p>
-
-                {/* States Section */}
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-primary shrink-0" />
-                    <h3 className="font-semibold text-sm uppercase tracking-widest text-red-700">
-                      States List
-                    </h3>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2">
-                    {[
-                      "Karnataka", "Maharashtra", "Telangana", "Tamil Nadu",
-                      "Gujarat", "Delhi", "West Bengal", "Chhattisgarh",
-                      "Andhra Pradesh", "Uttar Pradesh", "Goa", "Rajasthan",
-                      "Madhya Pradesh", "Punjab", "Bihar", "Uttarakhand",
-                      "Assam", "Kerala"
-                    ].map((state) => (
-                      <span
-                        key={state}
-                        className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-300/10 text-red-700 border border-red-300/20 hover:bg-primary/20 transition-colors cursor-default"
-                      >
-                        {state}
-                      </span>
-                    ))}
-                  </div>
-                </div>
               </div>
 
-              {/* Right: Banner Image */}
-              <div className="relative sm:h-[550px] h-[300px] rounded-2xl overflow-hidden border border-border bg-card p-2 shadow-2xl transition-transform duration-500">
+              {/* Banner Image - order-2 on mobile, right column on desktop */}
+              {/* Banner Image */}
+              <div className="relative w-full h-[300px] md:h-[550px] rounded-2xl overflow-hidden border border-border bg-card p-2 shadow-2xl transition-transform duration-500 md:row-start-1 md:col-start-2 md:row-span-2">
                 <Image
                   src="/assets/banner-2.jpeg"
                   alt="RIFAH Presence Across India"
@@ -401,82 +375,202 @@ export default function PongalLandingPage() {
                 />
               </div>
 
+              {/* States & Chapters - order-3 on mobile, below heading on desktop */}
+              <div className="md:row-start-2 md:col-start-1 space-y-3">
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-primary shrink-0" />
+                  <h3 className="font-semibold text-sm uppercase tracking-widest text-red-700">
+                    States Units Across India
+                  </h3>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    "Karnataka", "Maharashtra", "Telangana", "Tamil Nadu",
+                    "Gujarat", "Delhi", "West Bengal", "Chhattisgarh",
+                    "Andhra Pradesh", "Uttar Pradesh", "Goa", "Rajasthan",
+                    "Madhya Pradesh", "Punjab", "Bihar", "Uttarakhand",
+                    "Assam", "Kerala"
+                  ].map((state) => (
+                    <span
+                      key={state}
+                      className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-300/10 text-red-700 border border-red-300/20 hover:bg-primary/20 transition-colors cursor-default"
+                    >
+                      {state}
+                    </span>
+                  ))}
+                </div>
+
+                <div className="flex items-center gap-2 mt-10">
+                  <MapPin className="h-4 w-4 text-primary shrink-0" />
+                  <h3 className="font-semibold text-sm uppercase tracking-widest text-red-700">
+                    Chapters in Tamilnadu
+                  </h3>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    "Chennai", "Trichy", "kumbakonam", "Theni",
+                    "krishnagiri", "vaniyambadi", "Tirupattur", "Pudukkottai",
+                    "Tirumangalam", "Mannargudi", "Tenkasi"
+                  ].map((state) => (
+                    <span
+                      key={state}
+                      className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-300/10 text-red-700 border border-red-300/20 hover:bg-primary/20 transition-colors cursor-default"
+                    >
+                      {state}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
             </div>
           </div>
         </section>
 
         {/* Why Attend Section */}
-        <section id="why-attend" className="py-24 bg-background">
+        <section id="who-should-attend" className="py-16 sm:py-24 bg-background overflow-hidden">
           <div className="container mx-auto px-4">
 
             {/* Header */}
-            <div className="text-center max-w-2xl mx-auto mb-16">
+            <div className="text-center max-w-2xl mx-auto mb-14">
+              {/* <span className="inline-block text-xs font-semibold uppercase tracking-widest text-red-700 border border-red-300/30 bg-red-50/50 px-4 py-1.5 rounded-full mb-4">
+                Who Should Attend
+              </span> */}
               <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
                 Why You Should Attend This Summit
               </h2>
-              <p className="">
+              <p className="text-muted-foreground leading-relaxed">
                 Five powerful reasons that make RIFAH Annual Summit 2026 the event you cannot afford to miss.
               </p>
             </div>
 
-            {/* Cards Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            {/* Audience Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-4xl mx-auto mb-14">
               {[
                 {
-                  icon: <Users className="h-5 w-5 text-primary" />,
-                  title: "Meet the right people",
-                  desc: "Connect directly with entrepreneurs, business owners, and professionals who are actively growing.",
+                  icon: <TrendingUp className="h-5 w-5 text-red-700" />,
+                  label: "Entrepreneurs",
+                  title: "Hustling to Grow",
+                  desc: "Entrepreneurs driving their business to multiply — seeking strategies, networks, and momentum to scale faster.",
+                  // bg: "bg-red-50/60",
+                  border: "border-red-200/50",
                 },
                 {
-                  icon: <Search className="h-5 w-5 text-primary" />,
-                  title: "Find real opportunities",
-                  desc: "Discover collaborations, partnerships, and business leads that actually matter.",
+                  icon: <Users className="h-5 w-5 text-red-700" />,
+                  label: "Business Leaders",
+                  title: "Shaping the Nation",
+                  desc: "Leaders who want to guide the Muslim community to make a meaningful contribution to State and National growth.",
+                  // bg: "bg-amber-50/60",
+                  border: "border-amber-200/50",
                 },
                 {
-                  icon: <Globe className="h-5 w-5 text-primary" />,
-                  title: "Broaden your connections nationwide",
-                  desc: "Interact with members from multiple chapters across Tamil Nadu and India.",
+                  icon: <GraduationCap className="h-5 w-5 text-red-700" />,
+                  label: "Students & Professionals",
+                  title: "Aspiring Entrepreneurs",
+                  desc: "Students and working professionals who carry the fire of entrepreneurship and are ready to take the leap.",
+                  // bg: "bg-emerald-50/60",
+                  border: "border-emerald-200/50",
                 },
                 {
-                  icon: <BookOpen className="h-5 w-5 text-primary" />,
-                  title: "Learn from real experiences",
-                  desc: "Gain insights from people who are already building and scaling businesses.",
-                },
-                {
-                  icon: <Shield className="h-5 w-5 text-primary" />,
-                  title: "Be part of a purpose-driven community",
-                  desc: "Engage in a platform that promotes ethical and value-based business growth.",
-                },
-                {
-                  icon: <Handshake className="h-5 w-5 text-primary" />,
-                  title: "Build lasting business relationships",
-                  desc: "Walk away with meaningful connections that go beyond the event and turn into long-term partnerships.",
+                  icon: <Rocket className="h-5 w-5 text-red-700" />,
+                  label: "Startups & Businesses",
+                  title: "Modernising with Ethics",
+                  desc: "Startups and traditional businesses eager to upgrade with modern techniques rooted in Islamic business principles.",
+                  // bg: "bg-sky-50/60",
+                  border: "border-sky-200/50",
                 },
               ].map((item, i) => (
                 <div
                   key={i}
-                  className="group flex flex-col gap-4 p-6 rounded-xl border border-border/50 bg-card hover:border-red-500/40 transition-colors"
+                  className={`group relative flex flex-col gap-3 p-6 rounded-2xl border ${item.border} ${item.bg} hover:shadow-md hover:border-red-200 transition-all duration-300`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-red-500/10 flex items-center justify-center shrink-0">
+                    <div className="h-10 w-10 rounded-xl bg-white border border-red-100 shadow-sm flex items-center justify-center shrink-0">
                       {item.icon}
                     </div>
-                    <h3 className="font-bold text-lg text-base leading-snug">{item.title}</h3>
+                    <div>
+                      <p className="text-[10px] uppercase tracking-widest text-red-600 font-semibold">{item.label}</p>
+                      <h3 className="font-bold text-base leading-snug">{item.title}</h3>
+                    </div>
                   </div>
-                  <p className="text-sm leading-relaxed">{item.desc}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
                 </div>
               ))}
             </div>
 
+            {/* Divider */}
+            {/* <div className="max-w-4xl mx-auto mb-14">
+              <div className="flex items-center gap-4">
+                <div className="flex-1 h-px bg-border" />
+                <span className="text-xs uppercase tracking-widest text-muted-foreground font-medium shrink-0">Why Attend</span>
+                <div className="flex-1 h-px bg-border" />
+              </div>
+            </div> */}
+
+            {/* Why Attend Cards */}
+            {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-4xl mx-auto">
+              {[
+                {
+                  icon: <Users className="h-5 w-5 text-red-700" />,
+                  title: "Meet the Right People",
+                  desc: "Connect directly with entrepreneurs, business owners, and professionals who are actively growing.",
+                },
+                {
+                  icon: <Search className="h-5 w-5 text-red-700" />,
+                  title: "Find Real Opportunities",
+                  desc: "Discover collaborations, partnerships, and business leads that actually matter.",
+                },
+                {
+                  icon: <Globe className="h-5 w-5 text-red-700" />,
+                  title: "Broaden Your Network Nationwide",
+                  desc: "Interact with members from multiple chapters across Tamil Nadu and India.",
+                },
+                {
+                  icon: <BookOpen className="h-5 w-5 text-red-700" />,
+                  title: "Learn from Real Experiences",
+                  desc: "Gain insights from people who are already building and scaling businesses.",
+                },
+                {
+                  icon: <Shield className="h-5 w-5 text-red-700" />,
+                  title: "Purpose-Driven Community",
+                  desc: "Engage in a platform that promotes ethical and value-based business growth.",
+                },
+                {
+                  icon: <Handshake className="h-5 w-5 text-red-700" />,
+                  title: "Build Lasting Relationships",
+                  desc: "Walk away with meaningful connections that turn into long-term partnerships.",
+                },
+              ].map((item, i) => (
+                <div
+                  key={i}
+                  className="group flex flex-col gap-3 p-5 rounded-xl border border-border/60 bg-card hover:border-red-400/40 hover:shadow-sm transition-all duration-300"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-lg bg-red-500/10 flex items-center justify-center shrink-0">
+                      {item.icon}
+                    </div>
+                    <h3 className="font-semibold text-sm leading-snug">{item.title}</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
+                </div>
+              ))}
+            </div> */}
+
             {/* Bottom CTA Banner */}
-            <div className="max-w-5xl mx-auto mt-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-red-200/10 border border-red-400/20 rounded-xl px-6 py-5">
+            <div className="max-w-4xl mx-auto mt-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-red-800 rounded-2xl px-6 py-6 sm:px-8">
               <div>
-                <p className="font-semibold text-red-700">Ready to grow with RIFAH?</p>
-                <p className="text-sm  mt-0.5">
+                <p className="font-bold text-white text-lg">Ready to grow with RIFAH?</p>
+                <p className="text-red-200 text-sm mt-1">
                   Join hundreds of business leaders at the Annual Summit 2026.
                 </p>
               </div>
-              <Link href="/register" className="px-6 py-2 bg-red-800 rounded-full text-white shrink-0">Registration Open</Link>
+              <Link
+                href="/register"
+                className="shrink-0 px-6 py-2.5 bg-white text-red-800 font-semibold rounded-full text-sm hover:bg-red-50 transition-colors"
+              >
+                Register Now
+              </Link>
             </div>
 
           </div>
@@ -564,6 +658,49 @@ export default function PongalLandingPage() {
               </table>
             </div>
 
+            {/* ── Sponsor Image Slider ── */}
+            <div className="mb-14">
+              <div className="text-center mb-8">
+                <span className="inline-block text-xs font-semibold uppercase tracking-widest text-red-700 border border-red-300/30 bg-red-50/50 px-4 py-1.5 rounded-full mb-3">
+                  Our Sponsors
+                </span>
+                {/* <h3 className="text-2xl font-bold">Brands That Trust RIFAH</h3> */}
+              </div>
+
+              {/* Slider wrapper */}
+              <div className="relative overflow-hidden rounded-2xl border border-border/40 bg-card py-6 px-2">
+                {/* Fade edges */}
+                <div className="pointer-events-none absolute inset-y-0 left-0 w-16 sm:w-24 z-10 bg-gradient-to-r from-card to-transparent" />
+                <div className="pointer-events-none absolute inset-y-0 right-0 w-16 sm:w-24 z-10 bg-gradient-to-l from-card to-transparent" />
+
+                {/* Scrolling track — duplicated for seamless loop */}
+                <div className="flex animate-sponsor-scroll gap-6 sm:gap-10 w-max">
+                  {[...Array(2)].map((_, dupIdx) => (
+                    <div key={dupIdx} className="flex gap-6 sm:gap-10 items-center">
+                      {[
+                        "/assets/slider-1.png",
+                        "/assets/slider-2.png",
+                        "/assets/slider-3.png",
+                        "/assets/slider-4.jpeg",
+                      ].map((src, i) => (
+                        <div
+                          key={`${dupIdx}-${i}`}
+                          className="relative flex-shrink-0 h-16 sm:h-20 w-32 sm:w-44 rounded-xl border border-border/40 bg-white/70 shadow-sm overflow-hidden flex items-center justify-center px-4"
+                        >
+                          <Image
+                            src={src}
+                            alt={`Sponsor ${i + 1}`}
+                            fill
+                            className="object-contain p-3"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
             {/* Key Benefits */}
             <div className="mb-14">
               <h3 className="text-2xl font-bold text-center mb-8">Key Benefits for Sponsors</h3>
@@ -581,8 +718,7 @@ export default function PongalLandingPage() {
                     className="flex items-start gap-3 p-4 rounded-xl border border-border/50 bg-card"
                   >
                     <CheckCircle2 className="mt-0.5 h-5 w-5 text-red-700 shrink-0" />
-
-                    <p className="text-sm  leading-relaxed">{benefit}</p>
+                    <p className="text-sm leading-relaxed">{benefit}</p>
                   </div>
                 ))}
               </div>

@@ -254,3 +254,16 @@
     @apply text-base md:text-lg leading-relaxed;
   }
 }
+
+/* globals.css — add this at the bottom */
+
+@keyframes sponsor-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@layer utilities {
+  .animate-sponsor-scroll {
+    animation: sponsor-scroll 25s linear infinite;
+  }
+}
