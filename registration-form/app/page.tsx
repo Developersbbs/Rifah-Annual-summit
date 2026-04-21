@@ -887,7 +887,7 @@ export default function PongalLandingPage() {
 
           {/* Contact Info */}
           <div className="mb-8 text-center">
-            <h3 className=" font-semibold text-sm uppercase tracking-widest mb-4 opacity-70">
+            <h3 className="text-white font-semibold text-sm uppercase tracking-widest mb-4">
               Contact Us
             </h3>
             <ul className="space-y-3 text-sm inline-block text-left mx-auto max-w-xs sm:max-w-none">
