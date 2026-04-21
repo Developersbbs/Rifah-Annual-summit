@@ -500,7 +500,7 @@ export default function PongalLandingPage() {
                 Why You Should Attend This Summit
               </h2>
               <p className="text-muted-foreground leading-relaxed">
-                Five powerful reasons that make RIFAH Annual Summit 2026 the event you cannot afford to miss.
+                Four powerful reasons that make RIFAH Annual Summit 2026 the event you cannot afford to miss.
               </p>
             </div>
 
