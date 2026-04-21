@@ -69,7 +69,7 @@ export default function AboutPage() {
                 RIFAH Annual Summit
               </h2>
               <p>
-                The RIFAH Annual Summit is our flagship event that brings together entrepreneurs, business leaders, and industry experts from across India. It's a platform for networking, learning, and exploring new business opportunities. The summit features keynote speakers, panel discussions, workshops, and ample networking opportunities.
+                The RIFAH Annual Summit is our flagship event that brings together entrepreneurs, business leaders, and industry experts from across India. It&apos;s a platform for networking, learning, and exploring new business opportunities. The summit features keynote speakers, panel discussions, workshops, and ample networking opportunities.
               </p>
             </div>
 
