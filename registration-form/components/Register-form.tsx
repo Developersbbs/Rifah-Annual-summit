@@ -234,6 +234,10 @@ export function RegisterForm() {
         const result = await getActiveEvent()
         if (result.success && result.event) {
           setActiveEvent(result.event)
+          // Auto-select the first (default) ticket type
+          if (result.event.ticketsPrice?.length > 0) {
+            setEventData(prev => ({ ...prev, ticketType: result.event.ticketsPrice[0].name }))
+          }
         }
       } catch (error) {
         console.error("Failed to fetch active event:", error)
@@ -1096,22 +1100,17 @@ export function RegisterForm() {
               <Receipt className="h-5 w-5 text-primary" />
               <h3 className="font-semibold">Ticket Type</h3>
             </div>
-            <Select
-              value={eventData.ticketType || ""}
-              onValueChange={(value) => setEventData(prev => ({ ...prev, ticketType: value }))}
-              disabled={isLoadingEvent}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder={isLoadingEvent ? "Loading ticket types..." : "Select ticket type"} />
-              </SelectTrigger>
-              <SelectContent>
-                {activeEvent?.ticketsPrice?.map((ticket: { name: string; price: number }) => (
-                  <SelectItem key={ticket.name} value={ticket.name}>
-                    {ticket.name} - ₹{ticket.price}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {/* Show the default selected ticket (no dropdown) */}
+            {activeEvent?.ticketsPrice?.[0] && (
+              <div className="w-full px-3 py-2 border rounded-md bg-muted/30 text-sm font-medium">
+                {activeEvent.ticketsPrice[0].name} - ₹{activeEvent.ticketsPrice[0].price}
+              </div>
+            )}
+            {isLoadingEvent && (
+              <div className="w-full px-3 py-2 border rounded-md bg-muted/30 text-sm text-muted-foreground">
+                Loading ticket type...
+              </div>
+            )}
             
             {/* Pricing Display */}
             {eventData.ticketType && pricePerPerson > 0 && (
