@@ -642,7 +642,7 @@ export default function PongalLandingPage() {
             {/* Header */}
             <div className="text-center max-w-2xl mx-auto mb-14">
               <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
-                Sponsorship options at RIFAH 2026
+                Sponsorship Options at RAS 2026
               </h2>
               <p className="leading-relaxed">
                 This summit offers a unique opportunity for brands to directly connect with a highly relevant audience of entrepreneurs and decision-makers.
