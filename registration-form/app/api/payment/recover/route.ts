@@ -78,10 +78,11 @@ export async function POST(req: Request) {
         createdAt: new Date((payment.created_at as number) * 1000).toISOString(),
       },
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Recovery error:", error)
+    const errorMessage = error instanceof Error ? error.message : "Recovery failed"
     return Response.json({
-      error: error.message || "Recovery failed",
+      error: errorMessage,
       details: error,
     }, { status: 500 })
   }

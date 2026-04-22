@@ -50,11 +50,11 @@ export async function POST(req: Request) {
         approvalStatus: "approved",
         isRegistered: true,
       })
-    } catch (createError: any) {
+    } catch (createError: unknown) {
       console.error("Failed to create participant in DB:", createError)
 
       // Handle duplicate mobileNumber (unique index violation)
-      if (createError.code === 11000) {
+      if (createError && typeof createError === 'object' && 'code' in createError && createError.code === 11000) {
         // Participant already exists — update payment info instead
         const existing = await Participant.findOneAndUpdate(
           { mobileNumber: registrationData.mobileNumber },
@@ -105,10 +105,11 @@ export async function POST(req: Request) {
 
     console.log("Participant saved successfully:", participant._id)
     return Response.json({ success: true, participantId: participant._id.toString() })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error in payment verify route:", error)
+    const errorMessage = error instanceof Error ? error.message : "Failed to verify payment"
     return Response.json(
-      { success: false, error: error.message || "Failed to verify payment" },
+      { success: false, error: errorMessage },
       { status: 500 }
     )
   }
