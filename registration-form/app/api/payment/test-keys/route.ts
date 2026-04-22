@@ -22,12 +22,18 @@ export async function GET() {
     // Minimal API call - fetch orders with limit 1 to validate credentials
     await razorpay.orders.all({ count: 1 })
     return Response.json({ status: "success", message: "Credentials are VALID ✅", info })
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const razorpayError = err && typeof err === 'object' && 'error' in err
+      ? (err as { error?: { description?: string } }).error?.description
+      : String(err)
+    const statusCode = err && typeof err === 'object' && 'statusCode' in err
+      ? (err as { statusCode?: number }).statusCode
+      : undefined
     return Response.json({
       status: "error",
       message: "Credentials are INVALID ❌",
-      razorpayError: err?.error?.description || String(err),
-      statusCode: err?.statusCode,
+      razorpayError,
+      statusCode,
       info,
     })
   }

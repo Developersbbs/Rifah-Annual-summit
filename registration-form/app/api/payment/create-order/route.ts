@@ -60,10 +60,13 @@ export async function POST(req: Request) {
     }
 
     return Response.json(order)
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error creating Razorpay order:", error)
+    const errorMessage = error && typeof error === 'object' && 'error' in error
+      ? (error as { error: { description?: string } }).error?.description || "Failed to create order"
+      : "Failed to create order"
     return Response.json(
-      { error: error?.error?.description || "Failed to create order", fullError: error },
+      { error: errorMessage, fullError: error },
       { status: 500 }
     )
   }
