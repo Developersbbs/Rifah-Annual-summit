@@ -288,6 +288,28 @@ export function RegisterForm() {
     try {
       console.log("Starting online payment")
 
+      // Build registration data for post-payment creation
+      const filteredSecondaryMembers = secondaryMembers.filter(m => m.name.trim() !== '')
+      const paymentRegistrationData = {
+        mobileNumber: verifiedPhone,
+        name: personalData.name,
+        email: personalData.email,
+        businessName: personalData.businessName,
+        businessCategory: personalData.businessCategory,
+        location: personalData.location,
+        guestCount: 0,
+        ticketType: eventData.ticketType,
+        paymentMethod: eventData.paymentMethod,
+        ageGuest: 0,
+        secondaryMembers: filteredSecondaryMembers,
+        gstNumber: gstNumber.trim() || undefined,
+        termsAccepted: termsAccepted,
+        termsAcceptedAt: new Date(),
+        eventId: activeEvent?._id,
+        eventDate: activeEvent?.eventDate,
+        memberCount: 1 + filteredSecondaryMembers.length,
+      }
+
       // Create Razorpay order without participant ID
       const res = await fetch("/api/payment/create-order", {
         method: "POST",
@@ -303,7 +325,7 @@ export function RegisterForm() {
 
       if (!order.id) {
         console.error("Order ID missing:", order)
-        throw new Error("Failed to create payment order")
+        throw new Error(order.error || "Failed to create payment order")
       }
 
       // Check if Razorpay is loaded
@@ -370,7 +392,7 @@ export function RegisterForm() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               ...response,
-              registrationData,
+              registrationData: paymentRegistrationData,
             }),
           })
 

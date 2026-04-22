@@ -796,7 +796,7 @@ export default function PongalLandingPage() {
 
               <a
                 href="tel:9176947207"
-                className="rounded-full p-3 bg-[#f5d78e] sm:px-8 shadow-lg shadow-red-700/30"
+                className="rounded-full p-2 bg-[#f5d78e] sm:px-8 shadow-lg shadow-red-700/30"
               >
                 For Sponsorships contact: 9176947207
               </a>
