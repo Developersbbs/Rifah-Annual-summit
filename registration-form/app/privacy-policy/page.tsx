@@ -9,7 +9,7 @@ export default function PrivacyPolicy() {
       <header className="w-full border-b bg-white">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Image src="/assets/logo.png" alt="Rifah" width={32} height={32} className="h-8 w-auto" />
+            <Image src="/assets/logo.svg" alt="Rifah" width={32} height={32} className="h-8 w-auto" />
             <span className="font-semibold text-lg">Rifah</span>
           </div>
 

@@ -108,11 +108,11 @@ export default function PongalLandingPage() {
     <div className="min-h-screen bg-background text-foreground selection:bg-primary selection:text-primary-foreground font-sans">
       {/* Navbar */}
       <header className=" w-full border-b border-white/10 ">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+        <div className="container mx-auto px-4 h-24 flex items-center justify-between">
+          <div className="flex items-center gap-3">
             {/* <Earth className="h-6 w-6 text-primary animate-spin-slow" /> */}
-            <Image src="/assets/logo.png" alt="RIFAH" width={48} height={48} className="h-7 sm:h-12 w-auto" />
-            <span className="text-xl font-bold tracking-tight">RIFAH ANNUAL SUMMIT</span>
+            <Image src="/assets/logo.svg" alt="RIFAH" width={240} height={80} className="h-16 sm:h-20 w-auto" />
+            {/* <span className="text-xl font-bold tracking-tight">RIFAH ANNUAL SUMMIT</span> */}
           </div>
 
           {/* Desktop Nav */}
@@ -122,8 +122,8 @@ export default function PongalLandingPage() {
             <Link href="#contact" className="hover:text-primary transition-colors">Contact</Link> */}
             <Button
               onClick={handleRegistrationClick}
-              size="sm"
-              className="bg-red-700 hover:bg-red-700 text-white font-semibold rounded-full px-8"
+              size="lg"
+              className="bg-red-700 hover:bg-red-700 text-white font-bold rounded-full px-10 py-6 text-lg"
               disabled={loading || !eventStatus?.isActive}
             >
               {loading ? "Loading..." : eventStatus?.isActive ? "Register now" : "Registration Closed"}
@@ -144,7 +144,7 @@ export default function PongalLandingPage() {
           {/* Sheet Header */}
           {/* <div className="px-6 py-5 border-b border-border/50">
                   <div className="flex items-center gap-2">
-                    <Image src="/assets/logo.png" alt="RIFAH" width={28} height={28} className="h-7 w-auto" />
+                    <Image src="/assets/logo.svg" alt="RIFAH" width={28} height={28} className="h-7 w-auto" />
                     <span className="font-semibold text-sm tracking-wide">RIFAH ANNUAL SUMMIT</span>
                   </div>
                 </div> */}
