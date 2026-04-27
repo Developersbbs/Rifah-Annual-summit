@@ -76,8 +76,9 @@ export async function POST(req: Request) {
         }
       }
 
+      const errorMessage = createError instanceof Error ? (createError as Error).message : "Failed to save registration"
       return Response.json(
-        { success: false, error: createError instanceof Error ? createError.message : "Failed to save registration" },
+        { success: false, error: errorMessage },
         { status: 500 }
       )
     }

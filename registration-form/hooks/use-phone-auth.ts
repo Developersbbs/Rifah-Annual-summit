@@ -15,32 +15,50 @@ export function usePhoneAuth() {
         setLoading(true)
         setError(null)
         try {
-            // Lazy initialize RecaptchaVerifier
-            if (!window.recaptchaVerifier) {
-                const container = document.getElementById("recaptcha-container")
-                if (!container) {
-                    throw new Error("Recaptcha container not found")
+            // Clear previous verifier and container before re-initializing
+            if (window.recaptchaVerifier) {
+                try {
+                    window.recaptchaVerifier.clear()
+                } catch (e) {
+                    console.warn("Error clearing previous recaptcha:", e)
                 }
-                window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
-                    size: "invisible",
-                    callback: () => {
-                        // reCAPTCHA solved, allow signInWithPhoneNumber.
-                    },
-                    "expired-callback": () => {
-                        setError("Recaptcha expired. Please try again.")
-                    }
-                })
+                window.recaptchaVerifier = undefined
             }
 
+            // Use unique container ID for each reCAPTCHA to avoid "already rendered" error
+            const uniqueId = `recaptcha-container-${Date.now()}`
+            const container = document.createElement("div")
+            container.id = uniqueId
+            document.body.appendChild(container)
+
+            // Initialize RecaptchaVerifier with unique container
+            window.recaptchaVerifier = new RecaptchaVerifier(auth, uniqueId, {
+                size: "invisible",
+                callback: () => {
+                    // reCAPTCHA solved, allow signInWithPhoneNumber.
+                },
+                "expired-callback": () => {
+                    setError("Recaptcha expired. Please try again.")
+                }
+            })
+
+            // Firebase handles invisible reCAPTCHA rendering automatically when signInWithPhoneNumber is called
             const confirmation = await signInWithPhoneNumber(auth, phoneNumber, window.recaptchaVerifier)
             setConfirmationResult(confirmation)
+
+            // Clean up container after successful OTP send
+            document.body.removeChild(container)
             return true
         } catch (err: unknown) {
             console.error("Error sending OTP:", err)
             setError(err instanceof Error ? err.message : "Failed to send OTP")
             // Reset recaptcha on error so it can be retried
             if (window.recaptchaVerifier) {
-                window.recaptchaVerifier.clear()
+                try {
+                    window.recaptchaVerifier.clear()
+                } catch (e) {
+                    console.warn("Error clearing recaptcha on error:", e)
+                }
                 window.recaptchaVerifier = undefined
             }
             return false
