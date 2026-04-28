@@ -748,6 +748,7 @@ export default function PongalLandingPage() {
                         "/assets/slider-14.jpeg",
                         "/assets/slider-18.jpeg",
                         "/assets/slider-15.jpeg",
+                        "/assets/slider-20.png",
                         "/assets/slider-17.jpeg",
                       ].map((src, i) => (
                         <div
