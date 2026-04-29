@@ -750,16 +750,17 @@ export default function PongalLandingPage() {
                         "/assets/slider-15.jpeg",
                         "/assets/slider-20.png",
                         "/assets/slider-17.jpeg",
+                        "/assets/slider-21.jpeg",
                       ].map((src, i) => (
                         <div
                           key={`${dupIdx}-${i}`}
-                          className="relative flex-shrink-0 h-24 sm:h-28 md:h-38 w-40 sm:w-52 md:w-60  duration-300 overflow-hidden flex items-center justify-center p-4 sm:p-5"
+                          className="relative flex-shrink-0 h-20 sm:h-24 md:h-28 w-36 sm:w-44 md:w-52 mx-4 sm:mx-6"
                         >
                           <Image
                             src={src}
                             alt={`Sponsor ${i + 1}`}
                             fill
-                            className="object-contain p-4 sm:p-5"
+                            className="object-contain"
                           />
                         </div>
                       ))}
