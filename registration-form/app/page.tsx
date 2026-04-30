@@ -2,13 +2,13 @@
 
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { Calendar, MapPin, CheckCircle2, Clock, Mail, Rocket, GraduationCap, TrendingUp, ArrowRight } from "lucide-react"
+import { Calendar, MapPin, CheckCircle2, Clock, Mail, Rocket, GraduationCap, TrendingUp } from "lucide-react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import { useState, useEffect } from "react"
 import { Users } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+
 
 
 interface EventStatus {
