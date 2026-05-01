@@ -264,6 +264,6 @@
 
 @layer utilities {
   .animate-sponsor-scroll {
-    animation: sponsor-scroll 15s linear infinite;
+    animation: sponsor-scroll 18s linear infinite;
   }
 }

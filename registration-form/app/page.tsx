@@ -153,7 +153,7 @@ export default function PongalLandingPage() {
       id: 8,
       name: "Younus Sait",
       role: "Managing Director-Sait Fashions | President TN - Rifah chamber of commerce and industries",
-      image: "/assets/speaker-8.jpeg"
+      image: "/assets/speaker-12.jpeg"
     },
     {
       id: 9,
@@ -166,6 +166,12 @@ export default function PongalLandingPage() {
       name: "MR. M.A. MOHAMMAD HANIFA",
       role: "Chairman - Creative Communication Chennai (CCC)",
       image: "/assets/speaker-10.jpeg"
+    },
+    {
+      id: 11,
+      name: "Abdul Nabeel",
+      role: "Managing Director, Arabian Garden Seafood Restaurant",
+      image: "/assets/speaker-11.jpeg"
     }
   ]
 
@@ -562,7 +568,7 @@ export default function PongalLandingPage() {
             {/* Title */}
             <div className="text-center mb-12">
               <h2 className=" text-2xl sm:text-6xl font-black tracking-wider leading-none">
-                <span className="text-red-700">The</span> VISIONARY<span className="text-red-700">LEADERS</span>
+                <span className="text-red-700">The</span> VISIONARY <span className="text-red-700">LEADERS</span>
               </h2>
 
             </div>
@@ -938,21 +944,23 @@ export default function PongalLandingPage() {
                   {[...Array(2)].map((_, dupIdx) => (
                     <div key={dupIdx} className="flex items-center">
                       {[
-                        "/assets/slider-1.png",
-                        "/assets/slider-2.png",
-                        "/assets/slider-3.png",
-                        "/assets/slider-9.jpeg",
-                        "/assets/slider-10.jpeg",
+                        "/assets/slider1.jpeg",
+                        "/assets/slider2.jpeg",
+                        "/assets/slider3.jpeg",
+                        "/assets/slider4.jpeg",
+                        "/assets/slider5.png",
+                        "/assets/slider6.jpeg",
+                        "/assets/slider7.jpeg",
+                        "/assets/slider8.jpeg",
+                        "/assets/slider9.jpeg",
+                        "/assets/slider10.jpeg",
                         "/assets/slider11.jpeg",
-                        "/assets/slider-19.jpeg",
-                        "/assets/slider12.jpeg",
-                        "/assets/slider-13.jpeg",
-                        "/assets/slider-14.jpeg",
-                        "/assets/slider-18.jpeg",
-                        "/assets/slider-15.jpeg",
-                        "/assets/slider-20.png",
-                        "/assets/slider-17.jpeg",
-                        "/assets/slider-21.jpeg",
+                        "/assets/slider17.jpeg",
+                        "/assets/slider18.jpeg",
+                        "/assets/slider13.jpeg",
+                        "/assets/slider14.jpg",
+                        "/assets/slider19.jpeg",
+                        "/assets/slider16.jpeg",
                       ].map((src, i) => (
                         <div
                           key={`${dupIdx}-${i}`}
