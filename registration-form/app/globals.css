@@ -270,6 +270,12 @@
 }
 
 
+@font-face {
+  font-family: 'Noto Sans Tamil';
+  src: local('Noto Sans Tamil');
+}
+
+/* Tamil unicode range only */
 * {
-  font-family: 'Noto Sans Tamil', 'Tamil Sangam MN', sans-serif;
+  font-family: var(--font-geist-sans), 'Noto Sans Tamil', sans-serif;
 }

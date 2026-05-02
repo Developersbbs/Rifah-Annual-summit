@@ -24,9 +24,12 @@ export async function sendRegistrationEmails(participant: IParticipant, eventNam
             auth: { user, pass },
         })
 
-        const isTamil = participant.registrationLanguage === 'ta'
+        const language = participant.registrationLanguage || 'en'
+        const isTamil = language === 'ta'
         
         const isPending = participant.paymentStatus === 'pending'
+        
+        console.log(`DEBUG - Sending emails for ${participant.name}. Language: ${language}, isTamil: ${isTamil}`)
         
         // 2. Prepare Member Email Content
         const memberSubject = isTamil 
@@ -91,7 +94,7 @@ export async function sendRegistrationEmails(participant: IParticipant, eventNam
                         <li>Location: ${participant.location || 'N/A'}</li>
                         <li>Amount: ₹${participant.totalAmount}</li>
                         <li>Payment: ${participant.paymentMethod} (${participant.paymentStatus})</li>
-                        <li>Language: ${participant.registrationLanguage}</li>
+                        <li>Language: ${participant.registrationLanguage || 'en (defaulted)'}</li>
                     </ul>
                 </div>
                 <p><a href="${appUrl}/admin/participants" style="color: #2563eb;">View in Admin Dashboard</a></p>
