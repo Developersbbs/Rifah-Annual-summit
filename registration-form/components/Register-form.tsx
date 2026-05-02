@@ -603,8 +603,8 @@ export function RegisterForm() {
                 </FormItem>
               )} />
               {authError && <Alert variant="destructive"><AlertTitle>Error</AlertTitle><AlertDescription>{authError}</AlertDescription></Alert>}
-              <Button type="submit" className="w-full" disabled={authLoading || isCheckingDb}>{authLoading || isCheckingDb ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : "Verify"}</Button>
-              <Button variant="ghost" type="button" className="w-full" onClick={() => setStep(Step.PHONE_INPUT)}>Change Phone</Button>
+              <Button type="submit" className="w-full" disabled={authLoading || isCheckingDb}>{authLoading || isCheckingDb ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : t("Verify")}</Button>
+              <Button variant="ghost" type="button" className="w-full" onClick={() => setStep(Step.PHONE_INPUT)}>{t("Change Phone")}</Button>
             </form>
           </Form>
         )}
@@ -817,9 +817,9 @@ export function RegisterForm() {
           {!isLoadingEvent && !activeEvent && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
-              <AlertTitle>No Active Event</AlertTitle>
+              <AlertTitle>{t("No Active Event")}</AlertTitle>
               <AlertDescription>
-                Unable to load event details. Please contact the administrator or try again later.
+                {t("Unable to load event details. Please contact the administrator or try again later.")}
               </AlertDescription>
             </Alert>
           )}
@@ -948,9 +948,9 @@ export function RegisterForm() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-xs">Business Category</Label>
+                    <Label className="text-xs">{t("Business Category")}</Label>
                     <Input
-                      placeholder="Category"
+                      placeholder={t("Category")}
                       value={currentMember.businessCategory}
                       onChange={(e) => setCurrentMember(prev => ({ ...prev, businessCategory: e.target.value }))}
                       className="h-9"
@@ -1042,13 +1042,12 @@ export function RegisterForm() {
                       onValueChange={(value) => setCurrentMember(prev => ({ ...prev, gender: value }))}
                     >
                       <SelectTrigger className="h-9">
-                        <SelectValue placeholder="Select gender" />
+                        <SelectValue placeholder={t("Select gender")} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="male">Male</SelectItem>
-                        <SelectItem value="female">Female</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                        {/* <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem> */}
+                        <SelectItem value="male">{t("Male")}</SelectItem>
+                        <SelectItem value="female">{t("Female")}</SelectItem>
+                        <SelectItem value="other">{t("Other")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -1060,19 +1059,19 @@ export function RegisterForm() {
                   onClick={() => {
                     // Validate required fields
                     if (!currentMember.name.trim()) {
-                      setDbError("Member name is required")
+                      setDbError(t("Member name is required"))
                       return
                     }
 
                     // Validate mobile number format if provided
                     if (currentMember.mobileNumber && !/^\+?[1-9]\d{1,14}$/.test(currentMember.mobileNumber)) {
-                      setDbError("Invalid mobile number format for member")
+                      setDbError(t("Invalid mobile number format for member"))
                       return
                     }
 
                     // Validate email format if provided
                     if (currentMember.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(currentMember.email)) {
-                      setDbError("Invalid email format for member")
+                      setDbError(t("Invalid email format for member"))
                       return
                     }
 
@@ -1116,7 +1115,7 @@ export function RegisterForm() {
             )}
             {isLoadingEvent && (
               <div className="w-full px-3 py-2 border rounded-md bg-muted/30 text-sm text-muted-foreground">
-                Loading ticket type...
+                {t("Loading ticket type...")}
               </div>
             )}
 
@@ -1152,24 +1151,24 @@ export function RegisterForm() {
                 {/* Secondary Members */}
                 {secondaryMembers.length > 0 && (
                   <div className="space-y-2">
-                    <div className="font-semibold text-sm mb-2">Secondary Members ({secondaryMembers.length})</div>
+                    <div className="font-semibold text-sm mb-2">{t("Secondary Members")} ({secondaryMembers.length})</div>
                     {secondaryMembers.map((member, index) => (
                       <div key={index} className="bg-white rounded p-3 space-y-2 border">
                         <div className="flex justify-between items-center text-sm">
-                          <span className="font-medium">{member.name || `Member ${index + 1}`}</span>
+                          <span className="font-medium">{member.name || `${t("Member")} ${index + 1}`}</span>
                         </div>
                         <div className="flex justify-between items-center text-sm">
-                          <span>Ticket Price:</span>
+                          <span>{t("Ticket Price")}:</span>
                           <span className="font-medium">₹{pricePerPerson}</span>
                         </div>
                         {taxCalculation.taxRate > 0 && (
                           <>
                             <div className="flex justify-between items-center text-sm">
-                              <span>Tax Amount ({taxCalculation.taxRate}%):</span>
+                              <span>{t("Tax Amount")} ({taxCalculation.taxRate}%):</span>
                               <span className="font-medium">₹{Math.round((pricePerPerson * taxCalculation.taxRate) / 100)}</span>
                             </div>
                             <div className="flex justify-between items-center text-sm font-semibold">
-                              <span>Total:</span>
+                              <span>{t("Total")}:</span>
                               <span className="font-bold">₹{pricePerPerson + Math.round((pricePerPerson * taxCalculation.taxRate) / 100)}</span>
                             </div>
                           </>
@@ -1199,12 +1198,12 @@ export function RegisterForm() {
           {/* GST Number Input with Real-time Validation */}
           {taxCalculation.taxRate > 0 && (
             <div className="space-y-2">
-              <Label htmlFor="gstNumber" className="text-sm">GST Number (Optional)</Label>
+              <Label htmlFor="gstNumber" className="text-sm">{t("GST Number (Optional)")}</Label>
               <div className="relative">
                 <Input
                   id="gstNumber"
                   type="text"
-                  placeholder="Enter GST Number (e.g., 22ABCDE1234F1Z5)"
+                  placeholder={t("Enter GST Number (e.g., 22ABCDE1234F1Z5)")}
                   value={gstNumber}
                   onChange={(e) => setGstNumber(e.target.value.toUpperCase())}
                   className={cn(
@@ -1328,7 +1327,11 @@ export function RegisterForm() {
                   className="mt-1 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                 />
                 <label htmlFor="terms" className="text-xs text-muted-foreground leading-tight">
-                  I agree to the <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Terms & Conditions</a> for event registration and payment processing.
+                  {t("I agree to the")}{" "}
+                  <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                    {t("Terms & Conditions")}
+                  </a>{" "}
+                  {t("for event registration and payment processing.")}
                 </label>
               </div>
             )}

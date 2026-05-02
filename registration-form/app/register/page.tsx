@@ -59,11 +59,11 @@ export default function RegisterPage() {
             status.isActive = true
             if (data.registeredCount >= data.maxCapacity) {
               status.isActive = false
-              status.message = "Registration is closed due to maximum capacity"
+              status.message = t("Registration is closed due to maximum capacity")
             }
           } else if (now < start) {
             status.isUpcoming = true
-            status.message = `Registration opens on ${start.toLocaleDateString('en-IN', {
+            status.message = `${t("Registration opens on")} ${start.toLocaleDateString('en-IN', {
               day: '2-digit',
               month: 'short',
               year: 'numeric',
@@ -72,7 +72,7 @@ export default function RegisterPage() {
             })}`
           } else {
             status.isPast = true
-            status.message = "Registration has ended"
+            status.message = t("Registration has ended")
           }
           
           setEventStatus(status)
@@ -81,7 +81,7 @@ export default function RegisterPage() {
             isActive: false,
             isUpcoming: false,
             isPast: false,
-            message: "No events scheduled at the moment"
+            message: t("No events scheduled at the moment")
           })
         }
       } catch (error) {
@@ -90,7 +90,7 @@ export default function RegisterPage() {
           isActive: false,
           isUpcoming: false,
           isPast: false,
-          message: "Unable to check registration status"
+          message: t("Unable to check registration status")
         })
       } finally {
         setLoading(false)
@@ -114,7 +114,7 @@ export default function RegisterPage() {
           </div>
           <div className="flex flex-1 items-center justify-center">
             <div className="w-full max-w-xl text-center">
-              <p className="text-muted-foreground">Loading registration status...</p>
+              <p className="text-muted-foreground">{t("Loading registration status...")}</p>
             </div>
           </div>
         </div>
@@ -157,7 +157,7 @@ export default function RegisterPage() {
                 <CardContent className="text-center">
                   <Button onClick={() => router.push('/')} variant="outline">
                     <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back to Home
+                    {t("Back to Home")}
                   </Button>
                 </CardContent>
               </Card>

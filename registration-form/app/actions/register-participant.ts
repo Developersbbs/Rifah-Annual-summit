@@ -3,6 +3,7 @@
 import dbConnect from "@/lib/db"
 import Participant from "@/models/Participant"
 import Event from "@/models/Event"
+import { sendRegistrationEmails } from "@/lib/email"
 
 // Helper function for input sanitization
 function sanitizeInput(input: string): string {
@@ -339,6 +340,11 @@ export async function registerParticipant(data: RegisterParticipantData) {
         await Event.findByIdAndUpdate(
             activeEvent._id,
             { $inc: { registeredCount: actualTotalPeople } }
+        )
+
+        // Send confirmation emails (Async)
+        sendRegistrationEmails(participant, activeEvent.eventName).catch(err => 
+            console.error("Failed to send registration emails:", err)
         )
 
         return {

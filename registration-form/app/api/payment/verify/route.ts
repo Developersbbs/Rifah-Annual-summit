@@ -105,6 +105,17 @@ export async function POST(req: Request) {
     }
 
     console.log("Participant saved successfully:", participant._id)
+
+    // Send confirmation emails (Async)
+    // Fetch active event again to get the name if not already available
+    const event = await Event.findById(registrationData.eventId).lean()
+    if (event) {
+      const { sendRegistrationEmails } = await import("@/lib/email")
+      sendRegistrationEmails(participant, event.eventName).catch(err => 
+        console.error("Failed to send registration emails:", err)
+      )
+    }
+
     return Response.json({ success: true, participantId: participant._id.toString() })
   } catch (error: unknown) {
     console.error("Error in payment verify route:", error)

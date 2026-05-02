@@ -3,6 +3,8 @@
 import dbConnect from "@/lib/db"
 import Participant from "@/models/Participant"
 import { getCurrentUser } from "@/lib/auth"
+import Event from "@/models/Event"
+import { sendRegistrationEmails } from "@/lib/email"
 
 export async function approveRegistration(participantId: string, markPaid?: boolean) {
     try {
@@ -50,7 +52,17 @@ export async function approveRegistration(participantId: string, markPaid?: bool
         }
 
         // Approve the registration
-        await Participant.findByIdAndUpdate(participantId, updateData)
+        const updatedParticipant = await Participant.findByIdAndUpdate(participantId, updateData, { new: true })
+
+        // Send confirmation email to member (Async)
+        if (updatedParticipant) {
+            const event = await Event.findById(updatedParticipant.eventId).lean()
+            if (event) {
+                sendRegistrationEmails(updatedParticipant, event.eventName).catch(err => 
+                    console.error("Failed to send approval email:", err)
+                )
+            }
+        }
 
         return { success: true, message: "Registration approved successfully" }
 
