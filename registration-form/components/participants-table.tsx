@@ -109,7 +109,7 @@ export function ParticipantsTable<TData, TValue>({
         return [
             ...columns,
             {
-                id: "actions",
+                id: "edit-participant",
                 enableHiding: false,
                 cell: ({ row }: { row: { original: TData } }) => {
                     return (
@@ -341,7 +341,7 @@ export function ParticipantsTable<TData, TValue>({
                             <TableRow key={headerGroup.id}>
                                 {headerGroup.headers.map((header) => {
                                     return (
-                                        <TableHead key={header.id}>
+                                        <TableHead key={header.id} colSpan={header.colSpan}>
                                             {header.isPlaceholder
                                                 ? null
                                                 : flexRender(
