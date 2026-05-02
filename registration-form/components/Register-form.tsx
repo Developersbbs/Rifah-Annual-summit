@@ -44,7 +44,7 @@ const otpSchema = z.object({
 
 // Tamil Nadu Districts for Location
 const TAMIL_NADU_DISTRICTS = [
-  "Ariyalur", "Chengalpattu", "Chennai", "Coimbatore", "Cuddalore", 
+  "Ariyalur", "Chengalpattu", "Chennai", "Coimbatore", "Cuddalore",
   "Dharmapuri", "Dindigul", "Erode", "Kallakurichi", "Kanchipuram",
   "Kanyakumari", "Karur", "Krishnagiri", "Madurai", "Nagapattinam",
   "Namakkal", "Nilgiris", "Perambalur", "Pudukkottai", "Ramanathapuram",
@@ -144,10 +144,10 @@ export function RegisterForm() {
   const otpForm = useForm<z.infer<typeof otpSchema>>({ resolver: zodResolver(otpSchema), defaultValues: { otp: "" } })
   const personalForm = useForm<z.infer<typeof personalDetailsSchema>>({
     resolver: zodResolver(personalDetailsSchema),
-    defaultValues: { 
+    defaultValues: {
       name: "",
       email: "",
-      businessName: "", 
+      businessName: "",
       businessCategory: "",
       location: ""
     }
@@ -412,7 +412,7 @@ export function RegisterForm() {
         },
 
         modal: {
-          ondismiss: function() {
+          ondismiss: function () {
             console.log("Payment modal dismissed")
             setDbError("Payment was cancelled. Please try again.")
             setIsSubmitting(false)
@@ -487,7 +487,7 @@ export function RegisterForm() {
       console.log("DEBUG - Secondary Members before API call:", secondaryMembers)
       console.log("DEBUG - Filtered Secondary Members (will be sent):", filteredSecondaryMembers)
       console.log("DEBUG - Member count:", filteredSecondaryMembers.length)
-      
+
       const payload = {
         mobileNumber: verifiedPhone,
         name: personalData.name,
@@ -844,255 +844,255 @@ export function RegisterForm() {
                 {secondaryMembers.length} {t("members added")}
               </span>
             </div>
-              
-              {/* Show list of added members */}
-              {secondaryMembers.map((member, index) => (
-                <div key={index} className="border rounded-lg p-4 space-y-3 bg-muted/30">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-muted-foreground">{t("Member")} {index + 1}</span>
-                    <div className="flex gap-1">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0"
-                        onClick={() => {
-                          setCurrentMember(member)
-                          setShowAddMemberForm(true)
-                          setSecondaryMembers(prev => prev.filter((_, i) => i !== index))
-                        }}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
-                        onClick={() => setSecondaryMembers(prev => prev.filter((_, i) => i !== index))}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="text-sm space-y-1">
-                    <p><span className="font-medium">{t("Name")}:</span> {member.name}</p>
-                    {member.mobileNumber && <p><span className="font-medium">{t("Mobile")}:</span> {member.mobileNumber}</p>}
-                    {member.email && <p><span className="font-medium">{t("Email")}:</span> {member.email}</p>}
-                    {member.businessName && <p><span className="font-medium">{t("Business Name")}:</span> {member.businessName}</p>}
-                    {member.location && <p><span className="font-medium">{t("Location")}:</span> {t(member.location)}</p>}
-                  </div>
-                </div>
-              ))}
-              
-              {/* Add Member Form - Shows one at a time */}
-              {showAddMemberForm && (
-                <div className="border rounded-lg p-4 space-y-3 bg-primary/5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">{t("Add Member")} {secondaryMembers.length + 1}</span>
+
+            {/* Show list of added members */}
+            {secondaryMembers.map((member, index) => (
+              <div key={index} className="border rounded-lg p-4 space-y-3 bg-muted/30">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-muted-foreground">{t("Member")} {index + 1}</span>
+                  <div className="flex gap-1">
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
                       className="h-8 w-8 p-0"
                       onClick={() => {
-                        setShowAddMemberForm(false)
-                        setCurrentMember({ name: '', mobileNumber: '', email: '', businessName: '', businessCategory: '', location: '', isMember: false, showCustomLocation: false, customLocation: '' })
+                        setCurrentMember(member)
+                        setShowAddMemberForm(true)
+                        setSecondaryMembers(prev => prev.filter((_, i) => i !== index))
                       }}
                     >
-                      <X className="h-4 w-4" />
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
+                      onClick={() => setSecondaryMembers(prev => prev.filter((_, i) => i !== index))}
+                    >
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                      <Label className="text-xs">{t("Name")} *</Label>
-                      <Input
-                        placeholder={t("Full name")}
-                        value={currentMember.name}
-                        onChange={(e) => setCurrentMember(prev => ({ ...prev, name: e.target.value }))}
-                        className="h-9"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs">{t("Mobile")}</Label>
-                      <Input
-                        placeholder="+91..."
-                        value={currentMember.mobileNumber}
-                        onChange={(e) => setCurrentMember(prev => ({ ...prev, mobileNumber: e.target.value }))}
-                        className="h-9"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs">{t("Email")}</Label>
-                      <Input
-                        type="email"
-                        placeholder="email@example.com"
-                        value={currentMember.email}
-                        onChange={(e) => setCurrentMember(prev => ({ ...prev, email: e.target.value }))}
-                        className="h-9"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs">{t("Business Name")}</Label>
-                      <Input
-                        placeholder={t("Business name")}
-                        value={currentMember.businessName}
-                        onChange={(e) => setCurrentMember(prev => ({ ...prev, businessName: e.target.value }))}
-                        className="h-9"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs">Business Category</Label>
-                      <Input
-                        placeholder="Category"
-                        value={currentMember.businessCategory}
-                        onChange={(e) => setCurrentMember(prev => ({ ...prev, businessCategory: e.target.value }))}
-                        className="h-9"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs">{t("Location")}</Label>
-                      <Popover
-                        open={currentMember.showCustomLocation ? false : undefined}
-                        onOpenChange={() => {
-                          if (!currentMember.showCustomLocation) {
-                            setCurrentMember(prev => ({ ...prev, showCustomLocation: false }))
-                          }
-                        }}
-                      >
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            className={cn(
-                              "w-full justify-between h-9",
-                              !currentMember.location && "text-muted-foreground"
-                            )}
-                            onClick={() => {
-                              if (currentMember.showCustomLocation) {
-                                setCurrentMember(prev => ({ ...prev, showCustomLocation: false }))
-                              }
-                            }}
-                          >
-                            {currentMember.showCustomLocation ? currentMember.customLocation || t("Enter custom location") : t(currentMember.location) || t("Select district")}
-                            <Check className="ml-2 h-4 w-4 opacity-50" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-full p-0 max-h-[350px] overflow-y-auto" align="start">
-                          <Command>
-                            <CommandInput placeholder={t("Search district...")} />
-                            <CommandEmpty>{t("No district found.")}</CommandEmpty>
-                            <CommandGroup>
-                              {TAMIL_NADU_DISTRICTS.map((district) => (
-                                <CommandItem
-                                  key={district}
-                                  value={district}
-                                  onSelect={() => {
-                                    setCurrentMember(prev => ({ ...prev, location: district, showCustomLocation: false }))
-                                  }}
-                                >
-                                  <Check
-                                    className={cn(
-                                      "mr-2 h-4 w-4",
-                                      currentMember.location === district ? "opacity-100" : "opacity-0"
-                                    )}
-                                  />
-                                  {t(district)}
-                                </CommandItem>
-                              ))}
+                </div>
+                <div className="text-sm space-y-1">
+                  <p><span className="font-medium">{t("Name")}:</span> {member.name}</p>
+                  {member.mobileNumber && <p><span className="font-medium">{t("Mobile")}:</span> {member.mobileNumber}</p>}
+                  {member.email && <p><span className="font-medium">{t("Email")}:</span> {member.email}</p>}
+                  {member.businessName && <p><span className="font-medium">{t("Business Name")}:</span> {member.businessName}</p>}
+                  {member.location && <p><span className="font-medium">{t("Location")}:</span> {t(member.location)}</p>}
+                </div>
+              </div>
+            ))}
+
+            {/* Add Member Form - Shows one at a time */}
+            {showAddMemberForm && (
+              <div className="border rounded-lg p-4 space-y-3 bg-primary/5">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">{t("Add Member")} {secondaryMembers.length + 1}</span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                    onClick={() => {
+                      setShowAddMemberForm(false)
+                      setCurrentMember({ name: '', mobileNumber: '', email: '', businessName: '', businessCategory: '', location: '', isMember: false, showCustomLocation: false, customLocation: '' })
+                    }}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label className="text-xs">{t("Name")} *</Label>
+                    <Input
+                      placeholder={t("Full name")}
+                      value={currentMember.name}
+                      onChange={(e) => setCurrentMember(prev => ({ ...prev, name: e.target.value }))}
+                      className="h-9"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs">{t("Mobile")}</Label>
+                    <Input
+                      placeholder="+91..."
+                      value={currentMember.mobileNumber}
+                      onChange={(e) => setCurrentMember(prev => ({ ...prev, mobileNumber: e.target.value }))}
+                      className="h-9"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs">{t("Email")}</Label>
+                    <Input
+                      type="email"
+                      placeholder="email@example.com"
+                      value={currentMember.email}
+                      onChange={(e) => setCurrentMember(prev => ({ ...prev, email: e.target.value }))}
+                      className="h-9"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs">{t("Business Name")}</Label>
+                    <Input
+                      placeholder={t("Business name")}
+                      value={currentMember.businessName}
+                      onChange={(e) => setCurrentMember(prev => ({ ...prev, businessName: e.target.value }))}
+                      className="h-9"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs">Business Category</Label>
+                    <Input
+                      placeholder="Category"
+                      value={currentMember.businessCategory}
+                      onChange={(e) => setCurrentMember(prev => ({ ...prev, businessCategory: e.target.value }))}
+                      className="h-9"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs">{t("Location")}</Label>
+                    <Popover
+                      open={currentMember.showCustomLocation ? false : undefined}
+                      onOpenChange={() => {
+                        if (!currentMember.showCustomLocation) {
+                          setCurrentMember(prev => ({ ...prev, showCustomLocation: false }))
+                        }
+                      }}
+                    >
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          className={cn(
+                            "w-full justify-between h-9",
+                            !currentMember.location && "text-muted-foreground"
+                          )}
+                          onClick={() => {
+                            if (currentMember.showCustomLocation) {
+                              setCurrentMember(prev => ({ ...prev, showCustomLocation: false }))
+                            }
+                          }}
+                        >
+                          {currentMember.showCustomLocation ? currentMember.customLocation || t("Enter custom location") : t(currentMember.location) || t("Select district")}
+                          <Check className="ml-2 h-4 w-4 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full p-0 max-h-[350px] overflow-y-auto" align="start">
+                        <Command>
+                          <CommandInput placeholder={t("Search district...")} />
+                          <CommandEmpty>{t("No district found.")}</CommandEmpty>
+                          <CommandGroup>
+                            {TAMIL_NADU_DISTRICTS.map((district) => (
                               <CommandItem
-                                value="other"
+                                key={district}
+                                value={district}
                                 onSelect={() => {
-                                  setCurrentMember(prev => ({ ...prev, showCustomLocation: true, location: '' }))
+                                  setCurrentMember(prev => ({ ...prev, location: district, showCustomLocation: false }))
                                 }}
                               >
                                 <Check
                                   className={cn(
                                     "mr-2 h-4 w-4",
-                                    currentMember.showCustomLocation ? "opacity-100" : "opacity-0"
+                                    currentMember.location === district ? "opacity-100" : "opacity-0"
                                   )}
                                 />
-                                {t("Other (enter manually)")}
+                                {t(district)}
                               </CommandItem>
-                            </CommandGroup>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
-                      {currentMember.showCustomLocation && (
-                        <Input
-                          placeholder={t("Enter location")}
-                          value={currentMember.customLocation || ''}
-                          onChange={(e) => {
-                            setCurrentMember(prev => ({ ...prev, customLocation: e.target.value, location: e.target.value }))
-                          }}
-                          className="mt-2 h-9"
-                        />
-                      )}
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-xs">{t("Gender (Optional)")}</Label>
-                      <Select
-                        value={currentMember.gender}
-                        onValueChange={(value) => setCurrentMember(prev => ({ ...prev, gender: value }))}
-                      >
-                        <SelectTrigger className="h-9">
-                          <SelectValue placeholder="Select gender" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="male">Male</SelectItem>
-                          <SelectItem value="female">Female</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                          {/* <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem> */}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                            ))}
+                            <CommandItem
+                              value="other"
+                              onSelect={() => {
+                                setCurrentMember(prev => ({ ...prev, showCustomLocation: true, location: '' }))
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  currentMember.showCustomLocation ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              {t("Other (enter manually)")}
+                            </CommandItem>
+                          </CommandGroup>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                    {currentMember.showCustomLocation && (
+                      <Input
+                        placeholder={t("Enter location")}
+                        value={currentMember.customLocation || ''}
+                        onChange={(e) => {
+                          setCurrentMember(prev => ({ ...prev, customLocation: e.target.value, location: e.target.value }))
+                        }}
+                        className="mt-2 h-9"
+                      />
+                    )}
                   </div>
-                  <Button
-                    type="button"
-                    className="w-full"
-                    disabled={!currentMember.name.trim()}
-                    onClick={() => {
-                      // Validate required fields
-                      if (!currentMember.name.trim()) {
-                        setDbError("Member name is required")
-                        return
-                      }
-                      
-                      // Validate mobile number format if provided
-                      if (currentMember.mobileNumber && !/^\+?[1-9]\d{1,14}$/.test(currentMember.mobileNumber)) {
-                        setDbError("Invalid mobile number format for member")
-                        return
-                      }
-                      
-                      // Validate email format if provided
-                      if (currentMember.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(currentMember.email)) {
-                        setDbError("Invalid email format for member")
-                        return
-                      }
-                      
-                      setSecondaryMembers(prev => [...prev, { ...currentMember }])
-                      setCurrentMember({ name: '', mobileNumber: '', email: '', businessName: '', businessCategory: '', location: '', isMember: false, showCustomLocation: false, customLocation: '' })
-                      setShowAddMemberForm(false)
-                      setDbError(null)
-                    }}
-                  >
-                    <Check className="h-4 w-4 mr-2" />
-                    {t("Add Member")}
-                  </Button>
+                  <div className="space-y-2">
+                    <Label className="text-xs">{t("Gender (Optional)")}</Label>
+                    <Select
+                      value={currentMember.gender}
+                      onValueChange={(value) => setCurrentMember(prev => ({ ...prev, gender: value }))}
+                    >
+                      <SelectTrigger className="h-9">
+                        <SelectValue placeholder="Select gender" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="male">Male</SelectItem>
+                        <SelectItem value="female">Female</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                        {/* <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem> */}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-              )}
-              
-              {!showAddMemberForm && (
                 <Button
                   type="button"
-                  variant="outline"
                   className="w-full"
-                  onClick={() => setShowAddMemberForm(true)}
+                  disabled={!currentMember.name.trim()}
+                  onClick={() => {
+                    // Validate required fields
+                    if (!currentMember.name.trim()) {
+                      setDbError("Member name is required")
+                      return
+                    }
+
+                    // Validate mobile number format if provided
+                    if (currentMember.mobileNumber && !/^\+?[1-9]\d{1,14}$/.test(currentMember.mobileNumber)) {
+                      setDbError("Invalid mobile number format for member")
+                      return
+                    }
+
+                    // Validate email format if provided
+                    if (currentMember.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(currentMember.email)) {
+                      setDbError("Invalid email format for member")
+                      return
+                    }
+
+                    setSecondaryMembers(prev => [...prev, { ...currentMember }])
+                    setCurrentMember({ name: '', mobileNumber: '', email: '', businessName: '', businessCategory: '', location: '', isMember: false, showCustomLocation: false, customLocation: '' })
+                    setShowAddMemberForm(false)
+                    setDbError(null)
+                  }}
                 >
-                  <UserPlus className="h-4 w-4 mr-2" />
+                  <Check className="h-4 w-4 mr-2" />
                   {t("Add Member")}
                 </Button>
-              )}
+              </div>
+            )}
+
+            {!showAddMemberForm && (
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => setShowAddMemberForm(true)}
+              >
+                <UserPlus className="h-4 w-4 mr-2" />
+                {t("Add Member")}
+              </Button>
+            )}
           </div>
 
 
@@ -1113,7 +1113,7 @@ export function RegisterForm() {
                 Loading ticket type...
               </div>
             )}
-            
+
             {/* Pricing Display */}
             {eventData.ticketType && pricePerPerson > 0 && (
               <div className="bg-muted/50 rounded-lg p-4 space-y-3">
@@ -1180,7 +1180,7 @@ export function RegisterForm() {
                     <span className="font-bold text-xl text-green-800">₹{taxCalculation.totalAmount}</span>
                   </div>
                   <p className="text-xs text-green-600 mt-1">
-                    {taxCalculation.taxRate > 0 
+                    {taxCalculation.taxRate > 0
                       ? `₹${taxCalculation.baseAmount} + ₹${taxCalculation.taxAmount} (GST)`
                       : `₹${taxCalculation.baseAmount} (${t("No GST")})`
                     }

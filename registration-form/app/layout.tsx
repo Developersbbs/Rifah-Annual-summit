@@ -15,6 +15,7 @@ const geistMono = Geist_Mono({
 const notoSansTamil = Noto_Sans_Tamil({
   variable: "--font-noto-sans-tamil",
   subsets: ["tamil"],
+   weight: ['300', '400'],
 });
 
 export const metadata: Metadata = {

@@ -5,10 +5,23 @@ import { ParticipantsTable } from "@/components/participants-table"
 import { columns } from "@/app/admin/columns"
 import { useTranslation } from "react-i18next"
 import "@/lib/i18n"
+import { Participant } from "@/app/admin/columns"
+
+interface AdminStats {
+  totalRegistrations: number
+  totalGuests: number
+  totalAmount: number
+  pendingApprovals: number
+  approvedRegistrations: number
+  rejectedRegistrations: number
+  cashPayments: number
+  onlinePayments: number
+  totalMembers?: number
+}
 
 interface AdminContentProps {
-  participants: any[]
-  stats: any
+  participants: Participant[]
+  stats: AdminStats
   userRole: string
 }
 
