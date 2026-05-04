@@ -77,21 +77,21 @@ export async function POST(req: NextRequest) {
       console.log("GST found in cache:", normalizedGst)
       
       // Still need to check duplicate for this specific event
-      if (eventId) {
-        const duplicate = await Participant.findOne({
-          gstNumber: normalizedGst,
-          eventId: eventId
-        }).lean()
+      // if (eventId) {
+      //   const duplicate = await Participant.findOne({
+      //     gstNumber: normalizedGst,
+      //     eventId: eventId
+      //   }).lean()
 
-        if (duplicate) {
-          return NextResponse.json({
-            valid: false,
-            error: "This GST number has already been used for this event",
-            gstName: cached.gstName,
-            isDuplicate: true
-          })
-        }
-      }
+      //   if (duplicate) {
+      //     return NextResponse.json({
+      //       valid: false,
+      //       error: "This GST number has already been used for this event",
+      //       gstName: cached.gstName,
+      //       isDuplicate: true
+      //     })
+      //   }
+      // }
 
       return NextResponse.json({
         valid: cached.valid,
