@@ -249,6 +249,9 @@ const resources = {
       "Secondary Members": "Secondary Members",
       "Total Members": "Total Members",
       "Total Amount": "Total Amount",
+      "All Status": "All Status",
+      "All Genders": "All Genders",
+      "Registrations": "Registrations",
 
     }
   },
@@ -398,6 +401,9 @@ const resources = {
       "All Types": "அனைத்து வகைகள்",
       "Primary": "முதன்மை",
       "Secondary": "கூடுதல்",
+      "Registrations": "பதிவுகள்",
+      "All Status": "அனைத்து நிலைகள்",
+      "All Genders": "அனைத்து பாலினங்கள்",
       "Search by name or phone...": "பெயர் அல்லது தொலைபேசி மூலம் தேடவும்...",
       "Status": "நிலை",
       "No records found": "பதிவுகள் எதுவும் இல்லை",
