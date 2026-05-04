@@ -175,6 +175,12 @@ export default function PongalLandingPage() {
       name: "Abdul Nabeel",
       role: "Managing Director, Arabian Garden Seafood Restaurant",
       image: "/assets/speaker-11.jpeg"
+    },
+    {
+      id: 12,
+      name: "Mr. Mirza Afzal Baig ",
+      role: "General Secretary Rifah Chamber Of Commerce & Industry",
+      image: "/assets/speaker-14.jpeg"
     }
   ]
 
@@ -966,6 +972,9 @@ export default function PongalLandingPage() {
                         "/assets/slider14.jpg",
                         "/assets/slider19.jpeg",
                         "/assets/slider-22.png",
+                        "/assets/slider23.png",
+                        "/assets/slider24.jpeg",
+                        "/assets/slider25.jpeg",
                       ].map((src, i) => (
                         <div
                           key={`${dupIdx}-${i}`}
