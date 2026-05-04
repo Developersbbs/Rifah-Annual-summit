@@ -65,6 +65,7 @@ export function ParticipantsTable<TData, TValue>({
     // Custom Filters State
     const [dateRange, setDateRange] = React.useState<DateRange | undefined>()
     const [locationFilter, setLocationFilter] = React.useState<string>("all")
+    const [genderFilter, setGenderFilter] = React.useState<string>("all")
 
     // Calculate Location Counts
     const locationOptions = React.useMemo(() => {
@@ -100,8 +101,15 @@ export function ParticipantsTable<TData, TValue>({
             })
         }
 
+        // Gender Filter
+        if (genderFilter !== "all") {
+            processedData = processedData.filter((item) =>
+                ((item as unknown as IParticipant).gender || "Unassigned").toString().toLowerCase() === genderFilter.toLowerCase()
+            )
+        }
+
         return processedData
-    }, [data, dateRange, locationFilter])
+    }, [data, dateRange, locationFilter, genderFilter])
 
     const tableColumns = React.useMemo(() => {
         if (userRole !== 'super-admin') return columns;
@@ -280,6 +288,21 @@ export function ParticipantsTable<TData, TValue>({
                                         {loc} ({count})
                                     </SelectItem>
                                 ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    {/* Gender Filter */}
+                    <div className="w-[150px]">
+                        <Select value={genderFilter} onValueChange={setGenderFilter}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Filter by Gender" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Genders</SelectItem>
+                                <SelectItem value="male">Male</SelectItem>
+                                <SelectItem value="female">Female</SelectItem>
+                                <SelectItem value="other">Other</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
