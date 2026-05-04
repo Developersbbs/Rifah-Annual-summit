@@ -15,12 +15,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 
-declare global {
-    interface Window {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        Razorpay: any;
-    }
-}
+
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from "@/components/ui/input-otp"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -103,7 +98,7 @@ export function QuickCreateForm({ createdBy }: QuickCreateFormProps = {}) {
 
     // Registration Data State
     const [verifiedPhone, setVerifiedPhone] = useState("")
-    const [activeEvent, setActiveEvent] = useState<{ _id: string; eventName: string; startDate: string; endDate: string; ticketsPrice: { name: string; price: number }[] } | null>(null)
+    const [activeEvent, setActiveEvent] = useState<{ _id: string; eventName: string; startDate: string; endDate: string; eventDate: string; ticketsPrice: { name: string; price: number }[] } | null>(null)
     const [isLoadingEvent, setIsLoadingEvent] = useState(false)
     const [personalData, setPersonalData] = useState({ 
         name: "",
