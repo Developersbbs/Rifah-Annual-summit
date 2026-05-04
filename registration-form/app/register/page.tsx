@@ -33,7 +33,7 @@ interface EventStatus {
 
 export default function RegisterPage() {
   const router = useRouter()
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [eventStatus, setEventStatus] = useState<EventStatus | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -120,7 +120,7 @@ export default function RegisterPage() {
         </div>
         <div className="bg-muted relative hidden lg:block">
           <Image
-            src="/assets/register-bg.jpeg"
+            src={i18n.language === 'ta' ? "/assets/register-bg-1.jpeg" : "/assets/register-bg.jpeg"}
             alt="Image"
             fill
             className="object-cover dark:brightness-[0.2] dark:grayscale"
@@ -166,7 +166,7 @@ export default function RegisterPage() {
         </div>
         <div className="bg-muted relative hidden lg:block">
           <Image
-            src="/assets/register-bg.jpeg"
+            src={i18n.language === 'ta' ? "/assets/register-bg-1.jpeg" : "/assets/register-bg.jpeg"}
             alt="Image"
             fill
             className="object-cover dark:brightness-[0.2] dark:grayscale"
@@ -208,7 +208,7 @@ export default function RegisterPage() {
       </div>
       <div className="bg-muted relative hidden lg:block">
         <Image
-          src="/assets/register-bg.jpeg"
+          src={i18n.language === 'ta' ? "/assets/register-bd-2.jpeg" : "/assets/register-bg.jpeg"}
           alt="Image"
           fill
           className="object-cover dark:brightness-[0.2] dark:grayscale"
