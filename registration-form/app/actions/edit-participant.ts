@@ -15,6 +15,8 @@ export async function updateParticipant(id: string, data: Partial<IParticipant>)
             businessName,
             businessCategory,
             location,
+            gender,
+            ticketType,
             secondaryMembers,
             registrationLanguage,
         } = data
@@ -35,6 +37,8 @@ export async function updateParticipant(id: string, data: Partial<IParticipant>)
         if (businessName !== undefined) existingParticipant.businessName = businessName
         if (businessCategory !== undefined) existingParticipant.businessCategory = businessCategory
         if (location !== undefined) existingParticipant.location = location
+        if (gender !== undefined) existingParticipant.gender = gender
+        if (ticketType !== undefined) existingParticipant.ticketType = ticketType
         if (registrationLanguage !== undefined) existingParticipant.registrationLanguage = registrationLanguage
 
         // Allow editing secondary members' name, email, business name, business category, location only
@@ -62,6 +66,9 @@ export async function updateParticipant(id: string, data: Partial<IParticipant>)
                     }
                     if (updatedMember.location !== undefined) {
                         existingParticipant.secondaryMembers[index].location = updatedMember.location
+                    }
+                    if (updatedMember.gender !== undefined) {
+                        existingParticipant.secondaryMembers[index].gender = updatedMember.gender
                     }
                 }
             })

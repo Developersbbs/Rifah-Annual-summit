@@ -26,6 +26,7 @@ export interface ISecondaryMember {
     isMember?: boolean;
     isCheckedIn: boolean;
     checkedInAt?: Date | string;
+    gender?: string;
 }
 
 export interface IApprovalLog {

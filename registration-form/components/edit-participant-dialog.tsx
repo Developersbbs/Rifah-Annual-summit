@@ -19,6 +19,7 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Loader2, AlertCircle } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { IParticipant } from "@/lib/types"
 
 const personalDetailsSchema = z.object({
@@ -27,6 +28,8 @@ const personalDetailsSchema = z.object({
     businessName: z.string().optional(),
     businessCategory: z.string().optional(),
     location: z.string().optional(),
+    gender: z.string().optional(),
+    ticketType: z.string().optional(),
 })
 
 interface EditParticipantDialogProps {
@@ -39,7 +42,7 @@ interface EditParticipantDialogProps {
 export function EditParticipantDialog({ participant, open, onOpenChange, onSuccess }: EditParticipantDialogProps) {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [dbError, setDbError] = useState<string | null>(null)
-    const [secondaryMembers, setSecondaryMembers] = useState<Array<{ name: string; email: string; businessName: string; businessCategory: string; location: string; isCheckedIn: boolean }>>([])
+    const [secondaryMembers, setSecondaryMembers] = useState<Array<{ name: string; email: string; businessName: string; businessCategory: string; location: string; gender: string; isCheckedIn: boolean }>>([])
 
     const form = useForm<z.infer<typeof personalDetailsSchema>>({
         resolver: zodResolver(personalDetailsSchema),
@@ -49,6 +52,8 @@ export function EditParticipantDialog({ participant, open, onOpenChange, onSucce
             businessName: participant.businessName || "",
             businessCategory: participant.businessCategory || "",
             location: participant.location || "",
+            gender: participant.gender || "",
+            ticketType: participant.ticketType || "",
         }
     })
 
@@ -61,6 +66,8 @@ export function EditParticipantDialog({ participant, open, onOpenChange, onSucce
                 businessName: participant.businessName || "",
                 businessCategory: participant.businessCategory || "",
                 location: participant.location || "",
+                gender: participant.gender || "",
+                ticketType: participant.ticketType || "",
             })
             // Initialize secondary members
             setSecondaryMembers(
@@ -70,6 +77,7 @@ export function EditParticipantDialog({ participant, open, onOpenChange, onSucce
                     businessName: member.businessName || "",
                     businessCategory: member.businessCategory || "",
                     location: member.location || "",
+                    gender: member.gender || "",
                     isCheckedIn: member.isCheckedIn || false,
                 })) || []
             )
@@ -149,6 +157,34 @@ export function EditParticipantDialog({ participant, open, onOpenChange, onSucce
                                             <FormMessage />
                                         </FormItem>
                                     )} />
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <FormField control={form.control} name="gender" render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Gender</FormLabel>
+                                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                    <FormControl>
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="Select Gender" />
+                                                        </SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectContent>
+                                                        <SelectItem value="male">Male</SelectItem>
+                                                        <SelectItem value="female">Female</SelectItem>
+                                                        <SelectItem value="other">Other</SelectItem>
+                                                        <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )} />
+                                        <FormField control={form.control} name="ticketType" render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Ticket Type</FormLabel>
+                                                <FormControl><Input placeholder="Ticket Type" {...field} /></FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )} />
+                                    </div>
                                 </div>
                             </div>
 
@@ -217,6 +253,27 @@ export function EditParticipantDialog({ participant, open, onOpenChange, onSucce
                                                             setSecondaryMembers(updated)
                                                         }}
                                                     />
+                                                </div>
+                                                <div>
+                                                    <Label className="text-xs">Gender</Label>
+                                                    <Select 
+                                                        value={member.gender} 
+                                                        onValueChange={(value) => {
+                                                            const updated = [...secondaryMembers]
+                                                            updated[index] = { ...updated[index], gender: value }
+                                                            setSecondaryMembers(updated)
+                                                        }}
+                                                    >
+                                                        <SelectTrigger className="h-10">
+                                                            <SelectValue placeholder="Select Gender" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="male">Male</SelectItem>
+                                                            <SelectItem value="female">Female</SelectItem>
+                                                            <SelectItem value="other">Other</SelectItem>
+                                                            <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
                                                 </div>
                                             </div>
                                         </div>

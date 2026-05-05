@@ -142,9 +142,9 @@ export default function PongalLandingPage() {
     },
     {
       id: 6,
-      name: "YBhg. Dato Hj Abdul Hamid PV",
-      role: "President - Malaysian Indian Muslim Chamber of Commerce & Industry.",
-      image: "/assets/speaker-6.jpeg"
+      name: "Fathhi",
+      role: "Founder - Elara Ventures",
+      image: "/assets/speaker-15.png"
     },
     {
       id: 7,
