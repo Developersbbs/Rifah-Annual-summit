@@ -2,6 +2,7 @@ import crypto from "crypto"
 import dbConnect from "@/lib/db"
 import Participant from "@/models/Participant"
 import Event from "@/models/Event"
+import { IParticipant } from "@/lib/types"
 
 export async function POST(req: Request) {
   try {
@@ -82,7 +83,7 @@ export async function POST(req: Request) {
         const { sendRegistrationEmails } = await import("@/lib/email")
 
         await sendRegistrationEmails(
-          participant as any,
+          participant as unknown as IParticipant,
           activeEvent.eventName
         )
 
@@ -92,8 +93,9 @@ export async function POST(req: Request) {
     }
 
     return Response.json({ success: true })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Webhook error:", error)
-    return Response.json({ error: error.message }, { status: 500 })
+    const errorMessage = error instanceof Error ? error.message : "Unknown error"
+    return Response.json({ error: errorMessage }, { status: 500 })
   }
 }
