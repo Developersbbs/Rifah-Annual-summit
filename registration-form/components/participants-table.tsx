@@ -15,6 +15,7 @@ import {
 } from "@tanstack/react-table"
 import { ChevronDown, Download, Search, Pencil } from "lucide-react"
 import { EditParticipantDialog } from "@/components/edit-participant-dialog"
+import { DeleteUserDialog } from "@/components/delete-user-dialog"
 import { DateRange } from "react-day-picker"
 import { isWithinInterval, parseISO, startOfDay, endOfDay } from "date-fns"
 import { IParticipant } from "@/lib/types"
@@ -61,6 +62,19 @@ export function ParticipantsTable<TData, TValue>({
     const [rowSelection, setRowSelection] = React.useState({})
     const [globalFilter, setGlobalFilter] = React.useState("")
     const [editingParticipant, setEditingParticipant] = React.useState<IParticipant | null>(null)
+    const [deletingParticipant, setDeletingParticipant] = React.useState<IParticipant | null>(null)
+
+    // Handle delete dialog events
+    React.useEffect(() => {
+        const handleDeleteEvent = (event: CustomEvent) => {
+            setDeletingParticipant(event.detail.participant)
+        }
+
+        window.addEventListener('openDeleteDialog', handleDeleteEvent as EventListener)
+        return () => {
+            window.removeEventListener('openDeleteDialog', handleDeleteEvent as EventListener)
+        }
+    }, [])
 
     // Custom Filters State
     const [dateRange, setDateRange] = React.useState<DateRange | undefined>()
@@ -112,11 +126,13 @@ export function ParticipantsTable<TData, TValue>({
     }, [data, dateRange, locationFilter, genderFilter])
 
     const tableColumns = React.useMemo(() => {
-        if (userRole !== 'super-admin') return columns;
+        // Set user role globally for columns to access
+        ;(window as any).currentUserRole = userRole
 
-        return [
-            ...columns,
-            {
+        const baseColumns = [...columns]
+        
+        if (userRole === 'super-admin') {
+            baseColumns.push({
                 id: "edit-participant",
                 enableHiding: false,
                 cell: ({ row }: { row: { original: TData } }) => {
@@ -128,8 +144,10 @@ export function ParticipantsTable<TData, TValue>({
                         </div>
                     )
                 }
-            }
-        ]
+            })
+        }
+
+        return baseColumns
     }, [columns, userRole])
 
 
@@ -467,6 +485,19 @@ export function ParticipantsTable<TData, TValue>({
                             // But I don't have router here.
                             // Actually, I can rely on auto-refresh or add router.
                             setEditingParticipant(null)
+                        }}
+                    />
+                )
+            }
+            {
+                deletingParticipant && userRole === 'super-admin' && (
+                    <DeleteUserDialog
+                        open={!!deletingParticipant}
+                        onOpenChange={(open) => !open && setDeletingParticipant(null)}
+                        participant={deletingParticipant}
+                        onSuccess={() => {
+                            setDeletingParticipant(null)
+                            window.location.reload()
                         }}
                     />
                 )

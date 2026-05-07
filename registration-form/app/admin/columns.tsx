@@ -3,7 +3,7 @@
 import { ColumnDef } from "@tanstack/react-table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { ArrowUpDown, CheckCircle, XCircle } from "lucide-react"
+import { ArrowUpDown, CheckCircle, XCircle, Trash2 } from "lucide-react"
 import { IParticipant } from "@/lib/types"
 
 // Types matching what getAdminData returns
@@ -133,6 +133,7 @@ export const columns: ColumnDef<Participant>[] = [
             const approvalStatus = row.getValue("approvalStatus") as string
             const paymentMethod = row.getValue("paymentMethod") as string
             const paymentStatus = row.getValue("paymentStatus") as string
+            const userRole = (window as any).currentUserRole || "admin" // This will be passed from the table component
 
             const handleApproveEntry = async () => {
                 try {
@@ -177,6 +178,15 @@ export const columns: ColumnDef<Participant>[] = [
                 }
             }
 
+            const handleDelete = () => {
+                // This will be handled by the parent component
+                // We'll trigger a custom event or use a callback
+                const deleteEvent = new CustomEvent('openDeleteDialog', { 
+                    detail: { participant: row.original } 
+                })
+                window.dispatchEvent(deleteEvent)
+            }
+
             // Determine button text based on payment method and status
             const getButtonText = () => {
                 if (paymentMethod === "cash" && paymentStatus === "pending") {
@@ -186,7 +196,7 @@ export const columns: ColumnDef<Participant>[] = [
             }
 
             return (
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                     {approvalStatus === "pending" && (
                         <div className="flex gap-1">
                             <Button
@@ -218,6 +228,17 @@ export const columns: ColumnDef<Participant>[] = [
                             <XCircle className="w-3 h-3 mr-1" />
                             Rejected
                         </Badge>
+                    )}
+                    {userRole === 'super-admin' && (
+                        <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={handleDelete}
+                            className="bg-red-600 hover:bg-red-700"
+                        >
+                            <Trash2 className="w-3 h-3 mr-1" />
+                            Delete
+                        </Button>
                     )}
                 </div>
             )

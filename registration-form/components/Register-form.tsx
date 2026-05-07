@@ -59,7 +59,7 @@ const personalDetailsSchema = z.object({
   businessName: z.string().min(2, "Business name is required"),
   businessCategory: z.string().min(1, "Please enter a business category"),
   location: z.string().min(1, "Please select a location"),
-  gender: z.string().optional(),
+  gender: z.string().min(1, "Please select a gender"),
 })
 
 export function RegisterForm() {
@@ -80,13 +80,14 @@ export function RegisterForm() {
     businessName: string
     businessCategory: string
     location: string
-    gender?: string
+    gender: string
   }>({
     name: "",
     email: "",
     businessName: "",
     businessCategory: "",
-    location: ""
+    location: "",
+    gender: ""
   })
   const [eventData, setEventData] = useState({
     ticketType: "",
@@ -107,8 +108,8 @@ export function RegisterForm() {
   })
   const debouncedGstNumber = useDebounce(gstNumber, 800)
   const [termsAccepted, setTermsAccepted] = useState(false)
-  const [secondaryMembers, setSecondaryMembers] = useState<{ name: string; mobileNumber: string; email: string; businessName: string; businessCategory: string; location: string; gender?: string; isMember?: boolean; showCustomLocation?: boolean; customLocation?: string }[]>([])
-  const [currentMember, setCurrentMember] = useState<{ name: string; mobileNumber: string; email: string; businessName: string; businessCategory: string; location: string; gender?: string; isMember?: boolean; showCustomLocation?: boolean; customLocation?: string }>({ name: '', mobileNumber: '', email: '', businessName: '', businessCategory: '', location: '', isMember: false, showCustomLocation: false, customLocation: '' })
+  const [secondaryMembers, setSecondaryMembers] = useState<{ name: string; mobileNumber: string; email: string; businessName: string; businessCategory: string; location: string; gender: string; isMember?: boolean; showCustomLocation?: boolean; customLocation?: string }[]>([])
+  const [currentMember, setCurrentMember] = useState<{ name: string; mobileNumber: string; email: string; businessName: string; businessCategory: string; location: string; gender: string; isMember?: boolean; showCustomLocation?: boolean; customLocation?: string }>({ name: '', mobileNumber: '', email: '', businessName: '', businessCategory: '', location: '', gender: '', isMember: false, showCustomLocation: false, customLocation: '' })
   const [showAddMemberForm, setShowAddMemberForm] = useState(false)
   const [primaryLocationOpen, setPrimaryLocationOpen] = useState(false)
   const [primaryCustomLocation, setPrimaryCustomLocation] = useState("")
@@ -149,7 +150,8 @@ export function RegisterForm() {
       email: "",
       businessName: "",
       businessCategory: "",
-      location: ""
+      location: "",
+      gender: ""
     }
   })
 
@@ -814,7 +816,7 @@ export function RegisterForm() {
 
               <FormField control={personalForm.control} name="gender" render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t("Gender (Optional)")}</FormLabel>
+                  <FormLabel>{t("Gender")}</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
@@ -824,7 +826,6 @@ export function RegisterForm() {
                     <SelectContent>
                       <SelectItem value="male">{t("Male")}</SelectItem>
                       <SelectItem value="female">{t("Female")}</SelectItem>
-                      <SelectItem value="other">{t("Other")}</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -904,7 +905,18 @@ export function RegisterForm() {
                       size="sm"
                       className="h-8 w-8 p-0"
                       onClick={() => {
-                        setCurrentMember(member)
+                        setCurrentMember({
+                          name: member.name || '',
+                          mobileNumber: member.mobileNumber || '',
+                          email: member.email || '',
+                          businessName: member.businessName || '',
+                          businessCategory: member.businessCategory || '',
+                          location: member.location || '',
+                          gender: member.gender || '',
+                          isMember: member.isMember || false,
+                          showCustomLocation: member.showCustomLocation || false,
+                          customLocation: member.customLocation || ''
+                        })
                         setShowAddMemberForm(true)
                         setSecondaryMembers(prev => prev.filter((_, i) => i !== index))
                       }}
@@ -944,7 +956,7 @@ export function RegisterForm() {
                     className="h-8 w-8 p-0"
                     onClick={() => {
                       setShowAddMemberForm(false)
-                      setCurrentMember({ name: '', mobileNumber: '', email: '', businessName: '', businessCategory: '', location: '', isMember: false, showCustomLocation: false, customLocation: '' })
+                      setCurrentMember({ name: '', mobileNumber: '', email: '', businessName: '', businessCategory: '', location: '', gender: '', isMember: false, showCustomLocation: false, customLocation: '' })
                     }}
                   >
                     <X className="h-4 w-4" />
@@ -1077,7 +1089,7 @@ export function RegisterForm() {
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-xs">{t("Gender (Optional)")}</Label>
+                    <Label className="text-xs">{t("Gender")}</Label>
                     <Select
                       value={currentMember.gender}
                       onValueChange={(value) => setCurrentMember(prev => ({ ...prev, gender: value }))}
@@ -1088,7 +1100,6 @@ export function RegisterForm() {
                       <SelectContent>
                         <SelectItem value="male">{t("Male")}</SelectItem>
                         <SelectItem value="female">{t("Female")}</SelectItem>
-                        <SelectItem value="other">{t("Other")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -1117,7 +1128,7 @@ export function RegisterForm() {
                     }
 
                     setSecondaryMembers(prev => [...prev, { ...currentMember }])
-                    setCurrentMember({ name: '', mobileNumber: '', email: '', businessName: '', businessCategory: '', location: '', isMember: false, showCustomLocation: false, customLocation: '' })
+                    setCurrentMember({ name: '', mobileNumber: '', email: '', businessName: '', businessCategory: '', location: '', gender: '', isMember: false, showCustomLocation: false, customLocation: '' })
                     setShowAddMemberForm(false)
                     setDbError(null)
                   }}
