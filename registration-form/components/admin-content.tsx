@@ -6,6 +6,9 @@ import { columns } from "@/app/admin/columns"
 import { useTranslation } from "react-i18next"
 import "@/lib/i18n"
 import { Participant } from "@/app/admin/columns"
+import { Button } from "@/components/ui/button"
+import { Plus } from "lucide-react"
+import Link from "next/link"
 
 interface AdminStats {
   totalRegistrations: number
@@ -34,6 +37,12 @@ export function AdminContent({ participants, stats, userRole }: AdminContentProp
         <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
           <div className="flex justify-between items-center px-4 lg:px-6">
             <h2 className="text-2xl font-bold">{t("Dashboard")}</h2>
+            <Link href="/admin/register">
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                Register Participant
+              </Button>
+            </Link>
           </div>
           <SectionCards stats={stats} />
           <div className="px-4 lg:px-6">
