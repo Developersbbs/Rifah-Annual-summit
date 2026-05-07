@@ -66,10 +66,10 @@ export async function registerParticipant(data: RegisterParticipantData) {
         const finalAgeGroups = { guest: ageGuest || 0 }
 
         // COMPREHENSIVE VALIDATION
-        if (!mobileNumber || !name || !ticketType) {
+        if (!mobileNumber || !name) {
             return {
                 success: false,
-                error: "Missing required fields: mobile number, name, and ticket type are required"
+                error: "Missing required fields: mobile number and name are required"
             }
         }
 
