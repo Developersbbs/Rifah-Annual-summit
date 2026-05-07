@@ -362,7 +362,7 @@ export async function registerParticipant(data: RegisterParticipantData) {
         if (error && typeof error === 'object' && 'code' in error && error.code === 11000) {
             return {
                 success: false,
-                error: "This mobile number is already registered for this event"
+                error: "This mobile number is already registered. If you have a pending registration, please try again after a few minutes."
             }
         }
 

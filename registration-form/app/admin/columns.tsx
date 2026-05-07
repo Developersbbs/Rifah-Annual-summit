@@ -108,7 +108,7 @@ export const columns: ColumnDef<Participant>[] = [
             const status = row.getValue("approvalStatus") as string
             return (
                 <Badge 
-                    variant={status === "approved" ? "default" : status === "rejected" ? "destructive" : "secondary"}
+                    variant={status === "approved" ? "default" : "secondary"}
                 >
                     {status}
                 </Badge>
@@ -157,27 +157,7 @@ export const columns: ColumnDef<Participant>[] = [
                 }
             }
 
-            const handleReject = async () => {
-                const reason = prompt("Please enter rejection reason (optional):")
-
-                try {
-                    const response = await fetch("/api/reject-registration", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ participantId: row.original._id, reason })
-                    })
-
-                    if (response.ok) {
-                        window.location.reload()
-                    } else {
-                        const { error } = await response.json()
-                        alert(error || "Failed to reject")
-                    }
-                } catch {
-                    alert("Error rejecting registration")
-                }
-            }
-
+            
             const handleDelete = () => {
                 // This will be handled by the parent component
                 // We'll trigger a custom event or use a callback
@@ -207,14 +187,6 @@ export const columns: ColumnDef<Participant>[] = [
                                 <CheckCircle className="w-2 h-2 mr-1" />
                                 {getButtonText()}
                             </Button>
-                            <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={handleReject}
-                            >
-                                <XCircle className="w-3 h-3 mr-1" />
-                                Reject
-                            </Button>
                         </div>
                     )}
                     {approvalStatus === "approved" && (
@@ -223,13 +195,7 @@ export const columns: ColumnDef<Participant>[] = [
                             Approved
                         </Badge>
                     )}
-                    {approvalStatus === "rejected" && (
-                        <Badge variant="destructive">
-                            <XCircle className="w-3 h-3 mr-1" />
-                            Rejected
-                        </Badge>
-                    )}
-                    {userRole === 'super-admin' && (
+                                        {userRole === 'super-admin' && (
                         <Button
                             size="sm"
                             variant="destructive"

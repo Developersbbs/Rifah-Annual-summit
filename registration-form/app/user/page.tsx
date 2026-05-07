@@ -137,25 +137,7 @@ export default async function UserDashboard() {
                                 </Card>
                             )}
 
-                            {registrationData.participant.approvalStatus === 'rejected' && (
-                                <Card className="border-red-200 bg-red-50">
-                                    <CardHeader>
-                                        <CardTitle className="flex items-center gap-2 text-red-800">
-                                            <XCircle className="h-5 w-5" />
-                                            Registration Rejected
-                                        </CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <CardDescription>
-                                            Your registration has been rejected.
-                                            {registrationData.participant.rejectionReason ? (
-                                                <span>Reason: {registrationData.participant.rejectionReason}</span>
-                                            ) : null}
-                                        </CardDescription>
-                                    </CardContent>
-                                </Card>
-                            )}
-
+                            
                             {registrationData.participant.approvalStatus === 'approved' && (
                                 <Card className="border-green-200 bg-green-50">
                                     <CardHeader>
