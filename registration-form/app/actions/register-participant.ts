@@ -157,15 +157,18 @@ export async function registerParticipant(data: RegisterParticipantData) {
             }
         }
 
-        // FIND TICKET
-        const selectedTicket = activeEvent.ticketsPrice.find(
-            (t: { name: string; price: number; soldCount: number }) => t.name === ticketType
-        )
+        // FIND TICKET - Only validate if ticketType is provided
+        let selectedTicket = null
+        if (ticketType) {
+            selectedTicket = activeEvent.ticketsPrice.find(
+                (t: { name: string; price: number; soldCount: number }) => t.name === ticketType
+            )
 
-        if (!selectedTicket) {
-            return {
-                success: false,
-                error: `Invalid ticket type: ${ticketType}. Please select a valid ticket.`
+            if (!selectedTicket) {
+                return {
+                    success: false,
+                    error: `Invalid ticket type: ${ticketType}. Please select a valid ticket.`
+                }
             }
         }
 
@@ -177,7 +180,7 @@ export async function registerParticipant(data: RegisterParticipantData) {
             }
         }
 
-        let pricePerPerson = selectedTicket.price
+        let pricePerPerson = selectedTicket ? selectedTicket.price : 0
 
         // Validate price
         if (pricePerPerson < 0) {
@@ -333,9 +336,11 @@ export async function registerParticipant(data: RegisterParticipantData) {
             registrationLanguage
         })
 
-        // Update event counts atomically
-        selectedTicket.soldCount += actualTotalPeople
-        await activeEvent.save()
+        // Update event counts atomically - Only if ticket type was provided
+        if (selectedTicket) {
+            selectedTicket.soldCount += actualTotalPeople
+            await activeEvent.save()
+        }
 
         await Event.findByIdAndUpdate(
             activeEvent._id,
