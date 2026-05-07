@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Separator } from "@/components/ui/separator"
 import { Loader2, Plus, Trash2 } from "lucide-react"
 import { registerParticipant } from "@/app/actions/register-participant"
+import { getActiveEvent } from "@/app/actions/get-active-event"
 
 interface SecondaryMember {
     name: string
@@ -37,7 +38,6 @@ export function AdminRegistration({ onSuccess }: AdminRegistrationProps) {
         gender: "",
         paymentMethod: "cash" as "cash" | "online",
         guestCount: 0,
-        ticketType: "",
         isMember: false,
         gstNumber: "",
         registrationLanguage: "en" as "en" | "ta"
@@ -45,6 +45,28 @@ export function AdminRegistration({ onSuccess }: AdminRegistrationProps) {
 
     const [secondaryMembers, setSecondaryMembers] = useState<SecondaryMember[]>([])
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [success, setSuccess] = useState(false)
+    const [activeEvent, setActiveEvent] = useState<any>(null)
+    const [isLoadingEvent, setIsLoadingEvent] = useState(false)
+
+    useEffect(() => {
+        const loadActiveEvent = async () => {
+            setIsLoadingEvent(true)
+            try {
+                const eventResult = await getActiveEvent()
+                if (eventResult.success) {
+                    setActiveEvent(eventResult.event)
+                } else {
+                    console.error('Error loading active event:', eventResult.error)
+                }
+            } catch (error) {
+                console.error('Error loading active event:', error)
+            } finally {
+                setIsLoadingEvent(false)
+            }
+        }
+        loadActiveEvent()
+    }, [])
 
     const handleInputChange = (field: string, value: string | boolean | number) => {
         setFormData(prev => ({ ...prev, [field]: value }))
@@ -96,7 +118,6 @@ export function AdminRegistration({ onSuccess }: AdminRegistrationProps) {
                     gender: "",
                     paymentMethod: "cash",
                     guestCount: 0,
-                    ticketType: "",
                     isMember: false,
                     gstNumber: "",
                     registrationLanguage: "en"
@@ -188,15 +209,6 @@ export function AdminRegistration({ onSuccess }: AdminRegistrationProps) {
                                         <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
                                     </SelectContent>
                                 </Select>
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="ticketType">Ticket Type *</Label>
-                                <Input
-                                    id="ticketType"
-                                    value={formData.ticketType}
-                                    onChange={(e) => handleInputChange("ticketType", e.target.value)}
-                                    required
-                                />
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="paymentMethod">Payment Method</Label>

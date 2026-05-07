@@ -34,7 +34,7 @@ interface RegisterParticipantData {
     guestCount?: number
     // Simplified age groups
     ageGuest?: number
-    ticketType: string
+    ticketType?: string
     isMember?: boolean
     secondaryMembers?: SecondaryMemberInput[]
     gstNumber?: string
