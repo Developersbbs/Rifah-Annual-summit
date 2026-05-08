@@ -46,8 +46,9 @@ export const columns: ColumnDef<Participant>[] = [
         header: "Gender",
         cell: ({ row }) => {
             const genderValue = row.getValue("gender") as string
-            console.log('Gender value:', genderValue)
-            return <div className="text-sm capitalize">{genderValue || "-"}</div>
+            // Handle undefined, null, empty string, and other falsy values
+            const displayGender = genderValue && genderValue.trim() !== "" ? genderValue : "-"
+            return <div className="text-sm capitalize">{displayGender}</div>
         },
     },
     {
