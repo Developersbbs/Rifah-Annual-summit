@@ -134,7 +134,7 @@ export const columns: ColumnDef<Participant>[] = [
             const approvalStatus = row.getValue("approvalStatus") as string
             const paymentMethod = row.getValue("paymentMethod") as string
             const paymentStatus = row.getValue("paymentStatus") as string
-            const userRole = "admin" // Default role - will be overridden by table component if needed
+            const userRole = "admin" // Default role - super-admin features will be handled by table component
             
             // Loading state for email sending
             const [isSendingEmail, setIsSendingEmail] = React.useState(false)
@@ -248,17 +248,15 @@ export const columns: ColumnDef<Participant>[] = [
                             )}
                         </Button>
                     )}
-                    {userRole === 'super-admin' && (
-                        <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={handleDelete}
-                            className="bg-red-600 hover:bg-red-700"
-                        >
-                            <Trash2 className="w-3 h-3 mr-1" />
-                            Delete
-                        </Button>
-                    )}
+                    <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={handleDelete}
+                        className="bg-red-600 hover:bg-red-700"
+                    >
+                        <Trash2 className="w-3 h-3 mr-1" />
+                        Delete
+                    </Button>
                 </div>
             )
         },
