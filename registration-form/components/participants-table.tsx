@@ -126,9 +126,6 @@ export function ParticipantsTable<TData, TValue>({
     }, [data, dateRange, locationFilter, genderFilter])
 
     const tableColumns = React.useMemo(() => {
-        // Set user role globally for columns to access
-        ;(window as any).currentUserRole = userRole
-
         const baseColumns = [...columns]
         
         if (userRole === 'super-admin') {
