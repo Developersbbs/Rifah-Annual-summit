@@ -45,6 +45,9 @@ export async function registerParticipant(data: RegisterParticipantData) {
     try {
         await dbConnect()
 
+        // Debug: log incoming data
+        console.log('Register participant data received:', data);
+
         const {
             mobileNumber,
             name,

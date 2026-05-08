@@ -310,6 +310,9 @@ export function RegisterForm() {
         totalAmount: perPersonTotal
       }))
 
+      // Debug: log gender value before submission
+      console.log('Submitting gender:', personalData.gender);
+      
       const paymentRegistrationData = {
         mobileNumber: verifiedPhone,
         name: personalData.name,
@@ -487,6 +490,7 @@ export function RegisterForm() {
           businessName: personalData.businessName,
           businessCategory: personalData.businessCategory,
           location: i18n.language === 'ta' ? t(personalData.location) : personalData.location,
+          gender: personalData.gender,
           guestCount: 0,
           registrationLanguage: i18n.language as "en" | "ta",
           ticketType: eventData.ticketType,
@@ -540,6 +544,7 @@ export function RegisterForm() {
         businessName: personalData.businessName,
         businessCategory: personalData.businessCategory,
         location: i18n.language === 'ta' ? t(personalData.location) : personalData.location,
+        gender: personalData.gender,
         guestCount: 0,
         registrationLanguage: i18n.language as "en" | "ta",
         ticketType: eventData.ticketType,
@@ -826,8 +831,6 @@ export function RegisterForm() {
                     <SelectContent>
                       <SelectItem value="male">{t("Male")}</SelectItem>
                       <SelectItem value="female">{t("Female")}</SelectItem>
-                      <SelectItem value="other">{t("Other")}</SelectItem>
-                      <SelectItem value="prefer-not-to-say">{t("Prefer not to say")}</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -1102,8 +1105,6 @@ export function RegisterForm() {
                       <SelectContent>
                         <SelectItem value="male">{t("Male")}</SelectItem>
                         <SelectItem value="female">{t("Female")}</SelectItem>
-                        <SelectItem value="other">{t("Other")}</SelectItem>
-                        <SelectItem value="prefer-not-to-say">{t("Prefer not to say")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
