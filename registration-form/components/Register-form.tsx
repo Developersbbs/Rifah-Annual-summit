@@ -817,7 +817,7 @@ export function RegisterForm() {
               <FormField control={personalForm.control} name="gender" render={({ field }) => (
                 <FormItem>
                   <FormLabel>{t("Gender")}</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder={t("Select gender")} />
@@ -826,6 +826,8 @@ export function RegisterForm() {
                     <SelectContent>
                       <SelectItem value="male">{t("Male")}</SelectItem>
                       <SelectItem value="female">{t("Female")}</SelectItem>
+                      <SelectItem value="other">{t("Other")}</SelectItem>
+                      <SelectItem value="prefer-not-to-say">{t("Prefer not to say")}</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -1100,6 +1102,8 @@ export function RegisterForm() {
                       <SelectContent>
                         <SelectItem value="male">{t("Male")}</SelectItem>
                         <SelectItem value="female">{t("Female")}</SelectItem>
+                        <SelectItem value="other">{t("Other")}</SelectItem>
+                        <SelectItem value="prefer-not-to-say">{t("Prefer not to say")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
