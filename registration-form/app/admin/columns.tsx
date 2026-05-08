@@ -44,7 +44,11 @@ export const columns: ColumnDef<Participant>[] = [
     {
         accessorKey: "gender",
         header: "Gender",
-        cell: ({ row }) => <div className="text-sm capitalize">{row.getValue("gender") || "-"}</div>,
+        cell: ({ row }) => {
+            const genderValue = row.getValue("gender") as string
+            console.log('Gender value:', genderValue)
+            return <div className="text-sm capitalize">{genderValue || "-"}</div>
+        },
     },
     {
         accessorKey: "ticketType",
