@@ -2,7 +2,6 @@ import nodemailer from "nodemailer"
 import SystemConfig from "@/models/SystemConfig"
 import dbConnect from "@/lib/db"
 import { IParticipant } from "@/lib/types"
-import { emailImages } from "./email-images"
 import path from "path"
 
 export async function sendRegistrationEmails(participant: IParticipant, eventName: string, skipAdmin: boolean = false) {

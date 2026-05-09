@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator"
 import { Loader2, Plus, Trash2 } from "lucide-react"
 import { registerParticipant } from "@/app/actions/register-participant"
 import { getActiveEvent } from "@/app/actions/get-active-event"
+import { IEvent } from "@/lib/types"
 
 interface SecondaryMember {
     name: string
@@ -46,17 +47,14 @@ export function AdminRegistration({ onSuccess }: AdminRegistrationProps) {
 
     const [secondaryMembers, setSecondaryMembers] = useState<SecondaryMember[]>([])
     const [isSubmitting, setIsSubmitting] = useState(false)
-    const [success, setSuccess] = useState(false)
-    const [activeEvent, setActiveEvent] = useState<any>(null)
-    const [isLoadingEvent, setIsLoadingEvent] = useState(false)
+    const [activeEvent, setActiveEvent] = useState<IEvent | null>(null)
 
     useEffect(() => {
         const loadActiveEvent = async () => {
-            setIsLoadingEvent(true)
             try {
                 const eventResult = await getActiveEvent()
                 if (eventResult.success && eventResult.event) {
-                    setActiveEvent(eventResult.event)
+                    setActiveEvent(eventResult.event as unknown as IEvent)
                     if (eventResult.event.ticketsPrice && eventResult.event.ticketsPrice.length > 0) {
                         setFormData(prev => ({ ...prev, ticketType: eventResult.event.ticketsPrice[0].name }))
                     }
@@ -65,8 +63,6 @@ export function AdminRegistration({ onSuccess }: AdminRegistrationProps) {
                 }
             } catch (error) {
                 console.error('Error loading active event:', error)
-            } finally {
-                setIsLoadingEvent(false)
             }
         }
         loadActiveEvent()
@@ -222,7 +218,7 @@ export function AdminRegistration({ onSuccess }: AdminRegistrationProps) {
                                         <SelectValue placeholder="Select ticket type" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {activeEvent?.ticketsPrice?.map((ticket: any) => (
+                                        {activeEvent?.ticketsPrice?.map((ticket) => (
                                             <SelectItem key={ticket.name} value={ticket.name}>
                                                 {ticket.name} (₹{ticket.price})
                                             </SelectItem>

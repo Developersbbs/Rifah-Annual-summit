@@ -3,6 +3,7 @@ import dbConnect from '@/lib/db'
 import DeletionAudit from '@/models/DeletionAudit'
 import { getCurrentUser } from '@/lib/auth'
 
+
 export async function GET(request: NextRequest) {
     try {
         // Check if user is authenticated and is admin
@@ -27,7 +28,7 @@ export async function GET(request: NextRequest) {
         const role = searchParams.get('role') || ''
 
         // Build query
-        const query: any = {}
+        const query: Record<string, unknown> = {}
         
         if (search) {
             query.$or = [

@@ -52,7 +52,7 @@ export function DeleteUserDialog({ open, onOpenChange, participant, onSuccess }:
             } else {
                 setError(data.error || "Failed to delete user")
             }
-        } catch (err) {
+        } catch {
             setError("Network error. Please try again.")
         } finally {
             setIsDeleting(false)
@@ -92,7 +92,7 @@ export function DeleteUserDialog({ open, onOpenChange, participant, onSuccess }:
 
                     <div className="space-y-2">
                         <label htmlFor="confirm-name" className="text-sm font-medium">
-                            Type the user's name to confirm deletion:
+                            Type the user&apos;s name to confirm deletion:
                         </label>
                         <Input
                             id="confirm-name"

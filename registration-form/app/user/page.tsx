@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { getCurrentUser } from "@/lib/auth"
 import { checkRegistration } from "@/app/actions/check-registration"
-import { MapPin, Phone, Mail, Users, Receipt, Clock, CheckCircle, XCircle, AlertCircle } from "lucide-react"
+import { MapPin, Phone, Mail, Users, Receipt, Clock, CheckCircle, AlertCircle } from "lucide-react"
 import Link from "next/link"
 
 export default async function UserDashboard() {

@@ -12,6 +12,7 @@ import { useDebounce } from "@/hooks/use-debounce"
 import { checkRegistration } from "@/app/actions/check-registration"
 import { registerParticipant } from "@/app/actions/register-participant"
 import { getActiveEvent } from "@/app/actions/get-active-event"
+import { IEvent } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -69,7 +70,7 @@ export function RegisterForm() {
   const [isCheckingDb, setIsCheckingDb] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [dbError, setDbError] = useState<string | null>(null)
-  const [activeEvent, setActiveEvent] = useState<{ _id: string; eventName: string; eventDate: string; startTime: string; endTime: string; venue: { name: string; address: string; city: string }; ticketsPrice: { name: string; price: number }[] } | null>(null)
+  const [activeEvent, setActiveEvent] = useState<IEvent | null>(null)
   const [isLoadingEvent, setIsLoadingEvent] = useState(false)
 
   // Registration Data State
@@ -220,7 +221,7 @@ export function RegisterForm() {
   const taxCalculation = useMemo(() => {
     const baseAmount = totalMembers * pricePerPerson
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const taxRate = (activeEvent as any)?.taxRate || 0
+    const taxRate = activeEvent?.taxRate || 0
     const taxAmount = Math.round((baseAmount * taxRate) / 100)
     const totalAmount = baseAmount + taxAmount
     return {

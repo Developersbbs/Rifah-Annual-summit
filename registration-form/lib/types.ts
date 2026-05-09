@@ -84,13 +84,21 @@ export interface IParticipant {
 export interface IEvent {
     _id: string;
     eventName: string;
-    startDate: string | Date;
-    endDate: string | Date;
-    location: string;
+    registrationStart: string | Date;
+    registrationEnd: string | Date;
+    eventDate: string | Date;
+    startTime: string | Date;
+    endTime: string | Date;
+    venue: {
+        name: string;
+        address: string;
+        city: string;
+    };
     maxCapacity: number;
     registeredCount: number;
     isActive: boolean;
     ticketsPrice: ITicketPrice[];
+    taxRate: number;
     createdBy?: string;
     createdAt?: string | Date;
     updatedAt?: string | Date;

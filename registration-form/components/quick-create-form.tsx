@@ -8,6 +8,7 @@ import { registerParticipant } from "@/app/actions/register-participant"
 import { checkRegistration } from "@/app/actions/check-registration"
 import { getActiveEvent } from "@/app/actions/get-active-event"
 import { usePhoneAuth } from "@/hooks/use-phone-auth"
+import { IEvent } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -55,14 +56,12 @@ export function QuickCreateForm() {
     const [step, setStep] = useState<Step>(Step.MODE_SELECTION)
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [error, setError] = useState<string | null>(null)
-    const [success, setSuccess] = useState(false)
     const [useOtp, setUseOtp] = useState<boolean>(false)
     const [phoneNumber, setPhoneNumber] = useState<string>("+91")
     const { sendOtp, verifyOtp, loading: authLoading, error: authError } = usePhoneAuth()
     const [otpCode, setOtpCode] = useState<string>("")
     const [secondaryMembers, setSecondaryMembers] = useState<SecondaryMember[]>([])
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const [activeEvent, setActiveEvent] = useState<any>(null)
+    const [activeEvent, setActiveEvent] = useState<IEvent | null>(null)
     const [isLoadingEvent, setIsLoadingEvent] = useState(false)
 
     const form = useForm<z.infer<typeof quickCreateSchema>>({
@@ -89,7 +88,7 @@ export function QuickCreateForm() {
             try {
                 const result = await getActiveEvent()
                 if (result.success && result.event) {
-                    setActiveEvent(result.event)
+                    setActiveEvent(result.event as unknown as IEvent)
                     if (result.event.ticketsPrice?.length > 0) {
                         form.setValue("ticketType", result.event.ticketsPrice[0].name)
                     }
@@ -106,8 +105,7 @@ export function QuickCreateForm() {
     const selectedTicketType = form.watch("ticketType")
     const pricePerPerson = useMemo(() => {
         if (!activeEvent || !selectedTicketType) return 0
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const ticket = activeEvent.ticketsPrice?.find((t: any) => t.name === selectedTicketType)
+        const ticket = activeEvent.ticketsPrice?.find((t) => t.name === selectedTicketType)
         return ticket?.price || 0
     }, [activeEvent, selectedTicketType])
 
@@ -194,7 +192,7 @@ export function QuickCreateForm() {
                 setOtpCode("")
                 setStep(Step.OTP_VERIFICATION)
             }
-        } catch (err) {
+        } catch {
             setError("Failed to send OTP")
         }
     }
@@ -211,12 +209,12 @@ export function QuickCreateForm() {
                 setStep(Step.PERSONAL_DETAILS)
                 form.setValue("mobileNumber", phoneNumber)
             }
-        } catch (err) {
+        } catch {
             setError("Invalid OTP")
         }
     }
 
-    if (success) {
+    if (step === Step.SUCCESS) {
         return (
             <Card className="w-full max-w-md mx-auto text-center py-10">
                 <CardContent className="space-y-6">
@@ -294,7 +292,7 @@ export function QuickCreateForm() {
                         Enter Phone Number
                     </CardTitle>
                     <CardDescription>
-                        We'll send a verification code to this number
+                        We&apos;ll send a verification code to this number
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -504,7 +502,7 @@ export function QuickCreateForm() {
                                     disabled={isLoadingEvent}
                                 >
                                     <option value="">Select ticket type</option>
-                                    {activeEvent?.ticketsPrice?.map((ticket: any) => (
+                                    {activeEvent?.ticketsPrice?.map((ticket) => (
                                         <option key={ticket.name} value={ticket.name}>
                                             {ticket.name} (₹{ticket.price})
                                         </option>
@@ -567,7 +565,7 @@ export function QuickCreateForm() {
                         {secondaryMembers.length === 0 ? (
                             <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-lg">
                                 <p className="text-gray-500">No guest members added yet</p>
-                                <p className="text-sm text-gray-400 mt-1">Click "Add Guest Member" to add guest details</p>
+                                <p className="text-sm text-gray-400 mt-1">Click &quot;Add Guest Member&quot; to add guest details</p>
                             </div>
                         ) : (
                             <div className="space-y-4">

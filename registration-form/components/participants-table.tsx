@@ -166,7 +166,6 @@ export function ParticipantsTable<TData, TValue>({
     }, [columns, userRole])
 
 
-    // eslint-disable-next-line react-hooks/incompatible-library
     const table = useReactTable({
         data: filteredData as TData[],
         columns: tableColumns as ColumnDef<TData, unknown>[],
