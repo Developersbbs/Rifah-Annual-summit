@@ -191,6 +191,12 @@ export const columns: ColumnDef<Participant>[] = [
                 }
             }
 
+            const handleView = () => {
+                const viewEvent = new CustomEvent('openViewDialog', { 
+                    detail: { participant: row.original } 
+                })
+                window.dispatchEvent(viewEvent)
+            }
             
             const handleDelete = () => {
                 // This will be handled by the parent component

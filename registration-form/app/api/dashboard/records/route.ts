@@ -39,7 +39,10 @@ export async function GET(request: Request) {
             gender: 1,
             checkIn: 1,
             secondaryMembers: 1,
-            approvalStatus: 1
+            approvalStatus: 1,
+            businessName: 1,
+            businessCategory: 1,
+            ticketType: 1
         }).lean()
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -61,7 +64,8 @@ export async function GET(request: Request) {
                     location: p.location || "",
                     primaryMember: "",
                     primaryPhone: "",
-                    approvalStatus: p.approvalStatus || "pending"
+                    approvalStatus: p.approvalStatus || "pending",
+                    originalParticipant: p
                 })
             }
 
@@ -82,7 +86,8 @@ export async function GET(request: Request) {
                             location: m.location || p.location || "",
                             primaryMember: p.name,
                             primaryPhone: p.mobileNumber,
-                            approvalStatus: p.approvalStatus || "pending"
+                            approvalStatus: p.approvalStatus || "pending",
+                            originalParticipant: p
                         })
                     }
                 })

@@ -13,9 +13,10 @@ import {
     getSortedRowModel,
     useReactTable,
 } from "@tanstack/react-table"
-import { ChevronDown, Download, Search, Pencil } from "lucide-react"
+import { ChevronDown, Download, Search, Pencil, Eye } from "lucide-react"
 import { EditParticipantDialog } from "@/components/edit-participant-dialog"
 import { DeleteUserDialog } from "@/components/delete-user-dialog"
+import { ViewParticipantDialog } from "@/components/view-participant-dialog"
 import { DateRange } from "react-day-picker"
 import { isWithinInterval, parseISO, startOfDay, endOfDay } from "date-fns"
 import { IParticipant } from "@/lib/types"
@@ -63,6 +64,7 @@ export function ParticipantsTable<TData, TValue>({
     const [globalFilter, setGlobalFilter] = React.useState("")
     const [editingParticipant, setEditingParticipant] = React.useState<IParticipant | null>(null)
     const [deletingParticipant, setDeletingParticipant] = React.useState<IParticipant | null>(null)
+    const [viewingParticipant, setViewingParticipant] = React.useState<IParticipant | null>(null)
 
     // Handle delete dialog events
     React.useEffect(() => {
@@ -73,6 +75,18 @@ export function ParticipantsTable<TData, TValue>({
         window.addEventListener('openDeleteDialog', handleDeleteEvent as EventListener)
         return () => {
             window.removeEventListener('openDeleteDialog', handleDeleteEvent as EventListener)
+        }
+    }, [])
+
+    // Handle view dialog events
+    React.useEffect(() => {
+        const handleViewEvent = (event: CustomEvent) => {
+            setViewingParticipant(event.detail.participant)
+        }
+
+        window.addEventListener('openViewDialog', handleViewEvent as EventListener)
+        return () => {
+            window.removeEventListener('openViewDialog', handleViewEvent as EventListener)
         }
     }, [])
 
@@ -128,21 +142,24 @@ export function ParticipantsTable<TData, TValue>({
     const tableColumns = React.useMemo(() => {
         const baseColumns = [...columns]
         
-        if (userRole === 'super-admin') {
-            baseColumns.push({
-                id: "edit-participant",
-                enableHiding: false,
-                cell: ({ row }: { row: { original: TData } }) => {
-                    return (
-                        <div className="flex justify-end">
+        baseColumns.push({
+            id: "row-actions",
+            enableHiding: false,
+            cell: ({ row }: { row: { original: TData } }) => {
+                return (
+                    <div className="flex justify-end gap-1">
+                        {userRole === 'super-admin' && (
                             <Button variant="ghost" size="icon" onClick={() => setEditingParticipant(row.original as unknown as IParticipant)}>
                                 <Pencil className="h-4 w-4" />
                             </Button>
-                        </div>
-                    )
-                }
-            })
-        }
+                        )}
+                        <Button variant="ghost" size="icon" onClick={() => setViewingParticipant(row.original as unknown as IParticipant)}>
+                            <Eye className="h-4 w-4 text-blue-600" />
+                        </Button>
+                    </div>
+                )
+            }
+        })
 
         return baseColumns
     }, [columns, userRole])
@@ -496,6 +513,15 @@ export function ParticipantsTable<TData, TValue>({
                             setDeletingParticipant(null)
                             window.location.reload()
                         }}
+                    />
+                )
+            }
+            {
+                viewingParticipant && (
+                    <ViewParticipantDialog
+                        open={!!viewingParticipant}
+                        onOpenChange={(open) => !open && setViewingParticipant(null)}
+                        participant={viewingParticipant}
                     />
                 )
             }

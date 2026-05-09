@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/table"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
+import { ViewParticipantDialog } from "@/components/view-participant-dialog"
+import { IParticipant } from "@/lib/types"
 
 interface DashboardStats {
     totalRegistrations: number
@@ -43,6 +45,8 @@ interface DashboardRecord {
     primaryMember: string
     primaryPhone: string
     approvalStatus?: string
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    originalParticipant?: any
 }
 
 interface PaginationData {
@@ -64,6 +68,7 @@ export default function DashboardPage() {
     const [page, setPage] = React.useState(1)
     const [pagination, setPagination] = React.useState<PaginationData | null>(null)
     const [downloading, setDownloading] = React.useState(false)
+    const [viewingParticipant, setViewingParticipant] = React.useState<IParticipant | null>(null)
 
     const loadStats = React.useCallback(async () => {
         try {
@@ -245,18 +250,19 @@ export default function DashboardPage() {
                                 <TableHead>{t("Location")}</TableHead>
                                 <TableHead>{t("Status")}</TableHead>
                                 <TableHead className="text-center">{t("Checked-in")}</TableHead>
+                                <TableHead className="text-center">{t("Actions")}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {loading ? (
                                 <TableRow>
-                                    <TableCell colSpan={8} className="text-center py-8">
+                                    <TableCell colSpan={9} className="text-center py-8">
                                         <Loader2 className="h-6 w-6 animate-spin mx-auto" />
                                     </TableCell>
                                 </TableRow>
                             ) : records.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                                    <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                                         {t("No records found")}
                                     </TableCell>
                                 </TableRow>
@@ -314,6 +320,15 @@ export default function DashboardPage() {
                                                 <span className="text-gray-400">○</span>
                                             )}
                                         </TableCell>
+                                        <TableCell className="text-center">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => setViewingParticipant(record.originalParticipant)}
+                                            >
+                                                {t("View")}
+                                            </Button>
+                                        </TableCell>
                                     </TableRow>
                                 ))
                             )}
@@ -349,6 +364,14 @@ export default function DashboardPage() {
                     </div>
                 )}
             </div>
+
+            {viewingParticipant && (
+                <ViewParticipantDialog
+                    participant={viewingParticipant}
+                    open={!!viewingParticipant}
+                    onOpenChange={(open) => !open && setViewingParticipant(null)}
+                />
+            )}
         </div>
     )
 }
