@@ -1,11 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { registerParticipant } from "@/app/actions/register-participant"
 import { checkRegistration } from "@/app/actions/check-registration"
+import { getActiveEvent } from "@/app/actions/get-active-event"
 import { usePhoneAuth } from "@/hooks/use-phone-auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -43,6 +44,7 @@ const quickCreateSchema = z.object({
     businessName: z.string().min(2, "Business name is required"),
     businessCategory: z.string().min(1, "Please enter a business category"),
     location: z.string().min(1, "Please select a location"),
+    ticketType: z.string().min(1, "Please select a ticket type"),
     paymentMethod: z.enum(["cash", "online"]),
     guestCount: z.number().min(0).optional(),
     gstNumber: z.string().optional(),
@@ -59,6 +61,9 @@ export function QuickCreateForm() {
     const { sendOtp, verifyOtp, loading: authLoading, error: authError } = usePhoneAuth()
     const [otpCode, setOtpCode] = useState<string>("")
     const [secondaryMembers, setSecondaryMembers] = useState<SecondaryMember[]>([])
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const [activeEvent, setActiveEvent] = useState<any>(null)
+    const [isLoadingEvent, setIsLoadingEvent] = useState(false)
 
     const form = useForm<z.infer<typeof quickCreateSchema>>({
         resolver: zodResolver(quickCreateSchema),
@@ -70,12 +75,47 @@ export function QuickCreateForm() {
             businessName: "",
             businessCategory: "",
             location: "",
+            ticketType: "",
             paymentMethod: "cash",
             guestCount: 0,
             gstNumber: "",
             termsAccepted: false
         }
     })
+
+    useEffect(() => {
+        const fetchEvent = async () => {
+            setIsLoadingEvent(true)
+            try {
+                const result = await getActiveEvent()
+                if (result.success && result.event) {
+                    setActiveEvent(result.event)
+                    if (result.event.ticketsPrice?.length > 0) {
+                        form.setValue("ticketType", result.event.ticketsPrice[0].name)
+                    }
+                }
+            } catch (error) {
+                console.error("Failed to fetch event details:", error)
+            } finally {
+                setIsLoadingEvent(false)
+            }
+        }
+        fetchEvent()
+    }, [form])
+
+    const selectedTicketType = form.watch("ticketType")
+    const pricePerPerson = useMemo(() => {
+        if (!activeEvent || !selectedTicketType) return 0
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const ticket = activeEvent.ticketsPrice?.find((t: any) => t.name === selectedTicketType)
+        return ticket?.price || 0
+    }, [activeEvent, selectedTicketType])
+
+    const totalMembers = 1 + secondaryMembers.filter(m => m.name.trim() !== '').length
+    const baseAmount = totalMembers * pricePerPerson
+    const taxRate = activeEvent?.taxRate || 0
+    const taxAmount = Math.round((baseAmount * taxRate) / 100)
+    const totalAmount = baseAmount + taxAmount
 
     const addSecondaryMember = () => {
         setSecondaryMembers(prev => [...prev, {
@@ -91,7 +131,7 @@ export function QuickCreateForm() {
     }
 
     const updateSecondaryMember = (index: number, field: keyof SecondaryMember, value: string | boolean) => {
-        setSecondaryMembers(prev => prev.map((member, i) => 
+        setSecondaryMembers(prev => prev.map((member, i) =>
             i === index ? { ...member, [field]: value } : member
         ))
     }
@@ -113,6 +153,7 @@ export function QuickCreateForm() {
                 businessCategory: data.businessCategory,
                 location: data.location,
                 gender: data.gender,
+                ticketType: data.ticketType,
                 paymentMethod: data.paymentMethod,
                 ageGuest: data.guestCount || 0,
                 isMember: false,
@@ -208,7 +249,7 @@ export function QuickCreateForm() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <Button 
+                    <Button
                         onClick={() => handleModeSelect("no-otp")}
                         className="w-full h-16 text-left justify-start"
                         variant="outline"
@@ -223,8 +264,8 @@ export function QuickCreateForm() {
                             </div>
                         </div>
                     </Button>
-                    
-                    <Button 
+
+                    <Button
                         onClick={() => handleModeSelect("otp")}
                         className="w-full h-16 text-left justify-start"
                         variant="outline"
@@ -267,7 +308,7 @@ export function QuickCreateForm() {
                             className="text-center text-lg"
                         />
                     </div>
-                    
+
                     <Button onClick={handleSendOtp} className="w-full" disabled={authLoading}>
                         {authLoading ? (
                             <>
@@ -278,16 +319,16 @@ export function QuickCreateForm() {
                             "Send OTP"
                         )}
                     </Button>
-                    
+
                     {authError && (
                         <Alert variant="destructive">
                             <AlertCircle className="h-4 w-4" />
                             <AlertDescription>{authError}</AlertDescription>
                         </Alert>
                     )}
-                    
-                    <Button 
-                        variant="outline" 
+
+                    <Button
+                        variant="outline"
                         onClick={() => setStep(Step.MODE_SELECTION)}
                         className="w-full"
                     >
@@ -331,7 +372,7 @@ export function QuickCreateForm() {
                             </InputOTPGroup>
                         </InputOTP>
                     </div>
-                    
+
                     <Button onClick={handleVerifyOtp} className="w-full" disabled={authLoading}>
                         {authLoading ? (
                             <>
@@ -342,16 +383,16 @@ export function QuickCreateForm() {
                             "Verify OTP"
                         )}
                     </Button>
-                    
+
                     {error && (
                         <Alert variant="destructive">
                             <AlertCircle className="h-4 w-4" />
                             <AlertDescription>{error}</AlertDescription>
                         </Alert>
                     )}
-                    
-                    <Button 
-                        variant="outline" 
+
+                    <Button
+                        variant="outline"
                         onClick={() => setStep(Step.PHONE_INPUT)}
                         className="w-full"
                     >
@@ -454,6 +495,23 @@ export function QuickCreateForm() {
                         <h3 className="text-lg font-semibold">Event Information</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
+                                <Label htmlFor="ticketType">Ticket Type *</Label>
+                                <select
+                                    id="ticketType"
+                                    value={form.watch("ticketType")}
+                                    onChange={(e) => form.setValue("ticketType", e.target.value)}
+                                    className="w-full p-2 border rounded-md bg-white"
+                                    disabled={isLoadingEvent}
+                                >
+                                    <option value="">Select ticket type</option>
+                                    {activeEvent?.ticketsPrice?.map((ticket: any) => (
+                                        <option key={ticket.name} value={ticket.name}>
+                                            {ticket.name} (₹{ticket.price})
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
                                 <Label htmlFor="paymentMethod">Payment Method *</Label>
                                 <select
                                     id="paymentMethod"
@@ -505,7 +563,7 @@ export function QuickCreateForm() {
                                 Add Guest Member
                             </Button>
                         </div>
-                        
+
                         {secondaryMembers.length === 0 ? (
                             <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-lg">
                                 <p className="text-gray-500">No guest members added yet</p>
@@ -623,6 +681,29 @@ export function QuickCreateForm() {
                         />
                         <div className="space-y-1 leading-none">
                             <Label>I accept terms and conditions *</Label>
+                        </div>
+                    </div>
+
+                    <div className="bg-gray-50 p-4 rounded-lg space-y-2 mt-4">
+                        <h4 className="font-semibold text-gray-700 mb-3">Amount Summary</h4>
+                        <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">Total Members:</span>
+                            <span className="font-medium">{totalMembers}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">Base Amount:</span>
+                            <span className="font-medium">₹{baseAmount}</span>
+                        </div>
+                        {taxRate > 0 && (
+                            <div className="flex justify-between text-sm">
+                                <span className="text-gray-600">GST ({taxRate}%):</span>
+                                <span className="font-medium">₹{taxAmount}</span>
+                            </div>
+                        )}
+                        <Separator className="my-2" />
+                        <div className="flex justify-between font-bold text-lg">
+                            <span>Total Amount:</span>
+                            <span className="text-green-600">₹{totalAmount}</span>
                         </div>
                     </div>
 

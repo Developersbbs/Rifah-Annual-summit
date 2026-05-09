@@ -90,7 +90,7 @@ export function AdminRegistration({ onSuccess }: AdminRegistrationProps) {
     }
 
     const updateSecondaryMember = (index: number, field: string, value: string | boolean) => {
-        setSecondaryMembers(prev => prev.map((member, i) => 
+        setSecondaryMembers(prev => prev.map((member, i) =>
             i === index ? { ...member, [field]: value } : member
         ))
     }

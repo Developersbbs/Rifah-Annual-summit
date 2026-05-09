@@ -29,11 +29,11 @@ export default async function AdminRegisterPage() {
           </p>
         </div>
 
-        <AdminRegistration 
+        <AdminRegistration
           onSuccess={() => {
             // This will be handled by the component itself
             console.log('Registration successful')
-          }} 
+          }}
         />
       </div>
     </div>
