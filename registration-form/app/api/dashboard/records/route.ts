@@ -12,13 +12,15 @@ export async function GET(request: Request) {
         const limit = parseInt(searchParams.get('limit') || '20')
         const search = searchParams.get('search') || ''
 
+        const genderFilter = searchParams.get('gender') || 'all'
+
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const query: any = { isRegistered: true }
-        
+
         if (filter === 'checked-in') {
-            query["checkIn.isCheckedIn"] = true
+            query["checkIn.memberPresent"] = true
         } else if (filter === 'not-checked-in') {
-            query["checkIn.isCheckedIn"] = false
+            query["checkIn.memberPresent"] = false
         }
 
         if (search) {
@@ -34,9 +36,13 @@ export async function GET(request: Request) {
             mobileNumber: 1,
             email: 1,
             location: 1,
+            gender: 1,
             checkIn: 1,
             secondaryMembers: 1,
-            approvalStatus: 1
+            approvalStatus: 1,
+            businessName: 1,
+            businessCategory: 1,
+            ticketType: 1
         }).lean()
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -45,19 +51,21 @@ export async function GET(request: Request) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         participants.forEach((p: any) => {
             // primary
-            if (type === 'all' || type === 'primary') {
+            if ((type === 'all' || type === 'primary') && (genderFilter === 'all' || p.gender === genderFilter)) {
                 records.push({
                     _id: p._id.toString(),
                     type: "Primary",
                     name: p.name,
                     phone: p.mobileNumber,
                     email: p.email || "",
-                    checkedIn: p.checkIn?.isCheckedIn || false,
+                    gender: p.gender || "other",
+                    checkedIn: p.checkIn?.memberPresent || false,
                     eventDate: p.eventDate || "",
                     location: p.location || "",
                     primaryMember: "",
                     primaryPhone: "",
-                    approvalStatus: p.approvalStatus || "pending"
+                    approvalStatus: p.approvalStatus || "pending",
+                    originalParticipant: p
                 })
             }
 
@@ -65,19 +73,23 @@ export async function GET(request: Request) {
             if (type === 'all' || type === 'secondary') {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 p.secondaryMembers?.forEach((m: any) => {
-                    records.push({
-                        _id: p._id.toString(),
-                        type: "Secondary",
-                        name: m.name,
-                        phone: m.mobileNumber,
-                        email: m.email || "",
-                        checkedIn: m.isCheckedIn || false,
-                        eventDate: p.eventDate || "",
-                        location: m.location || p.location || "",
-                        primaryMember: p.name,
-                        primaryPhone: p.mobileNumber,
-                        approvalStatus: p.approvalStatus || "pending"
-                    })
+                    if (genderFilter === 'all' || m.gender === genderFilter) {
+                        records.push({
+                            _id: p._id.toString(),
+                            type: "Secondary",
+                            name: m.name,
+                            phone: m.mobileNumber,
+                            email: m.email || "",
+                            gender: m.gender || "other",
+                            checkedIn: m.isCheckedIn || false,
+                            eventDate: p.eventDate || "",
+                            location: m.location || p.location || "",
+                            primaryMember: p.name,
+                            primaryPhone: p.mobileNumber,
+                            approvalStatus: p.approvalStatus || "pending",
+                            originalParticipant: p
+                        })
+                    }
                 })
             }
         })

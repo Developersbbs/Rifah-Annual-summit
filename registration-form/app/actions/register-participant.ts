@@ -3,8 +3,12 @@
 import dbConnect from "@/lib/db"
 import Participant from "@/models/Participant"
 import Event from "@/models/Event"
+<<<<<<< HEAD
 import { generateQR, generateSecondaryMemberQR } from "@/lib/qr-generator"
 import * as crypto from "crypto"
+=======
+import { sendRegistrationEmails } from "@/lib/email"
+>>>>>>> main
 
 // Helper function for input sanitization
 function sanitizeInput(input: string): string {
@@ -32,21 +36,22 @@ interface RegisterParticipantData {
     location?: string
     gender?: string
     paymentMethod?: string
-    // Simplified food preference
-    foodGuest?: number
-    isMorningFood?: boolean
     guestCount?: number
     // Simplified age groups
     ageGuest?: number
-    ticketType: string
+    ticketType?: string
     isMember?: boolean
     secondaryMembers?: SecondaryMemberInput[]
     gstNumber?: string
+    registrationLanguage?: "en" | "ta"
 }
 
 export async function registerParticipant(data: RegisterParticipantData) {
     try {
         await dbConnect()
+
+        // Debug: log incoming data
+        console.log('Register participant data received:', data);
 
         const {
             mobileNumber,
@@ -57,24 +62,22 @@ export async function registerParticipant(data: RegisterParticipantData) {
             location,
             gender,
             paymentMethod = "cash",
-            foodGuest = 0,
-            isMorningFood = false,
             ageGuest = 0,
             ticketType,
             isMember = false,
             secondaryMembers = [],
-            gstNumber
+            gstNumber,
+            registrationLanguage = "en"
         } = data
 
         const totalPeople = 1 + secondaryMembers.length
         const finalAgeGroups = { guest: ageGuest || 0 }
-        const finalFoodPreference = { guest: foodGuest || totalPeople }
 
         // COMPREHENSIVE VALIDATION
-        if (!mobileNumber || !name || !ticketType) {
+        if (!mobileNumber || !name) {
             return {
                 success: false,
-                error: "Missing required fields: mobile number, name, and ticket type are required"
+                error: "Missing required fields: mobile number and name are required"
             }
         }
 
@@ -136,29 +139,44 @@ export async function registerParticipant(data: RegisterParticipantData) {
 
         const now = new Date()
 
-        // FIND ACTIVE EVENT
-        const activeEvent = await Event.findOne({
-            isActive: true,
-            startDate: { $lte: now },
-            endDate: { $gte: now }
-        })
+        // DEBUG: Log current time for event validation
+        console.log("=== EVENT VALIDATION DEBUG ===")
+        console.log("NOW (UTC):", now.toISOString())
+        console.log("NOW (Local):", now.toLocaleString())
+
+        // FIND EVENT - For admin quick-create, find any event regardless of date
+        // This allows admins to register participants for any event in the system
+        const activeEvent = await Event.findOne({})
+
+        console.log("ACTIVE EVENT:", activeEvent ? {
+            _id: activeEvent._id,
+            eventName: activeEvent.eventName,
+            eventDate: activeEvent.eventDate,
+            startTime: activeEvent.startTime,
+            endTime: activeEvent.endTime,
+            isActive: activeEvent.isActive
+        } : "NOT FOUND")
 
         if (!activeEvent) {
+            console.log("ERROR: No event found in database")
             return {
                 success: false,
-                error: "No active event found. Please contact administrator."
+                error: "No event found in the system. Please create an event first."
             }
         }
 
-        // FIND TICKET
-        const selectedTicket = activeEvent.ticketsPrice.find(
-            (t: { name: string; price: number; soldCount: number }) => t.name === ticketType
-        )
+        // FIND TICKET - Only validate if ticketType is provided
+        let selectedTicket = null
+        if (ticketType) {
+            selectedTicket = activeEvent.ticketsPrice.find(
+                (t: { name: string; price: number; soldCount: number }) => t.name === ticketType
+            )
 
-        if (!selectedTicket) {
-            return {
-                success: false,
-                error: `Invalid ticket type: ${ticketType}. Please select a valid ticket.`
+            if (!selectedTicket) {
+                return {
+                    success: false,
+                    error: `Invalid ticket type: ${ticketType}. Please select a valid ticket.`
+                }
             }
         }
 
@@ -170,7 +188,7 @@ export async function registerParticipant(data: RegisterParticipantData) {
             }
         }
 
-        let pricePerPerson = selectedTicket.price
+        let pricePerPerson = selectedTicket ? selectedTicket.price : 0
 
         // Validate price
         if (pricePerPerson < 0) {
@@ -195,9 +213,42 @@ export async function registerParticipant(data: RegisterParticipantData) {
         let paymentStatus = "pending"
         let approvalStatus = "pending"
 
+        // Check if this is admin-created participant
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const createdBy = (data as any).createdBy
+        const isAdmin = createdBy && (createdBy.role === 'admin' || createdBy.role === 'super-admin')
+
         if (paymentMethod === "online") {
-            paymentStatus = "completed"
+            paymentStatus = "pending" // Set to pending until verified
+            approvalStatus = "pending"
+        } else if (isAdmin) {
+            // Admin-created participants are automatically approved and marked as paid for cash
             approvalStatus = "approved"
+            paymentStatus = "completed"
+        }
+
+        // Initialize approval logs array
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const approvalLogs: any[] = []
+
+        // For online payments, auto-approve and add approval log with system role
+        if (paymentMethod === "online" && approvalStatus === "approved") {
+            approvalLogs.push({
+                role: "system",
+                status: "approved",
+                approvedBy: null,
+                timestamp: new Date()
+            })
+        }
+
+        // Add approval logs for admin-approved registrations
+        if (isAdmin) {
+            approvalLogs.push({
+                role: createdBy.role === 'super-admin' ? 'super-admin' : 'admin',
+                status: 'approved',
+                approvedBy: createdBy._id,
+                timestamp: new Date(),
+            })
         }
 
         // Build secondary members array with defaults and sanitization
@@ -274,11 +325,9 @@ export async function registerParticipant(data: RegisterParticipantData) {
             paymentMethod,
             paymentStatus,
             approvalStatus,
-            foodPreference: finalFoodPreference,
-            isMorningFood,
             isRegistered: true,
             eventId: activeEvent._id,
-            eventDate: activeEvent.startDate,
+            eventDate: activeEvent.eventDate,
             ageGroups: finalAgeGroups,
             guestCount: 0,
             memberCount: backendTotalMembers,
@@ -291,18 +340,23 @@ export async function registerParticipant(data: RegisterParticipantData) {
             primaryAmount,
             gstNumber: gstNumber ? sanitizeInput(gstNumber) : undefined,
             isMember,
-            secondaryMembers: formattedSecondaryMembersWithTax
+            secondaryMembers: formattedSecondaryMembersWithTax,
+            approvalLogs: approvalLogs,
+            registrationLanguage
         })
 
-        // Update event counts atomically
-        selectedTicket.soldCount += actualTotalPeople
-        await activeEvent.save()
+        // Update event counts atomically - Only if ticket type was provided
+        if (selectedTicket) {
+            selectedTicket.soldCount += actualTotalPeople
+            await activeEvent.save()
+        }
 
         await Event.findByIdAndUpdate(
             activeEvent._id,
             { $inc: { registeredCount: actualTotalPeople } }
         )
 
+<<<<<<< HEAD
         // Generate QR codes
         const primaryQR = await generateQR(participant._id.toString())
         
@@ -339,6 +393,19 @@ export async function registerParticipant(data: RegisterParticipantData) {
             qrCode: primaryQR,
             primaryEmail: email || "",
             secondaryMemberQRs
+=======
+        // Send confirmation emails (Async) - ONLY for completed payments or admin created
+        if (paymentStatus === "completed" || isAdmin) {
+            sendRegistrationEmails(participant, activeEvent.eventName).catch(err => 
+                console.error("Failed to send registration emails:", err)
+            )
+        }
+
+        return {
+            success: true,
+            participantId: participant._id.toString(),
+            totalAmount
+>>>>>>> main
         }
 
     } catch (error: unknown) {
@@ -348,7 +415,7 @@ export async function registerParticipant(data: RegisterParticipantData) {
         if (error && typeof error === 'object' && 'code' in error && error.code === 11000) {
             return {
                 success: false,
-                error: "This mobile number is already registered for this event"
+                error: "This mobile number is already registered. If you have a pending registration, please try again after a few minutes."
             }
         }
 

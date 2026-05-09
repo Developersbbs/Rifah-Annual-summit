@@ -10,13 +10,15 @@ export async function updateParticipant(id: string, data: Partial<IParticipant>)
         await dbConnect()
 
         const {
-            mobileNumber,
             name,
+            email,
+            businessName,
+            businessCategory,
             location,
-            guestCount,
-            ageGroups,
-            foodPreference,
-            isMorningFood,
+            gender,
+            ticketType,
+            secondaryMembers,
+            registrationLanguage,
         } = data
 
         // Check if participant exists
@@ -25,40 +27,53 @@ export async function updateParticipant(id: string, data: Partial<IParticipant>)
             return { success: false, error: "Participant not found" }
         }
 
-        // Check if mobile number is being changed and if it conflicts
-        if (mobileNumber && mobileNumber !== existingParticipant.mobileNumber) {
-            const conflict = await Participant.findOne({ mobileNumber, _id: { $ne: id } })
-            if (conflict) {
-                return { success: false, error: "Mobile number already registered to another participant" }
-            }
-        }
+        // STRICT RULES: Only allow editing name, email, business name, business category, location
+        // ❌ Prevent changing mobile number, ticket price, guest count
+        // ❌ Prevent adding/removing secondary members (only allow editing existing ones)
 
-        // Update fields
-        if (mobileNumber) existingParticipant.mobileNumber = mobileNumber
+        // Allow editing primary member name, email, business name, business category, location
         if (name) existingParticipant.name = name
-        if (location) existingParticipant.location = location
-        
-        if (guestCount !== undefined) {
-            existingParticipant.guestCount = guestCount
-            existingParticipant.ageGroups = { guest: guestCount }
-            // Automatically update foodPreference if not provided separately
-            if (!foodPreference) {
-                existingParticipant.foodPreference = { guest: guestCount + 1 }
+        if (email !== undefined) existingParticipant.email = email
+        if (businessName !== undefined) existingParticipant.businessName = businessName
+        if (businessCategory !== undefined) existingParticipant.businessCategory = businessCategory
+        if (location !== undefined) existingParticipant.location = location
+        if (gender !== undefined) existingParticipant.gender = gender
+        if (ticketType !== undefined) existingParticipant.ticketType = ticketType
+        if (registrationLanguage !== undefined) existingParticipant.registrationLanguage = registrationLanguage
+
+        // Allow editing secondary members' name, email, business name, business category, location only
+        // Cannot add/remove secondary members, only edit existing ones
+        if (secondaryMembers && existingParticipant.secondaryMembers) {
+            // Check if number of members changed (adding/removing)
+            if (secondaryMembers.length !== existingParticipant.secondaryMembers.length) {
+                return { success: false, error: "Cannot add or remove secondary members. Only name, email, business name, business category, and location can be edited." }
             }
-        } else if (ageGroups) {
-            existingParticipant.ageGroups = ageGroups
-            existingParticipant.guestCount = ageGroups.guest || 0
+
+            // Update existing secondary members' name, email, business name, business category, location
+            secondaryMembers.forEach((updatedMember, index) => {
+                if (existingParticipant.secondaryMembers && existingParticipant.secondaryMembers[index]) {
+                    if (updatedMember.name) {
+                        existingParticipant.secondaryMembers[index].name = updatedMember.name
+                    }
+                    if (updatedMember.email !== undefined) {
+                        existingParticipant.secondaryMembers[index].email = updatedMember.email
+                    }
+                    if (updatedMember.businessName !== undefined) {
+                        existingParticipant.secondaryMembers[index].businessName = updatedMember.businessName
+                    }
+                    if (updatedMember.businessCategory !== undefined) {
+                        existingParticipant.secondaryMembers[index].businessCategory = updatedMember.businessCategory
+                    }
+                    if (updatedMember.location !== undefined) {
+                        existingParticipant.secondaryMembers[index].location = updatedMember.location
+                    }
+                    if (updatedMember.gender !== undefined) {
+                        existingParticipant.secondaryMembers[index].gender = updatedMember.gender
+                    }
+                }
+            })
         }
 
-        // Recalculate totalAmount based on actual member count (backend-only)
-        const actualMemberCount = existingParticipant.secondaryMembers?.length || 0
-        const totalMembers = 1 + actualMemberCount
-        const ticketPrice = existingParticipant.ticketPrice || 0
-        existingParticipant.totalAmount = totalMembers * ticketPrice
-        existingParticipant.memberCount = actualMemberCount
-
-        if (foodPreference) existingParticipant.foodPreference = foodPreference
-        if (isMorningFood !== undefined) existingParticipant.isMorningFood = isMorningFood
         existingParticipant.updatedAt = new Date()
 
         await existingParticipant.save()

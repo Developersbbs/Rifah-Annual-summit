@@ -1,0 +1,55 @@
+
+════════════════════════════════════════════════════════════════
+                    RIFAH ANNUAL SUMMIT 2026
+════════════════════════════════════════════════════════════════
+
+INVOICE
+
+Date: 18 Apr 2026
+Invoice ID: pay_SevIZarYRGGvLE
+
+────────────────────────────────────────────────────────────────
+BILLING DETAILS
+────────────────────────────────────────────────────────────────
+
+Name: Jeeva
+Mobile: +919876543211
+Email: jeevanandam2708@gmail.com
+Business: Demo Business Name
+Ticket Type: event
+Total Members: 1
+
+────────────────────────────────────────────────────────────────
+PAYMENT DETAILS
+────────────────────────────────────────────────────────────────
+
+Base Amount: ₹1,500
+GST (18%): ₹270
+────────────────────────────────────────────────────────────────
+TOTAL: ₹1,770
+────────────────────────────────────────────────────────────────
+
+Payment ID: pay_SevIZarYRGGvLE
+Payment Status: Completed
+
+
+────────────────────────────────────────────────────────────────
+GST DETAILS
+────────────────────────────────────────────────────────────────
+
+GST Number: 22AAAAA0000A1Z5
+
+
+
+────────────────────────────────────────────────────────────────
+TERMS & CONDITIONS
+────────────────────────────────────────────────────────────────
+
+1. Registration fees are non-transferable and non-refundable.
+2. GST is applicable as per government regulations.
+3. This invoice is generated automatically upon successful payment.
+4. For any queries, please contact the event organizer.
+
+════════════════════════════════════════════════════════════════
+                    Thank you for your registration!
+════════════════════════════════════════════════════════════════

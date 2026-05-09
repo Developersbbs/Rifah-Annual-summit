@@ -1,8 +1,6 @@
-import { SectionCards } from "@/components/section-cards"
-import { ParticipantsTable } from "@/components/participants-table"
-import { columns } from "./columns"
 import { getCurrentUser } from "@/lib/auth"
 import { getAdminData } from "@/app/actions/get-admin-data"
+import { AdminContent } from "@/components/admin-content"
 
 export default async function Page() {
   const user = await getCurrentUser()
@@ -19,25 +17,14 @@ export default async function Page() {
     rejectedRegistrations: 0,
     cashPayments: 0,
     onlinePayments: 0,
-    foodGuestCount: 0,
-    morningFoodCount: 0,
     totalMembers: 0,
   }
 
   return (
-    <div className="flex flex-1 flex-col">
-      <div className="@container/main flex flex-1 flex-col gap-2">
-        <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-          <div className="flex justify-between items-center px-4 lg:px-6">
-            <h2 className="text-2xl font-bold">Dashboard</h2>
-          </div>
-          <SectionCards stats={safeStats} />
-          <div className="px-4 lg:px-6">
-            <h2 className="text-xl font-semibold mb-4">Participants</h2>
-            <ParticipantsTable columns={columns} data={participants || []} userRole={user?.role as string} />
-          </div>
-        </div>
-      </div>
-    </div>
+    <AdminContent 
+      participants={participants || []} 
+      stats={safeStats} 
+      userRole={user?.role as string} 
+    />
   )
 }

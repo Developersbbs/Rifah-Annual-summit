@@ -30,11 +30,6 @@ export async function getAdminData() {
             rejectedRegistrations: 0,
             cashPayments: 0,
             onlinePayments: 0,
-            // FOOD PREFERENCE - Commented out
-            // vegCount: 0,
-            // nonVegCount: 0,
-            foodGuestCount: 0,
-            morningFoodCount: 0,
             totalMembers: 0,
         };
 
@@ -45,17 +40,9 @@ export async function getAdminData() {
             const totalAmount = p.totalAmount || 0
             const paymentMethod = p.paymentMethod || "cash"
             const approvalStatus = p.approvalStatus || "pending"
-            // FOOD PREFERENCE - Commented out
-            // const veg = p.foodPreference?.veg || 0
-            // const nonVeg = p.foodPreference?.nonVeg || 0
-            const foodGuest = p.foodPreference?.guest || 0
 
             stats.totalGuests += totalMembers
             stats.totalAmount += totalAmount
-            // FOOD PREFERENCE - Commented out
-            // stats.vegCount += veg
-            // stats.nonVegCount += nonVeg
-            stats.foodGuestCount += foodGuest
             stats.totalMembers += totalMembers
             
             if (paymentMethod === "cash") {
@@ -70,11 +57,6 @@ export async function getAdminData() {
                 stats.approvedRegistrations += 1
             } else if (approvalStatus === "rejected") {
                 stats.rejectedRegistrations += 1
-            }
-
-            // FOOD PREFERENCE - Commented out
-            if (p.isMorningFood) {
-                stats.morningFoodCount += (foodGuest) // foodGuest includes registrant if they opted in
             }
         })
 

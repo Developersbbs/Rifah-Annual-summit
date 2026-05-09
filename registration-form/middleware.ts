@@ -29,18 +29,21 @@ export async function middleware(request: NextRequest) {
         return NextResponse.next()
     }
 
-    // If no user, redirect to login
-    if (!user) {
-        return NextResponse.redirect(new URL('/login', request.url))
+    // Admin routes - strict protection
+    if (pathname.startsWith('/admin')) {
+        // Must have valid token
+        if (!token || !user) {
+            return NextResponse.redirect(new URL('/login?unauthorized=true', request.url))
+        }
+        // Must be admin or super-admin
+        if (user.role !== 'admin' && user.role !== 'super-admin') {
+            return NextResponse.redirect(new URL('/?unauthorized=true', request.url))
+        }
     }
 
-    // Admin routes protection
-    if (pathname.startsWith('/admin')) {
-        // Only admin and super-admin can access admin routes
-        if (user.role !== 'admin' && user.role !== 'super-admin') {
-            // Regular users trying to access admin - redirect to register
-            return NextResponse.redirect(new URL('/register', request.url))
-        }
+    // If no user for other routes, redirect to login
+    if (!user) {
+        return NextResponse.redirect(new URL('/login', request.url))
     }
 
     // Regular users - only allow register page

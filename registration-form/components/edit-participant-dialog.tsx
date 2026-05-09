@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -17,19 +17,19 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Loader2, Plus, Minus, Users, Utensils, AlertCircle } from "lucide-react"
+import { Loader2, AlertCircle } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Separator } from "@/components/ui/separator"
-// import { toast } from "sonner"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { IParticipant } from "@/lib/types"
-// Assuming sonner or toast is available? If not, simple alert or callback. 
-// I'll stick to props based callback or internal state.
 
 const personalDetailsSchema = z.object({
     name: z.string().min(2, "Name must be at least 2 characters"),
-    location: z.string().min(1, "Please enter your location"),
-    mobileNumber: z.string().regex(/^\+?[1-9]\d{1,14}$/, "Please enter a valid phone number"),
+    email: z.string().email("Invalid email format").optional(),
+    businessName: z.string().optional(),
+    businessCategory: z.string().optional(),
+    location: z.string().optional(),
+    gender: z.string().optional(),
+    ticketType: z.string().optional(),
 })
 
 interface EditParticipantDialogProps {
@@ -42,68 +42,56 @@ interface EditParticipantDialogProps {
 export function EditParticipantDialog({ participant, open, onOpenChange, onSuccess }: EditParticipantDialogProps) {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [dbError, setDbError] = useState<string | null>(null)
-
-    // Event Data State
-    const [eventData, setEventData] = useState({
-        guestCount: 0,
-        ageGuest: 0,
-        foodGuest: participant.foodPreference?.guest || 1,
-        isMorningFood: participant.isMorningFood || false,
-    })
+    const [secondaryMembers, setSecondaryMembers] = useState<Array<{ name: string; email: string; businessName: string; businessCategory: string; location: string; gender: string; isCheckedIn: boolean }>>([])
 
     const form = useForm<z.infer<typeof personalDetailsSchema>>({
         resolver: zodResolver(personalDetailsSchema),
         defaultValues: {
             name: participant.name,
-            location: participant.location,
-            mobileNumber: participant.mobileNumber,
+            email: participant.email || "",
+            businessName: participant.businessName || "",
+            businessCategory: participant.businessCategory || "",
+            location: participant.location || "",
+            gender: participant.gender || "",
+            ticketType: participant.ticketType || "",
         }
     })
 
-    // Reset state when participant changes (if dialog re-opens with different user)
+    // Reset form when participant changes
     useEffect(() => {
-        if (open && participant) {
-            setEventData({
-                guestCount: 0,
-                ageGuest: 0,
-                foodGuest: participant.foodPreference?.guest || 1,
-                isMorningFood: participant.isMorningFood || false,
-            })
+        if (participant) {
             form.reset({
                 name: participant.name,
-                location: participant.location,
-                mobileNumber: participant.mobileNumber,
+                email: participant.email || "",
+                businessName: participant.businessName || "",
+                businessCategory: participant.businessCategory || "",
+                location: participant.location || "",
+                gender: participant.gender || "",
+                ticketType: participant.ticketType || "",
             })
-            setDbError(null)
+            // Initialize secondary members
+            setSecondaryMembers(
+                participant.secondaryMembers?.map((member) => ({
+                    name: member.name || "",
+                    email: member.email || "",
+                    businessName: member.businessName || "",
+                    businessCategory: member.businessCategory || "",
+                    location: member.location || "",
+                    gender: member.gender || "",
+                    isCheckedIn: member.isCheckedIn || false,
+                })) || []
+            )
         }
-    }, [open, participant, form])
-
-    // --- Derived State (Pricing) ---
-    const totalMembers = useMemo(() => {
-        return 1 + (participant.secondaryMembers?.length || 0)
-    }, [participant.secondaryMembers])
-
-
-    // --- Handlers ---
-
+    }, [participant, form])
 
     const onSubmit = async (data: z.infer<typeof personalDetailsSchema>) => {
         setIsSubmitting(true)
         setDbError(null)
         try {
-            const payload = {
-                ...data,
-                guestCount: 0,
-                ageGroups: { guest: 0 },
-                foodPreference: { guest: eventData.foodGuest },
-                isMorningFood: eventData.isMorningFood,
-            }
-
-            const result = await updateParticipant(participant._id, payload)
+            const result = await updateParticipant(participant._id, { ...data, secondaryMembers })
             if (result.success) {
                 onOpenChange(false)
                 if (onSuccess) onSuccess()
-                // Optional: Toast success
             } else {
                 setDbError(result.error || "Update failed.")
             }
@@ -116,93 +104,182 @@ export function EditParticipantDialog({ participant, open, onOpenChange, onSucce
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+            <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle>Edit Participant</DialogTitle>
+                    <DialogTitle>Participant Details</DialogTitle>
                     <DialogDescription>
-                        Make changes to the participant details here. Click save when you&apos;re done.
+                        View and edit participant information.
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="grid gap-4 py-4">
+                <div className="space-y-6 py-4">
                     <Form {...form}>
-                        <form id="edit-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                        <form id="edit-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
 
-                            {/* Personal Details */}
-                            <div className="space-y-4">
-                                <h3 className="text-sm font-medium text-muted-foreground">Personal Details</h3>
-                                <FormField control={form.control} name="name" render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Full Name</FormLabel>
-                                        <FormControl><Input placeholder="Name" {...field} /></FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )} />
-                                <FormField control={form.control} name="mobileNumber" render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Mobile Number</FormLabel>
-                                        <FormControl><Input placeholder="+91..." {...field} /></FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )} />
-                                <FormField control={form.control} name="location" render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Location</FormLabel>
-                                        <FormControl><Input placeholder="Enter your location (e.g. Covai, Trichy)" {...field} /></FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )} />
-                            </div>
-
-                            <Separator />
-
-                            {/* Event Details */}
+                            {/* SECTION 1: Primary Member */}
                             <div className="space-y-4">
                                 <div className="flex items-center gap-2">
-                                    <Users className="h-4 w-4 text-primary" />
-                                    <h3 className="text-sm font-medium text-muted-foreground">Guest Count</h3>
+                                    <h3 className="font-semibold text-lg">Primary Member</h3>
                                 </div>
-                                <div className="flex items-center gap-4">
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="icon"
-                                        className="h-8 w-8"
-                                        onClick={() => setEventData(prev => ({ ...prev, guestCount: Math.max(0, prev.guestCount - 1) }))}
-                                        disabled={true}
-                                    >
-                                        <Minus className="h-4 w-4" />
-                                    </Button>
-                                    <span className="text-xl font-semibold w-8 text-center">0</span>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="icon"
-                                        className="h-8 w-8"
-                                        disabled={true}
-                                    >
-                                        <Plus className="h-4 w-4" />
-                                    </Button>
-                                    <span className="text-xs text-muted-foreground">
-                                        Total Participation: {totalMembers}
-                                    </span>
+                                <div className="space-y-3">
+                                    <FormField control={form.control} name="name" render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Full Name</FormLabel>
+                                            <FormControl><Input placeholder="Name" {...field} /></FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )} />
+                                    <FormField control={form.control} name="businessName" render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Business Name</FormLabel>
+                                            <FormControl><Input placeholder="Business Name" {...field} /></FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )} />
+                                    <FormField control={form.control} name="email" render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Email</FormLabel>
+                                            <FormControl><Input type="email" placeholder="Email" {...field} /></FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )} />
+                                    <FormField control={form.control} name="businessCategory" render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Business Category</FormLabel>
+                                            <FormControl><Input placeholder="Business Category" {...field} /></FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )} />
+                                    <FormField control={form.control} name="location" render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Location</FormLabel>
+                                            <FormControl><Input placeholder="Location" {...field} /></FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )} />
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <FormField control={form.control} name="gender" render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Gender</FormLabel>
+                                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                    <FormControl>
+                                                        <SelectTrigger>
+                                                            <SelectValue placeholder="Select Gender" />
+                                                        </SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectContent>
+                                                        <SelectItem value="male">Male</SelectItem>
+                                                        <SelectItem value="female">Female</SelectItem>
+                                                        <SelectItem value="other">Other</SelectItem>
+                                                        <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )} />
+                                        <FormField control={form.control} name="ticketType" render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Ticket Type</FormLabel>
+                                                <FormControl><Input placeholder="Ticket Type" {...field} /></FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )} />
+                                    </div>
                                 </div>
                             </div>
 
-                            <div className="space-y-4">
-                                <div className="flex items-center gap-2">
-                                    <Utensils className="h-4 w-4 text-primary" />
-                                    <h3 className="text-sm font-medium text-muted-foreground">Morning Food</h3>
+                            {/* SECTION 2: Secondary Members */}
+                            {secondaryMembers.length > 0 && (
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-2">
+                                        <h3 className="font-semibold text-lg">Secondary Members</h3>
+                                    </div>
+                                    {secondaryMembers.map((member, index) => (
+                                        <div key={index} className="border rounded-lg p-4 space-y-3 bg-muted/30">
+                                            <span className="text-sm font-medium text-muted-foreground">Member {index + 1}</span>
+                                            <div className="space-y-3">
+                                                <div>
+                                                    <Label className="text-xs">Name</Label>
+                                                    <Input
+                                                        value={member.name}
+                                                        onChange={(e) => {
+                                                            const updated = [...secondaryMembers]
+                                                            updated[index] = { ...updated[index], name: e.target.value }
+                                                            setSecondaryMembers(updated)
+                                                        }}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <Label className="text-xs">Email</Label>
+                                                    <Input
+                                                        type="email"
+                                                        value={member.email}
+                                                        onChange={(e) => {
+                                                            const updated = [...secondaryMembers]
+                                                            updated[index] = { ...updated[index], email: e.target.value }
+                                                            setSecondaryMembers(updated)
+                                                        }}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <Label className="text-xs">Business Name</Label>
+                                                    <Input
+                                                        value={member.businessName}
+                                                        onChange={(e) => {
+                                                            const updated = [...secondaryMembers]
+                                                            updated[index] = { ...updated[index], businessName: e.target.value }
+                                                            setSecondaryMembers(updated)
+                                                        }}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <Label className="text-xs">Business Category</Label>
+                                                    <Input
+                                                        value={member.businessCategory}
+                                                        onChange={(e) => {
+                                                            const updated = [...secondaryMembers]
+                                                            updated[index] = { ...updated[index], businessCategory: e.target.value }
+                                                            setSecondaryMembers(updated)
+                                                        }}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <Label className="text-xs">Location</Label>
+                                                    <Input
+                                                        value={member.location}
+                                                        onChange={(e) => {
+                                                            const updated = [...secondaryMembers]
+                                                            updated[index] = { ...updated[index], location: e.target.value }
+                                                            setSecondaryMembers(updated)
+                                                        }}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <Label className="text-xs">Gender</Label>
+                                                    <Select 
+                                                        value={member.gender} 
+                                                        onValueChange={(value) => {
+                                                            const updated = [...secondaryMembers]
+                                                            updated[index] = { ...updated[index], gender: value }
+                                                            setSecondaryMembers(updated)
+                                                        }}
+                                                    >
+                                                        <SelectTrigger className="h-10">
+                                                            <SelectValue placeholder="Select Gender" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="male">Male</SelectItem>
+                                                            <SelectItem value="female">Female</SelectItem>
+                                                            <SelectItem value="other">Other</SelectItem>
+                                                            <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
-                                <div className="flex items-center space-x-2 border p-3 rounded-lg bg-muted/20">
-                                    <Checkbox
-                                        id="edit-morning-food"
-                                        checked={eventData.isMorningFood}
-                                        onCheckedChange={(c) => setEventData(prev => ({ ...prev, isMorningFood: !!c }))}
-                                    />
-                                    <Label htmlFor="edit-morning-food" className="font-medium cursor-pointer">Morning Food Required</Label>
-                                </div>
-                            </div>
+                            )}
 
                             {dbError && <Alert variant="destructive"><AlertCircle className="h-4 w-4" /><AlertTitle>Error</AlertTitle><AlertDescription>{dbError}</AlertDescription></Alert>}
 

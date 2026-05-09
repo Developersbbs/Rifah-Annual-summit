@@ -4,12 +4,6 @@ export interface IAgeGroups {
     guest: number;
 }
 
-export interface IFoodPreference {
-    // veg: number;
-    // nonVeg: number;
-    guest: number;
-}
-
 export interface ICheckIn {
     isCheckedIn: boolean;
     memberPresent: boolean;
@@ -32,6 +26,7 @@ export interface ISecondaryMember {
     isMember?: boolean;
     isCheckedIn: boolean;
     checkedInAt?: Date | string;
+    gender?: string;
 }
 
 export interface IApprovalLog {
@@ -62,8 +57,6 @@ export interface IParticipant {
     approvedBy?: string;
     approvedRole?: "admin" | "super-admin";
     ageGroups?: IAgeGroups;
-    foodPreference?: IFoodPreference;
-    isMorningFood: boolean;
     isRegistered: boolean;
     createdAt: string | Date;
     updatedAt: string | Date;
@@ -85,18 +78,27 @@ export interface IParticipant {
     gender?: string;
     rejectionReason?: string;
     approvalLogs?: IApprovalLog[];
+    registrationLanguage?: "en" | "ta";
 }
 
 export interface IEvent {
     _id: string;
     eventName: string;
-    startDate: string | Date;
-    endDate: string | Date;
-    location: string;
+    registrationStart: string | Date;
+    registrationEnd: string | Date;
+    eventDate: string | Date;
+    startTime: string | Date;
+    endTime: string | Date;
+    venue: {
+        name: string;
+        address: string;
+        city: string;
+    };
     maxCapacity: number;
     registeredCount: number;
     isActive: boolean;
     ticketsPrice: ITicketPrice[];
+    taxRate: number;
     createdBy?: string;
     createdAt?: string | Date;
     updatedAt?: string | Date;

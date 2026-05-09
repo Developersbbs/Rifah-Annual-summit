@@ -1,12 +1,12 @@
 "use client"
 
 import * as React from "react"
+import Image from "next/image"
 import {
   IconChartBar,
   IconDashboard,
   IconUsers,
   IconCalendarEvent,
-  IconWorld,
   IconDatabase,
   IconListDetails,
   IconHistory,
@@ -15,6 +15,8 @@ import {
 
 import { NavMain } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
+import { useTranslation } from "react-i18next"
+import "@/lib/i18n"
 import {
   Sidebar,
   SidebarContent,
@@ -30,34 +32,36 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 }
 
 export function AppSidebar({ user, ...props }: AppSidebarProps) {
+  const { t } = useTranslation()
   const navMain = [
     {
-      title: "Dashboard",
-      url: "/admin/dashboard",
-      icon: IconDashboard,
-    },
-    {
-      title: "Records",
+      title: t("Records"),
       url: "/admin",
       icon: IconDatabase,
     },
+    {
+      title: t("Dashboard"),
+      url: "/admin/dashboard",
+      icon: IconDashboard,
+    },
+
     // {
     //   title: "Quick Create",
     //   url: "/admin/quick-create",
     //   icon: IconPlus,
     // },
     {
-      title: "Location Stats",
+      title: t("Location Stats"),
       url: "/admin/locations",
       icon: IconChartBar,
     },
     {
-      title: "Events",
+      title: t("Events"),
       url: "/admin/events",
       icon: IconCalendarEvent,
     },
     {
-      title: "Check-in",
+      title: t("Check-in"),
       url: "/admin/checkin",
       icon: IconListDetails,
     },
@@ -68,12 +72,12 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
     },
     ...(user?.role === 'super-admin' ? [
       {
-        title: "Approval History",
+        title: t("Approval History"),
         url: "/admin/approval-history",
         icon: IconHistory,
       },
       {
-        title: "Users",
+        title: t("Users"),
         url: "/admin/users",
         icon: IconUsers,
       }
@@ -82,7 +86,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
 
   const userData = {
     name: user?.email?.split('@')[0] || "Admin",
-    email: user?.email || "admin@example.com",
+    email: user?.email || undefined,
     avatar: "/avatars/shadcn.jpg", // Placeholder
   }
 
@@ -95,10 +99,11 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
               asChild
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
-              <a href="#">
-                <IconWorld className="!size-5" />
-                <span className="text-base font-semibold">RIFAH ANNUAL SUMMIT</span>
-              </a>
+              <div className="flex items-center gap-2">
+                {/* <Earth className="h-6 w-6 text-primary animate-spin-slow" /> */}
+                <Image src="/assets/logo.png" alt="RIFAH" width={38} height={38} className="h-7 w-7 sm:h-8 sm:w-8" />
+                <span className=" font-bold tracking-tight">{t("RIFAH ANNUAL SUMMIT")}</span>
+              </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

@@ -6,6 +6,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { useTranslation } from "react-i18next"
+import "@/lib/i18n"
 
 interface SectionCardsProps {
   stats: {
@@ -17,99 +19,70 @@ interface SectionCardsProps {
     rejectedRegistrations: number
     cashPayments: number
     onlinePayments: number
-    foodGuestCount: number
-    morningFoodCount: number
     totalMembers?: number
   }
 }
 
 export function SectionCards({ stats }: SectionCardsProps) {
+  const { t } = useTranslation()
   return (
     <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
       <Card className="@container/card">
         <CardHeader>
-          <CardDescription>Total Registrations</CardDescription>
+          <CardDescription>{t("Total Registrations")}</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
             {stats.totalRegistrations}
           </CardTitle>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">
-            <IconUsers className="size-4 text-blue-500" /> Total Members: {stats.totalMembers || stats.totalGuests}
+            <IconUsers className="size-4 text-blue-500" /> {t("Total Members")}: {stats.totalMembers || stats.totalGuests}
           </div>
           <div className="text-muted-foreground text-xs">
-            ({stats.totalRegistrations} Primary + {(stats.totalMembers || stats.totalGuests) - stats.totalRegistrations} Secondary)
+            ({stats.totalRegistrations} {t("Primary")} + {(stats.totalMembers || stats.totalGuests) - stats.totalRegistrations} {t("Secondary")})
           </div>
           <div className="text-muted-foreground">
-            Total Amount: ₹{stats.totalAmount}
+            {t("Total Amount")}: ₹{stats.totalAmount}
           </div>
         </CardFooter>
       </Card>
 
       <Card className="@container/card">
         <CardHeader>
-          <CardDescription>Payment Methods</CardDescription>
+          <CardDescription>{t("Payment Methods")}</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
             {stats.cashPayments + stats.onlinePayments}
           </CardTitle>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">
-            <IconCurrencyRupee className="size-4 text-green-500" /> Cash: {stats.cashPayments}
+            <IconCurrencyRupee className="size-4 text-green-500" /> {t("Cash")}: {stats.cashPayments}
           </div>
           <div className="line-clamp-1 flex gap-2 font-medium">
-            <IconClock className="size-4 text-blue-500" /> Online: {stats.onlinePayments}
+            <IconClock className="size-4 text-blue-500" /> {t("Online")}: {stats.onlinePayments}
           </div>
         </CardFooter>
       </Card>
 
       <Card className="@container/card">
         <CardHeader>
-          <CardDescription>Approval Status</CardDescription>
+          <CardDescription>{t("Approval Status")}</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
             {stats.pendingApprovals + stats.approvedRegistrations + stats.rejectedRegistrations}
           </CardTitle>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">
-            <IconClock className="size-4 text-orange-500" /> Pending: {stats.pendingApprovals}
+            <IconClock className="size-4 text-orange-500" /> {t("Pending")}: {stats.pendingApprovals}
           </div>
           <div className="line-clamp-1 flex gap-2 font-medium">
-            <IconCheck className="size-4 text-green-500" /> Approved: {stats.approvedRegistrations}
+            <IconCheck className="size-4 text-green-500" /> {t("Approved")}: {stats.approvedRegistrations}
           </div>
           <div className="line-clamp-1 flex gap-2 font-medium">
-            <IconX className="size-4 text-red-500" /> Rejected: {stats.rejectedRegistrations}
+            <IconX className="size-4 text-red-500" /> {t("Rejected")}: {stats.rejectedRegistrations}
           </div>
         </CardFooter>
       </Card>
-
-      {/* <Card className="@container/card">
-        <CardHeader>
-          <CardDescription>Food Guests</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            {stats.foodGuestCount}
-          </CardTitle>
-        </CardHeader>
-        <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            <IconSoup className="size-4 text-primary" /> Total Food Opted
-          </div>
-        </CardFooter>
-      </Card> */}
-
-      {/* <Card className="@container/card">
-        <CardHeader>
-          <CardDescription>Morning Breakfast</CardDescription>
-          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            {stats.morningFoodCount}
-          </CardTitle>
-        </CardHeader>
-        <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            <IconCoffee className="size-4 text-orange-500" /> Opted In
-          </div>
-        </CardFooter>
-      </Card> */}
     </div>
   )
 }

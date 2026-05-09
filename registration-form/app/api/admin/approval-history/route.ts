@@ -42,6 +42,7 @@ export async function GET(request: Request) {
 
         // Fetch participants with approval logs
         const participants = await Participant.find(query)
+            .populate("approvalLogs.approvedBy", "name email")
             .lean()
 
         // Flatten approval logs into records

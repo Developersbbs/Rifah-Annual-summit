@@ -1,62 +1,3 @@
-// import mongoose from "mongoose"
-
-// const ParticipantSchema = new mongoose.Schema({
-//     mobileNumber: {
-//         type: String,
-//         required: true,
-//         unique: true,
-//     },
-//     name: {
-//         type: String,
-//         required: false, // Optional initially, but required for full reg
-//     },
-//     groupNumber: {
-//         type: String, // Storing as string to handle "Covai Group" etc.
-//         required: false,
-//     },
-//     ageGroups: {
-//         adults: { type: Number, default: 0 },
-//         children: { type: Number, default: 0 },
-//     },
-//     foodPreference: {
-//         veg: { type: Number, default: 0 },
-//         nonVeg: { type: Number, default: 0 },
-//     },
-
-//     isMorningFood: {
-//         type: Boolean,
-//         default: false,
-//     },
-//     isRegistered: {
-//         type: Boolean,
-//         default: false,
-//     },
-//     checkIn: {
-//         isCheckedIn: { type: Boolean, default: false },
-//         memberPresent: { type: Boolean, default: false },
-//         timestamp: { type: Date },
-//         actualAdults: { type: Number },
-//         actualChildren: { type: Number },
-//         checkedInBy: { type: String }
-//     },
-//     createdAt: {
-//         type: Date,
-//         default: Date.now,
-//     },
-//     updatedAt: {
-//         type: Date,
-//         default: Date.now,
-//     }
-// })
-
-// // Force re-compilation of model in dev to apply schema changes
-// if (process.env.NODE_ENV === "development" && mongoose.models.Participant) {
-//     delete mongoose.models.Participant
-// }
-
-// export default mongoose.models.Participant || mongoose.model("Participant", ParticipantSchema)
-
-
 import mongoose from "mongoose"
 
 const ParticipantSchema = new mongoose.Schema({
@@ -116,6 +57,19 @@ const ParticipantSchema = new mongoose.Schema({
         type: String,
         enum: ["pending", "completed", "failed"],
         default: "pending",
+    },
+
+    paymentId: {
+        type: String,
+    },
+
+    //  TERMS & CONDITIONS ACCEPTANCE
+    termsAccepted: {
+        type: Boolean,
+        default: false,
+    },
+    termsAcceptedAt: {
+        type: Date,
     },
 
     //  ADD THIS (TRACK AMOUNT)
@@ -185,17 +139,6 @@ const ParticipantSchema = new mongoose.Schema({
         // adults: { type: Number, default: 0 },
         // children: { type: Number, default: 0 },
         guest: { type: Number, default: 0 },
-    },
-
-    foodPreference: {
-        // veg: { type: Number, default: 0 },
-        // nonVeg: { type: Number, default: 0 },
-        guest: { type: Number, default: 0 },
-    },
-
-    isMorningFood: {
-        type: Boolean,
-        default: false,
     },
 
     isRegistered: {
@@ -276,7 +219,7 @@ const ParticipantSchema = new mongoose.Schema({
             },
             role: {
                 type: String,
-                enum: ["admin", "super-admin"]
+                enum: ["system", "admin", "super-admin"]
             },
             status: {
                 type: String,
@@ -287,8 +230,23 @@ const ParticipantSchema = new mongoose.Schema({
                 default: Date.now
             }
         }
-    ]
+    ],
+    registrationLanguage: {
+        type: String,
+        enum: ["en", "ta"],
+        default: "en",
+    },
+
+    emailSent: {
+        type: Boolean,
+        default: false,
+    },
 
 }, { timestamps: true })
+
+// Force re-compilation of model in dev to apply schema changes
+if (process.env.NODE_ENV === "development" && mongoose.models.Participant) {
+    delete mongoose.models.Participant
+}
 
 export default mongoose.models.Participant || mongoose.model("Participant", ParticipantSchema)

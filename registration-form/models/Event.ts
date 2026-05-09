@@ -6,19 +6,47 @@ const eventSchema = new mongoose.Schema({
         required: true,
     },
 
-    startDate: {
+    // REGISTRATION WINDOW
+    registrationStart: {
         type: Date,
         required: true,
     },
 
-    endDate: {
+    registrationEnd: {
         type: Date,
         required: true,
     },
 
-    location: {
-        type: String,
+    // EVENT SCHEDULE
+    eventDate: {
+        type: Date,
         required: true,
+    },
+
+    startTime: {
+        type: Date,
+        required: true,
+    },
+
+    endTime: {
+        type: Date,
+        required: true,
+    },
+
+    // VENUE
+    venue: {
+        name: {
+            type: String,
+            required: true,
+        },
+        address: {
+            type: String,
+            required: true,
+        },
+        city: {
+            type: String,
+            required: true,
+        },
     },
 
     maxCapacity: {
@@ -36,7 +64,7 @@ const eventSchema = new mongoose.Schema({
         default: true,
     },
 
-    //  TICKET PRICING SYSTEM
+    // TICKET PRICING SYSTEM
     ticketsPrice: [
         {
             name: {
@@ -54,7 +82,7 @@ const eventSchema = new mongoose.Schema({
         }
     ],
 
-    //  TAX CONFIGURATION
+    // TAX CONFIGURATION
     taxRate: {
         type: Number,
         default: 0, // Default to 0% tax

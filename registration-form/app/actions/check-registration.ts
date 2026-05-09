@@ -17,6 +17,8 @@ export async function checkRegistration(mobileNumber: string) {
 
         const participant = await Participant.findOne({ mobileNumber }).lean()
 
+        // Only block re-registration if user is fully registered (isRegistered: true)
+        // Allow re-registration for pending users who haven't completed payment
         if (participant && participant.isRegistered) {
             return {
                 exists: true,
@@ -44,6 +46,18 @@ export async function checkRegistration(mobileNumber: string) {
                     }))
                 },
                 message: "This mobile number is already registered."
+            }
+        }
+
+        // If participant exists but is not fully registered (pending), allow re-registration
+        // but delete the old pending record first
+        if (participant && !participant.isRegistered) {
+            try {
+                // Delete the old pending registration to allow fresh registration
+                await Participant.findByIdAndDelete(participant._id)
+                console.log(`Deleted pending registration for ${mobileNumber} to allow re-registration`)
+            } catch (error) {
+                console.error("Error deleting pending registration:", error)
             }
         }
 

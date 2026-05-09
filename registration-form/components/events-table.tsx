@@ -11,9 +11,20 @@ import { toast } from "sonner"
 interface Event {
   _id: string
   eventName: string
-  startDate: string
-  endDate: string
-  location: string
+  registrationStart?: string
+  registrationEnd?: string
+  eventDate?: string
+  startTime?: string
+  endTime?: string
+  venue?: {
+    name: string
+    address: string
+    city: string
+  }
+  // Backward compatibility
+  startDate?: string
+  endDate?: string
+  location?: string
   maxCapacity: number
   registeredCount: number
   isActive: boolean
@@ -73,6 +84,7 @@ export function EventsTable({ userRole }: EventsTableProps) {
   }, [])
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return 'N/A'
     return new Date(dateString).toLocaleString("en-IN", {
       day: "2-digit",
       month: "short",
@@ -84,20 +96,20 @@ export function EventsTable({ userRole }: EventsTableProps) {
 
   const isEventActive = (event: Event) => {
     const now = new Date()
-    const start = new Date(event.startDate)
-    const end = new Date(event.endDate)
+    const start = new Date(event.registrationStart || event.startDate || '')
+    const end = new Date(event.registrationEnd || event.endDate || '')
     return event.isActive && now >= start && now <= end
   }
 
   const isEventUpcoming = (event: Event) => {
     const now = new Date()
-    const start = new Date(event.startDate)
+    const start = new Date(event.registrationStart || event.startDate || '')
     return now < start
   }
 
   const isEventPast = (event: Event) => {
     const now = new Date()
-    const end = new Date(event.endDate)
+    const end = new Date(event.registrationEnd || event.endDate || '')
     return now > end
   }
 
@@ -145,7 +157,7 @@ export function EventsTable({ userRole }: EventsTableProps) {
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <MapPin className="h-4 w-4" />
-                        {event.location}
+                        {event.venue?.city || event.venue?.name || event.location || 'TBD'}
                       </div>
                       <div className="flex items-center gap-1">
                         <Users className="h-4 w-4" />
@@ -195,12 +207,20 @@ export function EventsTable({ userRole }: EventsTableProps) {
               <CardContent className="pt-0">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   <div>
-                    <p className="font-medium text-muted-foreground">Registration Start</p>
-                    <p>{formatDate(event.startDate)}</p>
+                    <p className="font-medium text-muted-foreground">Event Date</p>
+                    <p>{event.eventDate ? new Date(event.eventDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</p>
                   </div>
                   <div>
-                    <p className="font-medium text-muted-foreground">Registration End</p>
-                    <p>{formatDate(event.endDate)}</p>
+                    <p className="font-medium text-muted-foreground">Event Time</p>
+                    <p>{event.startTime && event.endTime ? `${new Date(event.startTime).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })} - ${new Date(event.endTime).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}` : 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="font-medium text-muted-foreground">Registration Window</p>
+                    <p>{formatDate(event.registrationStart || event.startDate || '')} - {formatDate(event.registrationEnd || event.endDate || '')}</p>
+                  </div>
+                  <div>
+                    <p className="font-medium text-muted-foreground">Venue</p>
+                    <p>{event.venue?.name || event.location || 'TBD'}</p>
                   </div>
                 </div>
                 <div className="mt-3">

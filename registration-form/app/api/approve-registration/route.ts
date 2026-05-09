@@ -4,7 +4,7 @@ import { approveRegistration } from "@/app/actions/approve-registration"
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json()
-        const { participantId } = body
+        const { participantId, markPaid } = body
 
         if (!participantId) {
             return NextResponse.json(
@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        const result = await approveRegistration(participantId)
+        const result = await approveRegistration(participantId, markPaid)
 
         if (result.success) {
             return NextResponse.json(result, { status: 200 })

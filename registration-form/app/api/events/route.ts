@@ -55,15 +55,18 @@ export async function POST(request: NextRequest) {
 
     const {
       eventName,
-      startDate,
-      endDate,
-      location,
+      registrationStart,
+      registrationEnd,
+      eventDate,
+      startTime,
+      endTime,
+      venue,
       maxCapacity,
       taxRate = 0,
     } = body
 
     // VALIDATION
-    if (!eventName || !startDate || !endDate || !location) {
+    if (!eventName || !registrationStart || !registrationEnd || !eventDate || !startTime || !endTime || !venue) {
       return NextResponse.json(
         { error: 'All required fields must be provided' },
         { status: 400 }
@@ -71,9 +74,9 @@ export async function POST(request: NextRequest) {
     }
 
     // DATE VALIDATION
-    if (new Date(startDate) > new Date(endDate)) {
+    if (new Date(registrationStart) > new Date(registrationEnd)) {
       return NextResponse.json(
-        { error: 'Start date cannot be after end date' },
+        { error: 'Registration start date cannot be after registration end date' },
         { status: 400 }
       )
     }
@@ -95,12 +98,15 @@ export async function POST(request: NextRequest) {
     // ✅ CLEAN EVENT CREATION
     const event = new Event({
       eventName,
-      startDate,
-      endDate,
-      location,
+      registrationStart,
+      registrationEnd,
+      eventDate,
+      startTime,
+      endTime,
+      venue,
       maxCapacity: maxCapacity || 100,
-      ticketsPrice: finalTickets, // ✅ Fixed
-      taxRate, // Add tax rate field
+      ticketsPrice: finalTickets,
+      taxRate,
       createdBy: userId
     })
 

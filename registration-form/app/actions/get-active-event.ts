@@ -11,8 +11,8 @@ export async function getActiveEvent() {
 
         const activeEvent = await Event.findOne({
             isActive: true,
-            startDate: { $lte: now },
-            endDate: { $gte: now }
+            registrationStart: { $lte: now },
+            registrationEnd: { $gte: now }
         }).lean()
 
         if (!activeEvent) {
@@ -33,8 +33,11 @@ export async function getActiveEvent() {
             event: {
                 ...serialized,
                 // Keep dates as explicit ISO strings for consistent client usage
-                startDate: activeEvent.startDate.toISOString(),
-                endDate: activeEvent.endDate.toISOString(),
+                registrationStart: activeEvent.registrationStart.toISOString(),
+                registrationEnd: activeEvent.registrationEnd.toISOString(),
+                eventDate: activeEvent.eventDate.toISOString(),
+                startTime: activeEvent.startTime.toISOString(),
+                endTime: activeEvent.endTime.toISOString(),
                 createdAt: activeEvent.createdAt?.toISOString() ?? null,
                 updatedAt: activeEvent.updatedAt?.toISOString() ?? null,
             }

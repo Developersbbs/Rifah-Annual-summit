@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -236,8 +237,69 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
     letter-spacing: var(--tracking-normal);
   }
+
+  /* Base typography scale */
+  h1 {
+    @apply text-4xl md:text-6xl font-bold;
+  }
+
+  h2 {
+    @apply text-3xl md:text-4xl font-semibold;
+  }
+
+  h3 {
+    @apply text-2xl md:text-3xl font-semibold;
+  }
+
+  p {
+    @apply text-base md:text-lg leading-relaxed;
+  }
+}
+
+/* globals.css — add this at the bottom */
+
+@layer utilities {
+  .animate-sponsor-scroll {
+    animation: sponsor-scroll 18s linear infinite;
+  }
+
+  .animate-sponsor-scroll-reverse {
+    animation: sponsor-scroll-reverse 18s linear infinite;
+  }
+}
+
+@keyframes sponsor-scroll {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes sponsor-scroll-reverse {
+  0% {
+    transform: translateX(-50%);
+  }
+
+  100% {
+    transform: translateX(0%);
+  }
+}
+
+
+@font-face {
+  font-family: 'Noto Sans Tamil';
+  src: local('Noto Sans Tamil');
+}
+
+/* Tamil unicode range only */
+* {
+  font-family: var(--font-geist-sans), 'Noto Sans Tamil', sans-serif;
 }

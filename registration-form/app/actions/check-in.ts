@@ -57,7 +57,8 @@ interface CheckInData {
 
 interface SecondaryMemberCheckInData {
     participantId: string
-    memberMobileNumber: string
+    memberMobileNumber?: string
+    memberIndex?: number
 }
 
 export async function performSecondaryMemberCheckIn(data: SecondaryMemberCheckInData) {
@@ -79,18 +80,29 @@ export async function performSecondaryMemberCheckIn(data: SecondaryMemberCheckIn
             return { success: false, error: "Participant is not approved for check-in" }
         }
 
+        // Block check-in for unpaid participants
+        if (participant.paymentStatus !== 'completed') {
+            return { success: false, error: "Payment not completed" }
+        }
+
         // Negative Test Case 5: Block check-in for unregistered users
         if (!participant.isRegistered) {
             return { success: false, error: "User is not registered" }
         }
 
-        // Find the secondary member by mobile number
-        const memberIndex = participant.secondaryMembers.findIndex(
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (m: any) => m.mobileNumber === data.memberMobileNumber
-        )
+        // Find the secondary member by mobile number or index
+        let memberIndex = -1
 
-        if (memberIndex === -1) {
+        if (data.memberMobileNumber) {
+            memberIndex = participant.secondaryMembers.findIndex(
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (m: any) => m.mobileNumber === data.memberMobileNumber
+            )
+        } else if (data.memberIndex !== undefined) {
+            memberIndex = data.memberIndex
+        }
+
+        if (memberIndex === -1 || memberIndex >= participant.secondaryMembers.length) {
             return { success: false, error: "Secondary member not found" }
         }
 
@@ -176,6 +188,11 @@ export async function performCheckIn(id: string, data: CheckInData) {
             return { success: false, error: "Participant is not approved for check-in" }
         }
 
+        // Block check-in for unpaid participants
+        if (participant.paymentStatus !== 'completed') {
+            return { success: false, error: "Payment not completed" }
+        }
+
         // Negative Test Case 5: Block check-in for unregistered users
         if (!participant.isRegistered) {
             return { success: false, error: "User is not registered" }
@@ -217,7 +234,15 @@ export async function performCheckIn(id: string, data: CheckInData) {
 export async function getCheckInStats() {
     await dbConnect()
     try {
-        const participants = await Participant.find({ isRegistered: true, approvalStatus: 'approved' }).lean()
+        // Include participants who are approved AND either: paid (cash/online completed) or online payment method
+        const participants = await Participant.find({
+            isRegistered: true,
+            approvalStatus: 'approved',
+            $or: [
+                { paymentStatus: 'completed' },
+                { paymentMethod: 'online' }
+            ]
+        }).lean()
 
         let registeredMembers = 0
         let registeredParticipants = 0
@@ -261,7 +286,14 @@ export async function getCheckInStats() {
 export async function getParticipantsByStatus(status: 'all' | 'checked-in' | 'pending', page: number = 1, limit: number = 20, query: string = "") {
     await dbConnect()
     try {
-        const dbQuery: Record<string, unknown> = { isRegistered: true, approvalStatus: "approved" }
+        // Show approved participants who have completed payment (cash) or used online payment
+        const dbQuery: Record<string, unknown> = {
+            approvalStatus: "approved",
+            $or: [
+                { paymentStatus: "completed" },
+                { paymentMethod: "online" }
+            ]
+        }
 
         if (status === 'checked-in') {
             dbQuery["checkIn.isCheckedIn"] = true

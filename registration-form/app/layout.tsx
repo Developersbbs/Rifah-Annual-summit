@@ -15,6 +15,7 @@ const geistMono = Geist_Mono({
 const notoSansTamil = Noto_Sans_Tamil({
   variable: "--font-noto-sans-tamil",
   subsets: ["tamil"],
+   weight: ['300', '400'],
 });
 
 export const metadata: Metadata = {
@@ -29,6 +30,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <script src="https://checkout.razorpay.com/v1/checkout.js" async></script>
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${notoSansTamil.variable} antialiased`}
       >

@@ -13,8 +13,10 @@ import {
     getSortedRowModel,
     useReactTable,
 } from "@tanstack/react-table"
-import { ChevronDown, Download, Search, Pencil } from "lucide-react"
+import { ChevronDown, Download, Search, Pencil, Eye, Mail } from "lucide-react"
 import { EditParticipantDialog } from "@/components/edit-participant-dialog"
+import { DeleteUserDialog } from "@/components/delete-user-dialog"
+import { ViewParticipantDialog } from "@/components/view-participant-dialog"
 import { DateRange } from "react-day-picker"
 import { isWithinInterval, parseISO, startOfDay, endOfDay } from "date-fns"
 import { IParticipant } from "@/lib/types"
@@ -61,11 +63,38 @@ export function ParticipantsTable<TData, TValue>({
     const [rowSelection, setRowSelection] = React.useState({})
     const [globalFilter, setGlobalFilter] = React.useState("")
     const [editingParticipant, setEditingParticipant] = React.useState<IParticipant | null>(null)
+    const [deletingParticipant, setDeletingParticipant] = React.useState<IParticipant | null>(null)
+    const [viewingParticipant, setViewingParticipant] = React.useState<IParticipant | null>(null)
+    const [isSendingBulkEmail, setIsSendingBulkEmail] = React.useState(false)
+
+    // Handle delete dialog events
+    React.useEffect(() => {
+        const handleDeleteEvent = (event: CustomEvent) => {
+            setDeletingParticipant(event.detail.participant)
+        }
+
+        window.addEventListener('openDeleteDialog', handleDeleteEvent as EventListener)
+        return () => {
+            window.removeEventListener('openDeleteDialog', handleDeleteEvent as EventListener)
+        }
+    }, [])
+
+    // Handle view dialog events
+    React.useEffect(() => {
+        const handleViewEvent = (event: CustomEvent) => {
+            setViewingParticipant(event.detail.participant)
+        }
+
+        window.addEventListener('openViewDialog', handleViewEvent as EventListener)
+        return () => {
+            window.removeEventListener('openViewDialog', handleViewEvent as EventListener)
+        }
+    }, [])
 
     // Custom Filters State
     const [dateRange, setDateRange] = React.useState<DateRange | undefined>()
-    const [showMorningFoodOnly] = React.useState(false)
     const [locationFilter, setLocationFilter] = React.useState<string>("all")
+    const [genderFilter, setGenderFilter] = React.useState<string>("all")
 
     // Calculate Location Counts
     const locationOptions = React.useMemo(() => {
@@ -101,37 +130,42 @@ export function ParticipantsTable<TData, TValue>({
             })
         }
 
-        // Morning Food Filter
-        if (showMorningFoodOnly) {
-            processedData = processedData.filter((item) => (item as unknown as IParticipant).isMorningFood === true)
+        // Gender Filter
+        if (genderFilter !== "all") {
+            processedData = processedData.filter((item) =>
+                ((item as unknown as IParticipant).gender || "Unassigned").toString().toLowerCase() === genderFilter.toLowerCase()
+            )
         }
 
         return processedData
-    }, [data, dateRange, showMorningFoodOnly, locationFilter])
+    }, [data, dateRange, locationFilter, genderFilter])
 
     const tableColumns = React.useMemo(() => {
-        if (userRole !== 'super-admin') return columns;
-
-        return [
-            ...columns,
-            {
-                id: "actions",
-                enableHiding: false,
-                cell: ({ row }: { row: { original: TData } }) => {
-                    return (
-                        <div className="flex justify-end">
+        const baseColumns = [...columns]
+        
+        baseColumns.push({
+            id: "row-actions",
+            enableHiding: false,
+            cell: ({ row }: { row: { original: TData } }) => {
+                return (
+                    <div className="flex justify-end gap-1">
+                        {userRole === 'super-admin' && (
                             <Button variant="ghost" size="icon" onClick={() => setEditingParticipant(row.original as unknown as IParticipant)}>
                                 <Pencil className="h-4 w-4" />
                             </Button>
-                        </div>
-                    )
-                }
+                        )}
+                        <Button variant="ghost" size="icon" onClick={() => setViewingParticipant(row.original as unknown as IParticipant)}>
+                            <Eye className="h-4 w-4 text-blue-600" />
+                        </Button>
+                    </div>
+                )
             }
-        ]
+        })
+
+        return baseColumns
     }, [columns, userRole])
 
 
-    // eslint-disable-next-line react-hooks/incompatible-library
     const table = useReactTable({
         data: filteredData as TData[],
         columns: tableColumns as ColumnDef<TData, unknown>[],
@@ -156,38 +190,30 @@ export function ParticipantsTable<TData, TValue>({
     // Export to CSV function
     const downloadCSV = () => {
         const headers = [
-            "Name", "Mobile", "Location",
-            "Reg Guests",
-            "Food Guests", "MorningFood",
-            "RegisteredAt",
-            "Check-in Status",
-            "Member Present",
-            "Actual Guests (In)",
-            "Check-in Time"
+            "Name", "Mobile", "Email", "Business", "Location",
+            "Amount", "Secondary Members", "Payment",
+            "Payment Status", "Approval Status", "Status",
+            "Registered At"
         ]
 
         const csvContent = "data:text/csv;charset=utf-8,"
             + headers.join(",") + "\n"
             + (filteredData as unknown as IParticipant[]).map((row) => {
-                const isCheckedIn = row.checkIn?.isCheckedIn
-                const memberPresent = row.checkIn?.memberPresent
-                const actualGuests = row.checkIn?.actualGuests || 0
-
-                const regGuests = row.ageGroups?.guest || 0
-                const foodGuests = row.foodPreference?.guest || 0
+                const secondaryMembersCount = row.secondaryMembers?.length || 0
 
                 return [
                     `"${row.name || ''}"`,
                     `"${row.mobileNumber}"`,
+                    `"${row.email || ''}"`,
+                    `"${row.businessName || ''}"`,
                     `"${row.location || ''}"`,
-                    regGuests,
-                    foodGuests,
-                    row.isMorningFood ? "Yes" : "No",
-                    `"${new Date(row.createdAt).toLocaleDateString()}"`,
-                    isCheckedIn ? "Checked In" : "Pending",
-                    isCheckedIn ? (memberPresent ? "Yes" : "No") : "-",
-                    isCheckedIn ? actualGuests : "-",
-                    isCheckedIn && row.checkIn?.timestamp ? `"${new Date(row.checkIn.timestamp).toLocaleString()}"` : "-"
+                    `"${row.totalAmount || 0}"`,
+                    secondaryMembersCount,
+                    `"${row.paymentMethod || ''}"`,
+                    `"${row.paymentStatus || ''}"`,
+                    `"${row.approvalStatus || ''}"`,
+                    row.isRegistered ? "Registered" : "Pending",
+                    `"${new Date(row.createdAt).toLocaleDateString()}"`
                 ].join(",")
             }).join("\n");
 
@@ -198,6 +224,61 @@ export function ParticipantsTable<TData, TValue>({
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+    }
+
+    const handleBulkEmail = async () => {
+        const participantIds = (filteredData as unknown as IParticipant[]).map(p => p._id)
+        
+        if (participantIds.length === 0) {
+            alert("No participants to send emails to.")
+            return
+        }
+
+        if (!confirm(`Are you sure you want to send confirmation emails to all ${participantIds.length} currently filtered participants? This may take some time.`)) {
+            return
+        }
+
+        setIsSendingBulkEmail(true)
+        
+        const batchSize = 5;
+        let totalSuccess = 0;
+        let totalFailures = 0;
+
+        try {
+            for (let i = 0; i < participantIds.length; i += batchSize) {
+                const batch = participantIds.slice(i, i + batchSize);
+                
+                const response = await fetch("/api/send-bulk-emails", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ participantIds: batch })
+                });
+
+                let result;
+                try {
+                    result = await response.json();
+                } catch (e) {
+                    console.error("Failed to parse JSON response:", e);
+                    totalFailures += batch.length;
+                    continue; // Continue to next batch even if this one failed completely (e.g. 504 Gateway Timeout)
+                }
+
+                if (response.ok) {
+                    totalSuccess += result.details?.successCount || 0;
+                    totalFailures += result.details?.failureCount || 0;
+                } else {
+                    console.error("Batch failed with error:", result.error);
+                    totalFailures += batch.length;
+                }
+            }
+
+            alert(`Bulk email process complete!\nSuccess: ${totalSuccess}\nFailures: ${totalFailures}`);
+        } catch (error) {
+            console.error("Bulk email error:", error)
+            alert("Error occurred during bulk email process. Some emails may not have been sent.")
+        } finally {
+            setIsSendingBulkEmail(false)
+        }
     }
 
     /*
@@ -236,13 +317,11 @@ export function ParticipantsTable<TData, TValue>({
                 row.mobileNumber || "",
                 row.location || "-",
                 row.ageGroups?.guest || 0,
-                row.foodPreference?.guest || 0,
-                row.isMorningFood ? "Yes" : "No",
                 new Date(row.createdAt).toLocaleDateString()
             ])
 
             autoTable(doc, {
-                head: [['Name', 'Mobile', 'Loc', 'Guests', 'Food', 'Morn', 'Reg Date']],
+                head: [['Name', 'Mobile', 'Loc', 'Guests', 'Reg Date']],
                 body: tableBody,
                 startY: 40,
                 styles: {
@@ -300,6 +379,21 @@ export function ParticipantsTable<TData, TValue>({
                         </Select>
                     </div>
 
+                    {/* Gender Filter */}
+                    <div className="w-[150px]">
+                        <Select value={genderFilter} onValueChange={setGenderFilter}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Filter by Gender" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Genders</SelectItem>
+                                <SelectItem value="male">Male</SelectItem>
+                                <SelectItem value="female">Female</SelectItem>
+                                <SelectItem value="other">Other</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
                     {/* Date Range Picker */}
                     <DatePickerWithRange date={dateRange} setDate={setDateRange} />
 
@@ -341,6 +435,26 @@ export function ParticipantsTable<TData, TValue>({
                                 })}
                         </DropdownMenuContent>
                     </DropdownMenu>
+                    <Button 
+                        variant="outline" 
+                        onClick={handleBulkEmail}
+                        disabled={isSendingBulkEmail}
+                        className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                    >
+                        {isSendingBulkEmail ? (
+                            <>
+                                <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Sending...
+                            </>
+                        ) : (
+                            <>
+                                <Mail className="h-4 w-4 mr-2" /> Bulk Email
+                            </>
+                        )}
+                    </Button>
                     <Button variant="outline" onClick={downloadCSV}>
                         <Download className="h-4 w-4 mr-2" /> Excel
                     </Button>
@@ -357,7 +471,7 @@ export function ParticipantsTable<TData, TValue>({
                             <TableRow key={headerGroup.id}>
                                 {headerGroup.headers.map((header) => {
                                     return (
-                                        <TableHead key={header.id}>
+                                        <TableHead key={header.id} colSpan={header.colSpan}>
                                             {header.isPlaceholder
                                                 ? null
                                                 : flexRender(
@@ -461,6 +575,28 @@ export function ParticipantsTable<TData, TValue>({
                             // Actually, I can rely on auto-refresh or add router.
                             setEditingParticipant(null)
                         }}
+                    />
+                )
+            }
+            {
+                deletingParticipant && userRole === 'super-admin' && (
+                    <DeleteUserDialog
+                        open={!!deletingParticipant}
+                        onOpenChange={(open) => !open && setDeletingParticipant(null)}
+                        participant={deletingParticipant}
+                        onSuccess={() => {
+                            setDeletingParticipant(null)
+                            window.location.reload()
+                        }}
+                    />
+                )
+            }
+            {
+                viewingParticipant && (
+                    <ViewParticipantDialog
+                        open={!!viewingParticipant}
+                        onOpenChange={(open) => !open && setViewingParticipant(null)}
+                        participant={viewingParticipant}
                     />
                 )
             }

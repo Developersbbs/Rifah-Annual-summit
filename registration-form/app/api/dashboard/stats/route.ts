@@ -13,6 +13,9 @@ export async function GET() {
         let totalSecondaryCheckedIn = 0
         let primaryMembers = 0
         let secondaryMembers = 0
+        let male = 0
+        let female = 0
+        let other = 0
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         participants.forEach((p: any) => {
@@ -26,6 +29,19 @@ export async function GET() {
             }
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             totalSecondaryCheckedIn += p.secondaryMembers?.filter((m: any) => m.isCheckedIn).length || 0
+
+            // Primary gender
+            if (p.gender === 'male') male++
+            else if (p.gender === 'female') female++
+            else if (p.gender === 'other') other++
+
+            // Secondary gender
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            p.secondaryMembers?.forEach((m: any) => {
+                if (m.gender === 'male') male++
+                else if (m.gender === 'female') female++
+                else if (m.gender === 'other') other++
+            })
         })
 
         return NextResponse.json({
@@ -34,7 +50,10 @@ export async function GET() {
             totalCheckedIn,
             totalSecondaryCheckedIn,
             primaryMembers,
-            secondaryMembers
+            secondaryMembers,
+            male,
+            female,
+            other
         })
     } catch (error) {
         console.error("Dashboard stats error:", error)

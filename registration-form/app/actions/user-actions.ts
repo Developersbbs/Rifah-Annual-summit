@@ -80,6 +80,14 @@ export async function createUser(prevState: unknown, formData: FormData) {
             return { success: false, error: 'User already exists' }
         }
 
+        // Check SMTP config if invite mode (no password)
+        if (!password) {
+            const config = await SystemConfig.findOne({ key: 'smtp' }).lean()
+            if (!config || !config.value) {
+                return { success: false, error: 'SMTP configuration is required for invite mode. Please configure SMTP or set a password manually.' }
+            }
+        }
+
         let hashedPassword = undefined
         let inviteToken = undefined
         let inviteTokenExpiry = undefined
@@ -112,42 +120,37 @@ export async function createUser(prevState: unknown, formData: FormData) {
         if (inviteToken) {
             // Send Invite Email
             const config = await SystemConfig.findOne({ key: 'smtp' }).lean()
-            if (config && config.value) {
-                const { host, port, user, pass, fromEmail } = config.value
+            const { host, port, user, pass, fromEmail } = config.value
 
-                const transporter = nodemailer.createTransport({
-                    host,
-                    port,
-                    secure: port === 465, // true for 465, false for other ports
-                    auth: { user, pass },
-                })
+            const transporter = nodemailer.createTransport({
+                host,
+                port,
+                secure: port === 465, // true for 465, false for other ports
+                auth: { user, pass },
+            })
 
-                const appUrl = process.env.NODE_ENV === "production"
-                    ? "https://event-management-yd8m.vercel.app/"
-                    : "http://localhost:3000"
-                const inviteUrl = `${appUrl}/setup-account?token=${inviteToken}`
+            const appUrl = process.env.NODE_ENV === "production"
+                ? "https://rifahtn.com/"
+                : "http://localhost:3000"
+            const inviteUrl = `${appUrl}/setup-account?token=${inviteToken}`
 
-                // console.log("DEBUG EMAIL - Token being sent:", inviteToken)
-                // console.log("DEBUG EMAIL - Invite URL:", inviteUrl)
-                // console.log("DEBUG EMAIL - Sending to:", email)
+            // console.log("DEBUG EMAIL - Token being sent:", inviteToken)
+            // console.log("DEBUG EMAIL - Invite URL:", inviteUrl)
+            // console.log("DEBUG EMAIL - Sending to:", email)
 
-                await transporter.sendMail({
-                    from: fromEmail || user,
-                    to: email,
-                    subject: "Welcome to Rifah Annual Summit",
-                    html: `
-                        <p>You have been invited to join the Rifah Annual Summit.</p>
-                        <p>Click the link below to set your password and access your account:</p>
-                        <a href="${inviteUrl}">${inviteUrl}</a>
-                        <p>This link expires in 24 hours.</p>
-                    `
-                })
+            await transporter.sendMail({
+                from: fromEmail || user,
+                to: email,
+                subject: "Welcome to Rifah Annual Summit",
+                html: `
+                    <p>You have been invited to join the Rifah Annual Summit.</p>
+                    <p>Click the link below to set your password and access your account:</p>
+                    <a href="${inviteUrl}">${inviteUrl}</a>
+                    <p>This link expires in 24 hours.</p>
+                `
+            })
 
-                // console.log("DEBUG EMAIL - Email sent successfully")
-            } else {
-                console.warn("SMTP config missing, invite email not sent.")
-                return { success: true, message: "User created, but SMTP config missing. Email not sent." }
-            }
+            // console.log("DEBUG EMAIL - Email sent successfully")
         }
 
         revalidatePath('/admin/users')

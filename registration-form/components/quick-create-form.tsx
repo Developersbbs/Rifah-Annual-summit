@@ -1,845 +1,730 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { checkRegistration } from "@/app/actions/check-registration"
 import { registerParticipant } from "@/app/actions/register-participant"
+import { checkRegistration } from "@/app/actions/check-registration"
 import { getActiveEvent } from "@/app/actions/get-active-event"
+import { usePhoneAuth } from "@/hooks/use-phone-auth"
+import { IEvent } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { Label } from "@/components/ui/label"
-import { Phone, Info, CheckCircle2, Loader2, AlertCircle, UserPlus, Edit, Trash2, X, Check, Receipt } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { CheckCircle2, Loader2, AlertCircle, Phone, Shield, ShieldOff, Plus, Trash2 } from "lucide-react"
+import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from "@/components/ui/input-otp"
+
+interface SecondaryMember {
+    name: string
+    mobileNumber?: string
+    email?: string
+    businessName?: string
+    businessCategory?: string
+    location?: string
+    gender?: string
+    isMember?: boolean
+}
 
 enum Step {
-    PHONE_INPUT = 0,
-    ALREADY_REGISTERED = 1,
-    PERSONAL_DETAILS = 2,
-    EVENT_DETAILS = 3,
+    MODE_SELECTION = 0,
+    PHONE_INPUT = 1,
+    OTP_VERIFICATION = 2,
+    PERSONAL_DETAILS = 3,
     SUCCESS = 4,
 }
 
-const phoneSchema = z.object({
-    phoneNumber: z.string().regex(/^\+?[1-9]\d{1,14}$/, "Please enter a valid phone number")
-})
-
-const personalDetailsSchema = z.object({
+const quickCreateSchema = z.object({
+    mobileNumber: z.string().regex(/^\+?[1-9]\d{1,14}$/, "Please enter a valid phone number"),
     name: z.string().min(2, "Name must be at least 2 characters"),
-    email: z.string().email("Please enter a valid email"),
+    email: z.string().email("Please enter a valid email").optional().or(z.literal("")),
+    gender: z.string().min(1, "Please select a gender"),
     businessName: z.string().min(2, "Business name is required"),
     businessCategory: z.string().min(1, "Please enter a business category"),
     location: z.string().min(1, "Please select a location"),
+    ticketType: z.string().min(1, "Please select a ticket type"),
+    paymentMethod: z.enum(["cash", "online"]),
+    guestCount: z.number().min(0).optional(),
+    gstNumber: z.string().optional(),
+    termsAccepted: z.boolean().refine(val => val === true, "You must accept terms and conditions")
 })
 
-// Tamil Nadu Districts for Location
-const TAMIL_NADU_DISTRICTS = [
-    "Ariyalur", "Chengalpattu", "Chennai", "Coimbatore", "Cuddalore", 
-    "Dharmapuri", "Dindigul", "Erode", "Kallakurichi", "Kanchipuram",
-    "Kanyakumari", "Karur", "Krishnagiri", "Madurai", "Nagapattinam",
-    "Namakkal", "Nilgiris", "Perambalur", "Pudukkottai", "Ramanathapuram",
-    "Ranipet", "Salem", "Sivaganga", "Tenkasi", "Thanjavur", "Theni",
-    "Thoothukudi", "Tiruchirappalli", "Tirunelveli", "Tirupathur", "Tiruppur",
-    "Tiruvallur", "Tiruvannamalai", "Tiruvarur", "Vellore", "Viluppuram", "Virudhunagar"
-]
-
 export function QuickCreateForm() {
-    const [step, setStep] = useState<Step>(Step.PHONE_INPUT)
-    const [isCheckingDb, setIsCheckingDb] = useState(false)
+    const [step, setStep] = useState<Step>(Step.MODE_SELECTION)
     const [isSubmitting, setIsSubmitting] = useState(false)
-    const [dbError, setDbError] = useState<string | null>(null)
-
-    // Registration Data State
-    const [verifiedPhone, setVerifiedPhone] = useState("")
-    const [activeEvent, setActiveEvent] = useState<{ _id: string; eventName: string; startDate: string; endDate: string; ticketsPrice: { name: string; price: number }[] } | null>(null)
+    const [error, setError] = useState<string | null>(null)
+    const [useOtp, setUseOtp] = useState<boolean>(false)
+    const [phoneNumber, setPhoneNumber] = useState<string>("+91")
+    const { sendOtp, verifyOtp, loading: authLoading, error: authError } = usePhoneAuth()
+    const [otpCode, setOtpCode] = useState<string>("")
+    const [secondaryMembers, setSecondaryMembers] = useState<SecondaryMember[]>([])
+    const [activeEvent, setActiveEvent] = useState<IEvent | null>(null)
     const [isLoadingEvent, setIsLoadingEvent] = useState(false)
-    const [personalData, setPersonalData] = useState({ 
-        name: "",
-        email: "",
-        businessName: "", 
-        businessCategory: "",
-        location: ""
-    })
-    const [eventData, setEventData] = useState({
-        ticketType: "",
-        paymentMethod: "cash",
-        foodGuest: 0,
-        isMorningFood: false,
-    })
-    const [secondaryMembers, setSecondaryMembers] = useState<{ name: string; mobileNumber: string; email: string; businessName: string; businessCategory: string; location: string; isMember?: boolean; showCustomLocation?: boolean; customLocation?: string }[]>([])
-    const [currentMember, setCurrentMember] = useState<{ name: string; mobileNumber: string; email: string; businessName: string; businessCategory: string; location: string; isMember?: boolean; showCustomLocation?: boolean; customLocation?: string }>({ name: '', mobileNumber: '', email: '', businessName: '', businessCategory: '', location: '', isMember: false, showCustomLocation: false, customLocation: '' })
-    const [showAddMemberForm, setShowAddMemberForm] = useState(false)
-    const [primaryLocationOpen, setPrimaryLocationOpen] = useState(false)
-    const [primaryCustomLocation, setPrimaryCustomLocation] = useState("")
-    const [showPrimaryCustomInput, setShowPrimaryCustomInput] = useState(false)
-    const [secondaryLocationOpen, setSecondaryLocationOpen] = useState(false)
-    const [existingParticipant, setExistingParticipant] = useState<{ 
-        name?: string;
-        email?: string;
-        businessName?: string;
-        businessCategory?: string;
-        location?: string;
-        guestCount?: number;
-        ageGroups?: { guest: number };
-        foodPreference?: { guest: number };
-        isMorningFood?: boolean;
-        ticketType?: string;
-        paymentMethod?: string;
-    } | null>(null)
 
-    // Forms
-    const phoneForm = useForm<z.infer<typeof phoneSchema>>({ resolver: zodResolver(phoneSchema), defaultValues: { phoneNumber: "+91" } })
-    const personalForm = useForm<z.infer<typeof personalDetailsSchema>>({
-        resolver: zodResolver(personalDetailsSchema),
-        defaultValues: { 
+    const form = useForm<z.infer<typeof quickCreateSchema>>({
+        resolver: zodResolver(quickCreateSchema),
+        defaultValues: {
+            mobileNumber: "+91",
             name: "",
             email: "",
-            businessName: "", 
+            gender: "",
+            businessName: "",
             businessCategory: "",
-            location: ""
+            location: "",
+            ticketType: "",
+            paymentMethod: "cash",
+            guestCount: 0,
+            gstNumber: "",
+            termsAccepted: false
         }
     })
 
-    // Handle primary location selection
-    const handlePrimaryLocationSelect = (value: string) => {
-        if (value === "other") {
-            setShowPrimaryCustomInput(true)
-            personalForm.setValue("location", "")
-        } else {
-            setShowPrimaryCustomInput(false)
-            personalForm.setValue("location", value)
-        }
-        setPrimaryLocationOpen(false)
-    }
-
-    // Handle secondary member location selection
-    const handleSecondaryLocationSelect = (value: string) => {
-        if (value === "other") {
-            setCurrentMember(prev => ({ 
-                ...prev, 
-                showCustomLocation: true, 
-                location: "" 
-            }))
-        } else {
-            setCurrentMember(prev => ({ 
-                ...prev, 
-                showCustomLocation: false, 
-                location: value,
-                customLocation: ""
-            }))
-        }
-        setSecondaryLocationOpen(false)
-    }
-
-    // --- Derived State (Pricing) ---
-    // Calculate total members: 1 (primary) + secondary members
-    const totalMembers = useMemo(() => {
-        return 1 + secondaryMembers.length
-    }, [secondaryMembers.length])
-
-    const pricePerPerson = useMemo(() => {
-        if (!activeEvent || !eventData.ticketType) return 0
-        const ticket = activeEvent.ticketsPrice?.find((t: { name: string; price: number }) => t.name === eventData.ticketType)
-        return ticket?.price || 0
-    }, [activeEvent, eventData.ticketType])
-
-    const totalAmount = useMemo(() => {
-        return totalMembers * pricePerPerson
-    }, [totalMembers, pricePerPerson])
-
-    // Fetch active event on mount
     useEffect(() => {
         const fetchEvent = async () => {
             setIsLoadingEvent(true)
             try {
                 const result = await getActiveEvent()
                 if (result.success && result.event) {
-                    setActiveEvent(result.event)
+                    setActiveEvent(result.event as unknown as IEvent)
+                    if (result.event.ticketsPrice?.length > 0) {
+                        form.setValue("ticketType", result.event.ticketsPrice[0].name)
+                    }
                 }
             } catch (error) {
-                console.error("Failed to fetch active event:", error)
+                console.error("Failed to fetch event details:", error)
             } finally {
                 setIsLoadingEvent(false)
             }
         }
         fetchEvent()
-    }, [])
+    }, [form])
 
-    // FOOD PREFERENCE - Commented out
-    // Update Food Prefs when total guests changes
-    // useEffect(() => {
-    //     setEventData(prev => ({
-    //         ...prev,
-    //         foodPreference: {
-    //             veg: Math.max(0, totalGuests - (prev.foodPreference.nonVeg || 0)),
-    //             nonVeg: prev.foodPreference.nonVeg || 0
-    //         }
-    //     }))
-    // }, [totalGuests])
+    const selectedTicketType = form.watch("ticketType")
+    const pricePerPerson = useMemo(() => {
+        if (!activeEvent || !selectedTicketType) return 0
+        const ticket = activeEvent.ticketsPrice?.find((t) => t.name === selectedTicketType)
+        return ticket?.price || 0
+    }, [activeEvent, selectedTicketType])
 
-    // --- Handlers ---
+    const totalMembers = 1 + secondaryMembers.filter(m => m.name.trim() !== '').length
+    const baseAmount = totalMembers * pricePerPerson
+    const taxRate = activeEvent?.taxRate || 0
+    const taxAmount = Math.round((baseAmount * taxRate) / 100)
+    const totalAmount = baseAmount + taxAmount
 
-    const onPhoneSubmit = async (data: z.infer<typeof phoneSchema>) => {
-        setIsCheckingDb(true)
-        setDbError(null)
-        try {
-            const ph = data.phoneNumber
-            const result = await checkRegistration(ph)
-            if (result.exists && result.participant) {
-                setExistingParticipant(result.participant)
-                setStep(Step.ALREADY_REGISTERED)
-            } else if (result.error) {
-                setDbError(result.error)
-            } else {
-                setVerifiedPhone(ph)
-                setStep(Step.PERSONAL_DETAILS)
-            }
-        } catch {
-            setDbError("System error checking registration.")
-        } finally {
-            setIsCheckingDb(false)
-        }
+    const addSecondaryMember = () => {
+        setSecondaryMembers(prev => [...prev, {
+            name: "",
+            mobileNumber: "",
+            email: "",
+            businessName: "",
+            businessCategory: "",
+            location: "",
+            gender: "",
+            isMember: false
+        }])
     }
 
-    const onPersonalSubmit = (data: z.infer<typeof personalDetailsSchema>) => {
-        setPersonalData(data)
-        setStep(Step.EVENT_DETAILS)
+    const updateSecondaryMember = (index: number, field: keyof SecondaryMember, value: string | boolean) => {
+        setSecondaryMembers(prev => prev.map((member, i) =>
+            i === index ? { ...member, [field]: value } : member
+        ))
     }
 
-    const onFinalSubmit = async () => {
+    const removeSecondaryMember = (index: number) => {
+        setSecondaryMembers(prev => prev.filter((_, i) => i !== index))
+    }
+
+    const onSubmit = async (data: z.infer<typeof quickCreateSchema>) => {
         setIsSubmitting(true)
-        try {
-            const filteredSecondaryMembers = secondaryMembers.filter(m => m.name.trim() !== '')
-            
-            const payload = {
-                mobileNumber: verifiedPhone,
-                name: personalData.name,
-                email: personalData.email,
-                businessName: personalData.businessName,
-                businessCategory: personalData.businessCategory,
-                location: personalData.location,
-                guestCount: 0,
-                ticketType: eventData.ticketType || "General",
-                paymentMethod: eventData.paymentMethod,
-                foodGuest: totalMembers, // Total people for food
-                ageGuest: 0,
-                isMorningFood: eventData.isMorningFood,
-                secondaryMembers: filteredSecondaryMembers
-            }
+        setError(null)
 
-            const result = await registerParticipant(payload)
+        try {
+            const result = await registerParticipant({
+                mobileNumber: data.mobileNumber,
+                name: data.name,
+                email: data.email || undefined,
+                businessName: data.businessName,
+                businessCategory: data.businessCategory,
+                location: data.location,
+                gender: data.gender,
+                ticketType: data.ticketType,
+                paymentMethod: data.paymentMethod,
+                ageGuest: data.guestCount || 0,
+                isMember: false,
+                gstNumber: data.gstNumber || undefined,
+                secondaryMembers,
+                registrationLanguage: "en"
+            })
+
             if (result.success) {
                 setStep(Step.SUCCESS)
+                form.reset()
+                setSecondaryMembers([])
             } else {
-                setDbError(result.error || "Registration failed.")
+                setError(result.error || "Registration failed")
             }
-        } catch {
-            setDbError("An unexpected error occurred.")
+        } catch (err) {
+            setError("An unexpected error occurred")
+            console.error("Registration error:", err)
         } finally {
             setIsSubmitting(false)
         }
     }
 
-    // --- Render Helpers ---
-
-    const renderStepsIndicator = () => (
-        <div className="flex justify-center gap-2 mb-8">
-            {[Step.PHONE_INPUT, Step.PERSONAL_DETAILS, Step.EVENT_DETAILS].map((s, i) => {
-                const isActive = step === s
-                const isCompleted = step > s
-                return (
-                    <div key={i} className={`h-2.5 w-10 sm:w-16 rounded-full transition-colors duration-300 ${isActive ? "bg-primary" : isCompleted ? "bg-primary/40" : "bg-muted"
-                        }`} />
-                )
-            })}
-        </div>
-    )
-
-    // --- Step 1: Input (No OTP) ---
-    if (step === Step.PHONE_INPUT) { // Consolidated input & already registered handling wrapper not needed here
-        return (
-            <div className="flex flex-col gap-6 w-full max-w-sm mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="flex flex-col items-center gap-4 text-center">
-                    <div className="p-3 bg-primary/10 rounded-full text-primary">
-                        <Phone className="h-6 w-6" />
-                    </div>
-                    <h1 className="text-2xl font-bold">Quick Create</h1>
-                    <p className="text-sm text-muted-foreground">
-                        Enter guest mobile number to begin.
-                    </p>
-                </div>
-
-                <Form {...phoneForm}>
-                    <form onSubmit={phoneForm.handleSubmit(onPhoneSubmit)} className="space-y-4">
-                        <FormField control={phoneForm.control} name="phoneNumber" render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Mobile Number</FormLabel>
-                                <FormControl>
-                                    <div className="relative">
-                                        <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                        <Input placeholder="+91 98765 43210" className="pl-9" {...field} />
-                                    </div>
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )} />
-                        {dbError && <Alert variant="destructive"><AlertCircle className="h-4 w-4" /><AlertTitle>Error</AlertTitle><AlertDescription>{dbError}</AlertDescription></Alert>}
-                        <Button type="submit" className="w-full" disabled={isCheckingDb}>{isCheckingDb ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : "Check Number"}</Button>
-                    </form>
-                </Form>
-            </div>
-        )
+    const handleModeSelect = (mode: string) => {
+        if (mode === "otp") {
+            setUseOtp(true)
+            setStep(Step.PHONE_INPUT)
+        } else {
+            setUseOtp(false)
+            setStep(Step.PERSONAL_DETAILS)
+        }
     }
 
-    // --- Step 2: Already Registered Alert ---
-    if (step === Step.ALREADY_REGISTERED) {
-        return (
-            <div className="flex flex-col gap-6 w-full max-w-sm mx-auto">
-                <Alert className="border-yellow-500/50 bg-yellow-500/10 text-yellow-600 dark:text-yellow-400">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertTitle>Already Registered</AlertTitle>
-                    <AlertDescription>
-                        {existingParticipant?.name ? `User ${existingParticipant.name} is` : "This number is"} already registered.
-                    </AlertDescription>
-                    <div className="mt-4 flex gap-2">
-                        <Button
-                            onClick={() => {
-                                setVerifiedPhone(phoneForm.getValues("phoneNumber"))
-                                setPersonalData({
-                                    name: existingParticipant?.name || "",
-                                    email: existingParticipant?.email || "",
-                                    businessName: existingParticipant?.businessName || "",
-                                    businessCategory: existingParticipant?.businessCategory || "",
-                                    location: existingParticipant?.location || ""
-                                })
-                                setEventData({
-                                    ticketType: existingParticipant?.ticketType || "",
-                                    paymentMethod: existingParticipant?.paymentMethod || "cash",
-                                    foodGuest: 1,
-                                    isMorningFood: existingParticipant?.isMorningFood || false
-                                })
-                                personalForm.reset({
-                                    name: existingParticipant?.name || "",
-                                    email: existingParticipant?.email || "",
-                                    businessName: existingParticipant?.businessName || "",
-                                    businessCategory: existingParticipant?.businessCategory || "",
-                                    location: existingParticipant?.location || ""
-                                })
-                                setStep(Step.PERSONAL_DETAILS)
-                            }}
-                        >
-                            Edit
-                        </Button>
-                        <Button variant="outline" onClick={() => setStep(Step.PHONE_INPUT)}>Use Different Number</Button>
-                    </div>
-                </Alert>
-            </div>
-        )
+    const handleSendOtp = async () => {
+        try {
+            const success = await sendOtp(phoneNumber)
+            if (success) {
+                setOtpCode("")
+                setStep(Step.OTP_VERIFICATION)
+            }
+        } catch {
+            setError("Failed to send OTP")
+        }
     }
 
-    // --- Step 3: Personal Details ---
-    if (step === Step.PERSONAL_DETAILS) {
+    const handleVerifyOtp = async () => {
+        try {
+            const user = await verifyOtp(otpCode)
+            if (user) {
+                const result = await checkRegistration(phoneNumber)
+                if (result.exists) {
+                    setError("This number is already registered")
+                    return
+                }
+                setStep(Step.PERSONAL_DETAILS)
+                form.setValue("mobileNumber", phoneNumber)
+            }
+        } catch {
+            setError("Invalid OTP")
+        }
+    }
+
+    if (step === Step.SUCCESS) {
         return (
-            <Card className="w-full max-w-lg mx-auto animate-in fade-in zoom-in-95 duration-300">
-                <CardHeader>
-                    {renderStepsIndicator()}
-                    <CardTitle>Personal Details</CardTitle>
-                    <CardDescription>Member details.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Form {...personalForm}>
-                        <form onSubmit={personalForm.handleSubmit(onPersonalSubmit)} className="space-y-4">
-                            <FormField control={personalForm.control} name="name" render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Full Name</FormLabel>
-                                    <FormControl><Input placeholder="Enter member name" {...field} /></FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )} />
-
-                            <FormField control={personalForm.control} name="email" render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Email</FormLabel>
-                                    <FormControl><Input type="email" placeholder="Enter email" {...field} /></FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )} />
-
-                            <FormField control={personalForm.control} name="businessName" render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Business Name</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="Enter business name" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )} />
-
-                            <FormField control={personalForm.control} name="businessCategory" render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Business Category</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="Enter business category" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )} />
-
-                            <FormField control={personalForm.control} name="location" render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Location</FormLabel>
-                                    <Popover open={primaryLocationOpen} onOpenChange={setPrimaryLocationOpen}>
-                                        <PopoverTrigger asChild>
-                                            <FormControl>
-                                                <Button
-                                                    variant="outline"
-                                                    role="combobox"
-                                                    className={cn(
-                                                        "w-full justify-between",
-                                                        !field.value && "text-muted-foreground"
-                                                    )}
-                                                >
-                                                    {showPrimaryCustomInput ? primaryCustomLocation || "Enter custom location" : field.value || "Select district"}
-                                                    <Check className="ml-2 h-4 w-4 opacity-50" />
-                                                </Button>
-                                            </FormControl>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-full p-0 max-h-[350px] overflow-y-auto" align="start">
-                                            <Command>
-                                                <CommandInput placeholder="Search district..." />
-                                                <CommandEmpty>No district found.</CommandEmpty>
-                                                <CommandGroup>
-                                                    {TAMIL_NADU_DISTRICTS.map((district) => (
-                                                        <CommandItem
-                                                            key={district}
-                                                            value={district}
-                                                            onSelect={() => handlePrimaryLocationSelect(district)}
-                                                        >
-                                                            <Check
-                                                                className={cn(
-                                                                    "mr-2 h-4 w-4",
-                                                                    field.value === district ? "opacity-100" : "opacity-0"
-                                                                )}
-                                                            />
-                                                            {district}
-                                                        </CommandItem>
-                                                    ))}
-                                                    <CommandItem
-                                                        value="other"
-                                                        onSelect={() => handlePrimaryLocationSelect("other")}
-                                                    >
-                                                        <Check
-                                                            className={cn(
-                                                                "mr-2 h-4 w-4",
-                                                                showPrimaryCustomInput ? "opacity-100" : "opacity-0"
-                                                            )}
-                                                        />
-                                                        Other (enter manually)
-                                                    </CommandItem>
-                                                </CommandGroup>
-                                            </Command>
-                                        </PopoverContent>
-                                    </Popover>
-                                    {showPrimaryCustomInput && (
-                                        <Input
-                                            placeholder="Enter your location"
-                                            value={primaryCustomLocation}
-                                            onChange={(e) => {
-                                                setPrimaryCustomLocation(e.target.value)
-                                                personalForm.setValue("location", e.target.value)
-                                            }}
-                                            className="mt-2"
-                                        />
-                                    )}
-                                    <FormMessage />
-                                </FormItem>
-                            )} />
-
-                            <Button type="submit" className="w-full">Next</Button>
-                        </form>
-                    </Form>
+            <Card className="w-full max-w-md mx-auto text-center py-10">
+                <CardContent className="space-y-6">
+                    <div className="h-20 w-20 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                        <CheckCircle2 className="h-10 w-10 text-green-600" />
+                    </div>
+                    <div>
+                        <h3 className="text-xl font-semibold text-green-600">Registration Successful!</h3>
+                        <p className="text-muted-foreground mt-2">
+                            Participant has been registered successfully {useOtp ? "with OTP verification" : "without OTP verification"}.
+                        </p>
+                    </div>
+                    <Button onClick={() => setStep(Step.MODE_SELECTION)} className="w-full">
+                        Register Another Participant
+                    </Button>
                 </CardContent>
             </Card>
         )
     }
 
-    // --- Step 4: Event Details ---
-    if (step === Step.EVENT_DETAILS) {
+    if (step === Step.MODE_SELECTION) {
         return (
-            <Card className="w-full max-h-[calc(100vh-8rem)] overflow-y-auto mx-auto animate-in fade-in zoom-in-95 duration-300">
-                <CardHeader>
-                    {renderStepsIndicator()}
-                    <CardTitle>Event Details</CardTitle>
-                    <CardDescription>Member participation details.</CardDescription>
+            <Card className="w-full max-w-md mx-auto">
+                <CardHeader className="text-center">
+                    <CardTitle className="flex items-center justify-center gap-2">
+                        Choose Registration Mode
+                    </CardTitle>
+                    <CardDescription>
+                        Select how you want to register participants
+                    </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                    {/* Active Event Error Alert */}
-                    {!isLoadingEvent && !activeEvent && (
+                <CardContent className="space-y-4">
+                    <Button
+                        onClick={() => handleModeSelect("no-otp")}
+                        className="w-full h-16 text-left justify-start"
+                        variant="outline"
+                    >
+                        <div className="flex items-center gap-3">
+                            <ShieldOff className="h-6 w-6 text-blue-600" />
+                            <div>
+                                <div className="font-semibold">Quick Registration (No OTP)</div>
+                                <div className="text-sm text-muted-foreground">
+                                    Register instantly without phone verification
+                                </div>
+                            </div>
+                        </div>
+                    </Button>
+
+                    <Button
+                        onClick={() => handleModeSelect("otp")}
+                        className="w-full h-16 text-left justify-start"
+                        variant="outline"
+                    >
+                        <div className="flex items-center gap-3">
+                            <Shield className="h-6 w-6 text-green-600" />
+                            <div>
+                                <div className="font-semibold">Standard Registration (With OTP)</div>
+                                <div className="text-sm text-muted-foreground">
+                                    Verify phone number with OTP before registration
+                                </div>
+                            </div>
+                        </div>
+                    </Button>
+                </CardContent>
+            </Card>
+        )
+    }
+
+    if (step === Step.PHONE_INPUT) {
+        return (
+            <Card className="w-full max-w-md mx-auto">
+                <CardHeader className="text-center">
+                    <CardTitle className="flex items-center justify-center gap-2">
+                        <Phone className="h-5 w-5" />
+                        Enter Phone Number
+                    </CardTitle>
+                    <CardDescription>
+                        We&apos;ll send a verification code to this number
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="phone">Mobile Number</Label>
+                        <Input
+                            id="phone"
+                            value={phoneNumber}
+                            onChange={(e) => setPhoneNumber(e.target.value)}
+                            placeholder="+91 98765 43210"
+                            className="text-center text-lg"
+                        />
+                    </div>
+
+                    <Button onClick={handleSendOtp} className="w-full" disabled={authLoading}>
+                        {authLoading ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Sending OTP...
+                            </>
+                        ) : (
+                            "Send OTP"
+                        )}
+                    </Button>
+
+                    {authError && (
                         <Alert variant="destructive">
                             <AlertCircle className="h-4 w-4" />
-                            <AlertTitle>No Active Event</AlertTitle>
-                            <AlertDescription>
-                                Unable to load event details. Please contact the administrator or try again later.
-                            </AlertDescription>
+                            <AlertDescription>{authError}</AlertDescription>
                         </Alert>
                     )}
 
-                    {/* Secondary Members */}
+                    <Button
+                        variant="outline"
+                        onClick={() => setStep(Step.MODE_SELECTION)}
+                        className="w-full"
+                    >
+                        Back
+                    </Button>
+                </CardContent>
+            </Card>
+        )
+    }
+
+    if (step === Step.OTP_VERIFICATION) {
+        return (
+            <Card className="w-full max-w-md mx-auto">
+                <CardHeader className="text-center">
+                    <CardTitle className="flex items-center justify-center gap-2">
+                        <Shield className="h-5 w-5" />
+                        Enter OTP
+                    </CardTitle>
+                    <CardDescription>
+                        Enter the 6-digit code sent to {phoneNumber}
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="otp">Verification Code</Label>
+                        <InputOTP
+                            value={otpCode}
+                            onChange={setOtpCode}
+                            maxLength={6}
+                        >
+                            <InputOTPGroup>
+                                <InputOTPSlot index={0} />
+                                <InputOTPSlot index={1} />
+                                <InputOTPSlot index={2} />
+                            </InputOTPGroup>
+                            <InputOTPSeparator />
+                            <InputOTPGroup>
+                                <InputOTPSlot index={3} />
+                                <InputOTPSlot index={4} />
+                                <InputOTPSlot index={5} />
+                            </InputOTPGroup>
+                        </InputOTP>
+                    </div>
+
+                    <Button onClick={handleVerifyOtp} className="w-full" disabled={authLoading}>
+                        {authLoading ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Verifying...
+                            </>
+                        ) : (
+                            "Verify OTP"
+                        )}
+                    </Button>
+
+                    {error && (
+                        <Alert variant="destructive">
+                            <AlertCircle className="h-4 w-4" />
+                            <AlertDescription>{error}</AlertDescription>
+                        </Alert>
+                    )}
+
+                    <Button
+                        variant="outline"
+                        onClick={() => setStep(Step.PHONE_INPUT)}
+                        className="w-full"
+                    >
+                        Back
+                    </Button>
+                </CardContent>
+            </Card>
+        )
+    }
+
+    return (
+        <Card className="w-full max-w-2xl mx-auto">
+            <CardHeader>
+                <CardTitle>Quick Registration ({useOtp ? "With OTP" : "No OTP"})</CardTitle>
+                <CardDescription>
+                    Register participants {useOtp ? "with OTP verification" : "without requiring OTP verification"}
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                    <div className="space-y-4">
+                        <h3 className="text-lg font-semibold">Personal Information</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <Label htmlFor="mobileNumber">Mobile Number *</Label>
+                                <Input
+                                    id="mobileNumber"
+                                    placeholder="+91 98765 43210"
+                                    value={form.watch("mobileNumber")}
+                                    onChange={(e) => form.setValue("mobileNumber", e.target.value)}
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="name">Name *</Label>
+                                <Input
+                                    id="name"
+                                    placeholder="John Doe"
+                                    value={form.watch("name")}
+                                    onChange={(e) => form.setValue("name", e.target.value)}
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="email">Email</Label>
+                                <Input
+                                    id="email"
+                                    type="email"
+                                    placeholder="john@example.com"
+                                    value={form.watch("email")}
+                                    onChange={(e) => form.setValue("email", e.target.value)}
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="gender">Gender *</Label>
+                                <select
+                                    id="gender"
+                                    value={form.watch("gender")}
+                                    onChange={(e) => form.setValue("gender", e.target.value)}
+                                    className="w-full p-2 border rounded-md"
+                                >
+                                    <option value="">Select gender</option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                    <option value="other">Other</option>
+                                    <option value="prefer-not-to-say">Prefer not to say</option>
+                                </select>
+                            </div>
+                            <div>
+                                <Label htmlFor="businessName">Business Name *</Label>
+                                <Input
+                                    id="businessName"
+                                    placeholder="ABC Company"
+                                    value={form.watch("businessName")}
+                                    onChange={(e) => form.setValue("businessName", e.target.value)}
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="businessCategory">Business Category *</Label>
+                                <Input
+                                    id="businessCategory"
+                                    placeholder="Technology"
+                                    value={form.watch("businessCategory")}
+                                    onChange={(e) => form.setValue("businessCategory", e.target.value)}
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="location">Location *</Label>
+                                <Input
+                                    id="location"
+                                    placeholder="Chennai"
+                                    value={form.watch("location")}
+                                    onChange={(e) => form.setValue("location", e.target.value)}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <Separator />
+
+                    <div className="space-y-4">
+                        <h3 className="text-lg font-semibold">Event Information</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <Label htmlFor="ticketType">Ticket Type *</Label>
+                                <select
+                                    id="ticketType"
+                                    value={form.watch("ticketType")}
+                                    onChange={(e) => form.setValue("ticketType", e.target.value)}
+                                    className="w-full p-2 border rounded-md bg-white"
+                                    disabled={isLoadingEvent}
+                                >
+                                    <option value="">Select ticket type</option>
+                                    {activeEvent?.ticketsPrice?.map((ticket) => (
+                                        <option key={ticket.name} value={ticket.name}>
+                                            {ticket.name} (₹{ticket.price})
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <Label htmlFor="paymentMethod">Payment Method *</Label>
+                                <select
+                                    id="paymentMethod"
+                                    value={form.watch("paymentMethod")}
+                                    onChange={(e) => form.setValue("paymentMethod", e.target.value as "cash" | "online")}
+                                    className="w-full p-2 border rounded-md"
+                                >
+                                    <option value="cash">Cash</option>
+                                    <option value="online">Online</option>
+                                </select>
+                            </div>
+                            <div>
+                                <Label htmlFor="guestCount">Guest Count</Label>
+                                <Input
+                                    id="guestCount"
+                                    type="number"
+                                    min="0"
+                                    placeholder="0"
+                                    value={form.watch("guestCount")}
+                                    onChange={(e) => form.setValue("guestCount", parseInt(e.target.value) || 0)}
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="gstNumber">GST Number</Label>
+                                <Input
+                                    id="gstNumber"
+                                    placeholder="GSTIN1234567890"
+                                    value={form.watch("gstNumber")}
+                                    onChange={(e) => form.setValue("gstNumber", e.target.value)}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Guest Members Section */}
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <UserPlus className="h-5 w-5 text-primary" />
-                                <h3 className="font-semibold">Additional Members</h3>
-                            </div>
-                            <span className="text-xs text-muted-foreground">
-                                {secondaryMembers.length} members added
-                            </span>
-                        </div>
-                          
-                        {/* Show list of added members */}
-                        {secondaryMembers.map((member, index) => (
-                            <div key={index} className="border rounded-lg p-4 space-y-3 bg-muted/30">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm font-medium text-muted-foreground">Member {index + 1}</span>
-                                    <div className="flex gap-1">
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-8 w-8 p-0"
-                                            onClick={() => {
-                                                setCurrentMember(member)
-                                                setShowAddMemberForm(true)
-                                                setSecondaryMembers(prev => prev.filter((_, i) => i !== index))
-                                            }}
-                                        >
-                                            <Edit className="h-4 w-4" />
-                                        </Button>
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-8 w-8 p-0 text-red-500 hover:text-red-600 hover:bg-red-50"
-                                            onClick={() => setSecondaryMembers(prev => prev.filter((_, i) => i !== index))}
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                </div>
-                                <div className="text-sm space-y-1">
-                                    <p><span className="font-medium">Name:</span> {member.name}</p>
-                                    {member.mobileNumber && <p><span className="font-medium">Mobile:</span> {member.mobileNumber}</p>}
-                                    {member.email && <p><span className="font-medium">Email:</span> {member.email}</p>}
-                                    {member.businessName && <p><span className="font-medium">Business:</span> {member.businessName}</p>}
-                                    {member.location && <p><span className="font-medium">Location:</span> {member.location}</p>}
-                                </div>
-                            </div>
-                        ))}
-                          
-                        {/* Add Member Form - Shows one at a time */}
-                        {showAddMemberForm && (
-                            <div className="border rounded-lg p-4 space-y-3 bg-primary/5">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm font-medium">Add Member {secondaryMembers.length + 1}</span>
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-8 w-8 p-0"
-                                        onClick={() => {
-                                            setShowAddMemberForm(false)
-                                            setCurrentMember({ name: '', mobileNumber: '', email: '', businessName: '', businessCategory: '', location: '', isMember: false, showCustomLocation: false, customLocation: '' })
-                                        }}
-                                    >
-                                        <X className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    <div className="space-y-2">
-                                        <Label className="text-xs">Name *</Label>
-                                        <Input
-                                            placeholder="Member name"
-                                            value={currentMember.name}
-                                            onChange={(e) => setCurrentMember(prev => ({ ...prev, name: e.target.value }))}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-xs">Mobile</Label>
-                                        <Input
-                                            placeholder="Mobile number"
-                                            value={currentMember.mobileNumber}
-                                            onChange={(e) => setCurrentMember(prev => ({ ...prev, mobileNumber: e.target.value }))}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-xs">Email</Label>
-                                        <Input
-                                            type="email"
-                                            placeholder="Email address"
-                                            value={currentMember.email}
-                                            onChange={(e) => setCurrentMember(prev => ({ ...prev, email: e.target.value }))}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-xs">Business Name</Label>
-                                        <Input
-                                            placeholder="Business name"
-                                            value={currentMember.businessName}
-                                            onChange={(e) => setCurrentMember(prev => ({ ...prev, businessName: e.target.value }))}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-xs">Business Category</Label>
-                                        <Input
-                                            placeholder="Business category"
-                                            value={currentMember.businessCategory}
-                                            onChange={(e) => setCurrentMember(prev => ({ ...prev, businessCategory: e.target.value }))}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-xs">Location</Label>
-                                        <Popover open={secondaryLocationOpen} onOpenChange={setSecondaryLocationOpen}>
-                                            <PopoverTrigger asChild>
-                                                <Button
-                                                    variant="outline"
-                                                    role="combobox"
-                                                    className={cn(
-                                                        "w-full justify-between",
-                                                        !currentMember.location && "text-muted-foreground"
-                                                    )}
-                                                >
-                                                    {currentMember.showCustomLocation ? currentMember.customLocation || "Enter custom location" : currentMember.location || "Select district"}
-                                                    <Check className="ml-2 h-4 w-4 opacity-50" />
-                                                </Button>
-                                            </PopoverTrigger>
-                                            <PopoverContent className="w-full p-0 max-h-[350px] overflow-y-auto" align="start">
-                                                <Command>
-                                                    <CommandInput placeholder="Search district..." />
-                                                    <CommandEmpty>No district found.</CommandEmpty>
-                                                    <CommandGroup>
-                                                        {TAMIL_NADU_DISTRICTS.map((district) => (
-                                                            <CommandItem
-                                                                key={district}
-                                                                value={district}
-                                                                onSelect={() => handleSecondaryLocationSelect(district)}
-                                                            >
-                                                                <Check
-                                                                    className={cn(
-                                                                        "mr-2 h-4 w-4",
-                                                                        currentMember.location === district ? "opacity-100" : "opacity-0"
-                                                                    )}
-                                                                />
-                                                                {district}
-                                                            </CommandItem>
-                                                        ))}
-                                                        <CommandItem
-                                                            value="other"
-                                                            onSelect={() => handleSecondaryLocationSelect("other")}
-                                                        >
-                                                            <Check
-                                                                className={cn(
-                                                                    "mr-2 h-4 w-4",
-                                                                    currentMember.showCustomLocation ? "opacity-100" : "opacity-0"
-                                                                )}
-                                                            />
-                                                            Other (enter manually)
-                                                        </CommandItem>
-                                                    </CommandGroup>
-                                                </Command>
-                                            </PopoverContent>
-                                        </Popover>
-                                        {currentMember.showCustomLocation && (
-                                            <Input
-                                                placeholder="Enter your location"
-                                                value={currentMember.customLocation || ""}
-                                                onChange={(e) => {
-                                                    setCurrentMember(prev => ({ 
-                                                        ...prev, 
-                                                        customLocation: e.target.value,
-                                                        location: e.target.value 
-                                                    }))
-                                                }}
-                                                className="mt-2"
-                                            />
-                                        )}
-                                    </div>
-                                </div>
-                                <div className="flex gap-2">
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => {
-                                            setShowAddMemberForm(false)
-                                            setCurrentMember({ name: '', mobileNumber: '', email: '', businessName: '', businessCategory: '', location: '', isMember: false, showCustomLocation: false, customLocation: '' })
-                                        }}
-                                    >
-                                        Cancel
-                                    </Button>
-                                    <Button
-                                        type="button"
-                                        size="sm"
-                                        onClick={() => {
-                                            if (!currentMember.name.trim()) {
-                                                setDbError("Member name is required")
-                                                return
-                                            }
-                                            if (currentMember.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(currentMember.email)) {
-                                                setDbError("Invalid email format for member")
-                                                return
-                                            }
-                                              
-                                            setSecondaryMembers(prev => [...prev, { ...currentMember }])
-                                            setCurrentMember({ name: '', mobileNumber: '', email: '', businessName: '', businessCategory: '', location: '', isMember: false, showCustomLocation: false, customLocation: '' })
-                                            setShowAddMemberForm(false)
-                                            setDbError(null)
-                                        }}
-                                    >
-                                        <Check className="h-4 w-4 mr-2" />
-                                        Add Member
-                                    </Button>
-                                </div>
-                            </div>
-                        )}
-                          
-                        {!showAddMemberForm && (
+                            <h3 className="text-lg font-semibold">Guest Members</h3>
                             <Button
                                 type="button"
+                                onClick={addSecondaryMember}
                                 variant="outline"
-                                className="w-full"
-                                onClick={() => setShowAddMemberForm(true)}
+                                size="sm"
+                                className="flex items-center gap-2"
                             >
-                                <UserPlus className="h-4 w-4 mr-2" />
-                                Add Member
+                                <Plus className="h-4 w-4" />
+                                Add Guest Member
                             </Button>
+                        </div>
+
+                        {secondaryMembers.length === 0 ? (
+                            <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-lg">
+                                <p className="text-gray-500">No guest members added yet</p>
+                                <p className="text-sm text-gray-400 mt-1">Click &quot;Add Guest Member&quot; to add guest details</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {secondaryMembers.map((member, index) => (
+                                    <Card key={index} className="p-4">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <h4 className="font-semibold">Guest Member {index + 1}</h4>
+                                            <Button
+                                                type="button"
+                                                onClick={() => removeSecondaryMember(index)}
+                                                variant="destructive"
+                                                size="sm"
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <Label htmlFor={`guest-name-${index}`}>Name *</Label>
+                                                <Input
+                                                    id={`guest-name-${index}`}
+                                                    value={member.name}
+                                                    onChange={(e) => updateSecondaryMember(index, "name", e.target.value)}
+                                                    placeholder="Guest name"
+                                                />
+                                            </div>
+                                            <div>
+                                                <Label htmlFor={`guest-mobile-${index}`}>Mobile Number</Label>
+                                                <Input
+                                                    id={`guest-mobile-${index}`}
+                                                    value={member.mobileNumber || ""}
+                                                    onChange={(e) => updateSecondaryMember(index, "mobileNumber", e.target.value)}
+                                                    placeholder="+91 98765 43210"
+                                                />
+                                            </div>
+                                            <div>
+                                                <Label htmlFor={`guest-email-${index}`}>Email</Label>
+                                                <Input
+                                                    id={`guest-email-${index}`}
+                                                    type="email"
+                                                    value={member.email || ""}
+                                                    onChange={(e) => updateSecondaryMember(index, "email", e.target.value)}
+                                                    placeholder="guest@example.com"
+                                                />
+                                            </div>
+                                            <div>
+                                                <Label htmlFor={`guest-gender-${index}`}>Gender</Label>
+                                                <select
+                                                    id={`guest-gender-${index}`}
+                                                    value={member.gender || ""}
+                                                    onChange={(e) => updateSecondaryMember(index, "gender", e.target.value)}
+                                                    className="w-full p-2 border rounded-md"
+                                                >
+                                                    <option value="">Select gender</option>
+                                                    <option value="male">Male</option>
+                                                    <option value="female">Female</option>
+                                                    <option value="other">Other</option>
+                                                    <option value="prefer-not-to-say">Prefer not to say</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <Label htmlFor={`guest-business-${index}`}>Business Name</Label>
+                                                <Input
+                                                    id={`guest-business-${index}`}
+                                                    value={member.businessName || ""}
+                                                    onChange={(e) => updateSecondaryMember(index, "businessName", e.target.value)}
+                                                    placeholder="Guest business name"
+                                                />
+                                            </div>
+                                            <div>
+                                                <Label htmlFor={`guest-category-${index}`}>Business Category</Label>
+                                                <Input
+                                                    id={`guest-category-${index}`}
+                                                    value={member.businessCategory || ""}
+                                                    onChange={(e) => updateSecondaryMember(index, "businessCategory", e.target.value)}
+                                                    placeholder="Business category"
+                                                />
+                                            </div>
+                                            <div>
+                                                <Label htmlFor={`guest-location-${index}`}>Location</Label>
+                                                <Input
+                                                    id={`guest-location-${index}`}
+                                                    value={member.location || ""}
+                                                    onChange={(e) => updateSecondaryMember(index, "location", e.target.value)}
+                                                    placeholder="Location"
+                                                />
+                                            </div>
+                                            <div className="flex items-center space-x-2">
+                                                <input
+                                                    type="checkbox"
+                                                    id={`guest-member-${index}`}
+                                                    checked={member.isMember || false}
+                                                    onChange={(e) => updateSecondaryMember(index, "isMember", e.target.checked)}
+                                                />
+                                                <Label htmlFor={`guest-member-${index}`}>Is Member</Label>
+                                            </div>
+                                        </div>
+                                    </Card>
+                                ))}
+                            </div>
                         )}
                     </div>
 
                     <Separator />
 
-                    {/* Ticket Type */}
-                    <div className="space-y-3">
-                        <div className="flex items-center gap-2">
-                            <Receipt className="h-5 w-5 text-primary" />
-                            <h3 className="font-semibold">Ticket Type</h3>
+                    <div className="flex flex-row items-start space-x-3 space-y-0">
+                        <input
+                            type="checkbox"
+                            checked={form.watch("termsAccepted")}
+                            onChange={(e) => form.setValue("termsAccepted", e.target.checked)}
+                        />
+                        <div className="space-y-1 leading-none">
+                            <Label>I accept terms and conditions *</Label>
                         </div>
-                        <Select value={eventData.ticketType} onValueChange={(value) => setEventData(prev => ({ ...prev, ticketType: value }))}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select ticket type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {activeEvent?.ticketsPrice?.map((ticket: { name: string; price: number }) => (
-                                    <SelectItem key={ticket.name} value={ticket.name}>
-                                        {ticket.name} - ₹{ticket.price}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
                     </div>
 
-                    {/* Payment Method */}
-                    <div className="space-y-3">
-                        <div className="flex items-center gap-2">
-                            <Receipt className="h-5 w-5 text-primary" />
-                            <h3 className="font-semibold">Payment Method</h3>
+                    <div className="bg-gray-50 p-4 rounded-lg space-y-2 mt-4">
+                        <h4 className="font-semibold text-gray-700 mb-3">Amount Summary</h4>
+                        <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">Total Members:</span>
+                            <span className="font-medium">{totalMembers}</span>
                         </div>
-                        <Select value={eventData.paymentMethod} onValueChange={(value) => setEventData(prev => ({ ...prev, paymentMethod: value }))}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select payment method" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="cash">Cash</SelectItem>
-                                <SelectItem value="online">Online</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-                    {/* Pricing Summary */}
-                    {eventData.ticketType && (
-                        <div className="border rounded-lg p-4 bg-muted/30">
-                            <h4 className="font-semibold mb-3">Pricing Summary</h4>
-                            <div className="space-y-2 text-sm">
-                                <div className="flex justify-between">
-                                    <span>Primary Member:</span>
-                                    <span>₹{pricePerPerson}</span>
-                                </div>
-                                {secondaryMembers.length > 0 && (
-                                    <div className="flex justify-between">
-                                        <span>Additional Members ({secondaryMembers.length}):</span>
-                                        <span>₹{pricePerPerson * secondaryMembers.length}</span>
-                                    </div>
-                                )}
-                                <Separator />
-                                <div className="flex justify-between font-bold text-base">
-                                    <span>Total Amount:</span>
-                                    <span className="text-primary">₹{totalAmount}</span>
-                                </div>
+                        <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">Base Amount:</span>
+                            <span className="font-medium">₹{baseAmount}</span>
+                        </div>
+                        {taxRate > 0 && (
+                            <div className="flex justify-between text-sm">
+                                <span className="text-gray-600">GST ({taxRate}%):</span>
+                                <span className="font-medium">₹{taxAmount}</span>
                             </div>
+                        )}
+                        <Separator className="my-2" />
+                        <div className="flex justify-between font-bold text-lg">
+                            <span>Total Amount:</span>
+                            <span className="text-green-600">₹{totalAmount}</span>
                         </div>
+                    </div>
+
+                    {error && (
+                        <Alert variant="destructive">
+                            <AlertCircle className="h-4 w-4" />
+                            <AlertTitle>Error</AlertTitle>
+                            <AlertDescription>{error}</AlertDescription>
+                        </Alert>
                     )}
 
-                    <Alert className="border-yellow-200 bg-yellow-50 dark:border-yellow-900/50 dark:bg-yellow-900/20">
-                        <Info className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
-                        <AlertTitle className="text-yellow-800 dark:text-yellow-300 font-semibold mb-1">Fee Reminder</AlertTitle>
-                        <AlertDescription className="text-yellow-700 dark:text-yellow-400 font-medium">
-                            Collect entrance fee if applicable.
-                        </AlertDescription>
-                    </Alert>
-
-                    {dbError && <Alert variant="destructive"><AlertCircle className="h-4 w-4" /><AlertTitle>Error</AlertTitle><AlertDescription>{dbError}</AlertDescription></Alert>}
-
-                </CardContent>
-                <CardFooter className="flex justify-between">
-                    <Button variant="ghost" onClick={() => setStep(Step.PERSONAL_DETAILS)}>Back</Button>
-                    <Button onClick={onFinalSubmit} disabled={isSubmitting}>
-                        {isSubmitting ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : "Complete Registration"}
+                    <Button type="submit" className="w-full" disabled={isSubmitting}>
+                        {isSubmitting ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Registering...
+                            </>
+                        ) : (
+                            "Register Participant"
+                        )}
                     </Button>
-                </CardFooter>
-            </Card>
-        )
-    }
-
-    // --- Step 5: Success ---
-    if (step === Step.SUCCESS) {
-        return (
-            <Card className="w-full max-w-md mx-auto text-center py-10 animate-in fade-in zoom-in-95">
-                <CardContent className="space-y-6">
-                    <div className="h-20 w-20 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-                        <CheckCircle2 className="h-10 w-10 text-green-600" />
-                    </div>
-                    <div className="space-y-2">
-                        <h2 className="text-2xl font-bold text-foreground">Registered Successfully!</h2>
-                        <p className="text-muted-foreground">The participant has been added.</p>
-                    </div>
-                    <div className="p-4 bg-muted rounded-lg text-left text-sm space-y-2">
-                        <div className="flex justify-between"><span>Name:</span><span className="font-medium">{personalData.name}</span></div>
-                        <div className="flex justify-between"><span>Mobile:</span><span className="font-medium">{verifiedPhone}</span></div>
-                        <div className="flex justify-between"><span>Secondary Members:</span><span className="font-medium">{secondaryMembers.length}</span></div>
-                        <div className="flex justify-between"><span>Total Members:</span><span className="font-medium">{totalMembers}</span></div>
-                        <div className="flex justify-between"><span>Ticket Type:</span><span className="font-medium">{eventData.ticketType}</span></div>
-                        <div className="flex justify-between"><span>Total Amount:</span><span className="font-bold text-primary">₹{totalAmount}</span></div>
-                    </div>
-                    <Button className="w-full" onClick={() => {
-                        setStep(Step.PHONE_INPUT)
-                        phoneForm.reset()
-                        personalForm.reset()
-                        setPersonalData({ name: "", email: "", businessName: "", businessCategory: "", location: "" })
-                        setEventData({ ticketType: "", paymentMethod: "cash", foodGuest: 0, isMorningFood: false })
-                        setSecondaryMembers([])
-                        setVerifiedPhone("")
-                    }}>Add Another</Button>
-                </CardContent>
-            </Card>
-        )
-    }
-
-    return null
+                </form>
+            </CardContent>
+        </Card>
+    )
 }
