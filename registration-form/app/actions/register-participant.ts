@@ -217,8 +217,9 @@ export async function registerParticipant(data: RegisterParticipantData) {
             paymentStatus = "pending" // Set to pending until verified
             approvalStatus = "pending"
         } else if (isAdmin) {
-            // Admin-created participants are automatically approved
+            // Admin-created participants are automatically approved and marked as paid for cash
             approvalStatus = "approved"
+            paymentStatus = "completed"
         }
 
         // Initialize approval logs array

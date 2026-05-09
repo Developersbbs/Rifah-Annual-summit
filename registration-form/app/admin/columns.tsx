@@ -151,7 +151,7 @@ export const columns: ColumnDef<Participant>[] = [
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
                             participantId: row.original._id,
-                            markPaid: paymentMethod === "cash" && paymentStatus === "pending"
+                            markPaid: true
                         })
                     })
 
@@ -209,7 +209,7 @@ export const columns: ColumnDef<Participant>[] = [
 
             // Determine button text based on payment method and status
             const getButtonText = () => {
-                if (paymentMethod === "cash" && paymentStatus === "pending") {
+                if (paymentStatus === "pending") {
                     return "Approve & Mark Paid"
                 }
                 return "Approve Entry"
