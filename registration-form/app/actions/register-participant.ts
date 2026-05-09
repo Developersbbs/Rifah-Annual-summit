@@ -3,12 +3,9 @@
 import dbConnect from "@/lib/db"
 import Participant from "@/models/Participant"
 import Event from "@/models/Event"
-<<<<<<< HEAD
 import { generateQR, generateSecondaryMemberQR } from "@/lib/qr-generator"
 import * as crypto from "crypto"
-=======
 import { sendRegistrationEmails } from "@/lib/email"
->>>>>>> main
 
 // Helper function for input sanitization
 function sanitizeInput(input: string): string {
@@ -356,7 +353,6 @@ export async function registerParticipant(data: RegisterParticipantData) {
             { $inc: { registeredCount: actualTotalPeople } }
         )
 
-<<<<<<< HEAD
         // Generate QR codes
         const primaryQR = await generateQR(participant._id.toString())
         
@@ -386,14 +382,6 @@ export async function registerParticipant(data: RegisterParticipantData) {
         }
         await participant.save()
 
-        return {
-            success: true,
-            id: participant._id.toString(),
-            totalAmount,
-            qrCode: primaryQR,
-            primaryEmail: email || "",
-            secondaryMemberQRs
-=======
         // Send confirmation emails (Async) - ONLY for completed payments or admin created
         if (paymentStatus === "completed" || isAdmin) {
             sendRegistrationEmails(participant, activeEvent.eventName).catch(err => 
@@ -404,10 +392,12 @@ export async function registerParticipant(data: RegisterParticipantData) {
         return {
             success: true,
             participantId: participant._id.toString(),
-            totalAmount
->>>>>>> main
+            id: participant._id.toString(),
+            totalAmount,
+            qrCode: primaryQR,
+            primaryEmail: email || "",
+            secondaryMemberQRs
         }
-
     } catch (error: unknown) {
         console.error("Error registering participant:", error)
 

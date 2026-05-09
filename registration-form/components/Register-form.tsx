@@ -1546,14 +1546,6 @@ export function RegisterForm() {
           )}
           
           <div className="p-4 bg-muted rounded-lg text-left text-sm space-y-2">
-<<<<<<< HEAD
-            <div className="flex justify-between"><span>Name:</span><span className="font-medium">{personalData.name}</span></div>
-            <div className="flex justify-between"><span>Mobile:</span><span className="font-medium">{verifiedPhone}</span></div>
-            <div className="flex justify-between"><span>Secondary Members:</span><span className="font-medium">{secondaryMembers.length}</span></div>
-            <div className="flex justify-between"><span>Total Members:</span><span className="font-medium">{totalMembers}</span></div>
-            <div className="flex justify-between"><span>Ticket Type:</span><span className="font-medium">{eventData.ticketType}</span></div>
-            <div className="flex justify-between"><span>Total Amount:</span><span className="font-bold text-primary">₹{taxCalculation.totalAmount}</span></div>
-=======
             <div className="flex justify-between"><span>{t("Full Name")}:</span><span className="font-medium">{personalData.name}</span></div>
             <div className="flex justify-between"><span>{t("Mobile Number")}:</span><span className="font-medium">{verifiedPhone}</span></div>
             <div className="flex justify-between"><span>{t("Location")}:</span><span className="font-medium">{t(personalData.location)}</span></div>
@@ -1563,7 +1555,6 @@ export function RegisterForm() {
             <div className="flex justify-between"><span>{t("Total Amount")}:</span><span className="font-bold text-primary">₹{taxCalculation.totalAmount}</span></div>
             {/* FOOD PREFERENCE - Commented out */}
             {/* <div className="flex justify-between"><span>Morning Food:</span><span className="font-medium">{eventData.isMorningFood ? "Yes" : "No"}</span></div> */}
->>>>>>> main
           </div>
 
           {/* Download Invoice Button */}
