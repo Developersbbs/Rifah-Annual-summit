@@ -13,7 +13,7 @@ import {
     getSortedRowModel,
     useReactTable,
 } from "@tanstack/react-table"
-import { ChevronDown, Download, Search, Pencil, Eye } from "lucide-react"
+import { ChevronDown, Download, Search, Pencil, Eye, Mail } from "lucide-react"
 import { EditParticipantDialog } from "@/components/edit-participant-dialog"
 import { DeleteUserDialog } from "@/components/delete-user-dialog"
 import { ViewParticipantDialog } from "@/components/view-participant-dialog"
@@ -65,6 +65,7 @@ export function ParticipantsTable<TData, TValue>({
     const [editingParticipant, setEditingParticipant] = React.useState<IParticipant | null>(null)
     const [deletingParticipant, setDeletingParticipant] = React.useState<IParticipant | null>(null)
     const [viewingParticipant, setViewingParticipant] = React.useState<IParticipant | null>(null)
+    const [isSendingBulkEmail, setIsSendingBulkEmail] = React.useState(false)
 
     // Handle delete dialog events
     React.useEffect(() => {
@@ -226,6 +227,61 @@ export function ParticipantsTable<TData, TValue>({
         document.body.removeChild(link);
     }
 
+    const handleBulkEmail = async () => {
+        const participantIds = (filteredData as unknown as IParticipant[]).map(p => p._id)
+        
+        if (participantIds.length === 0) {
+            alert("No participants to send emails to.")
+            return
+        }
+
+        if (!confirm(`Are you sure you want to send confirmation emails to all ${participantIds.length} currently filtered participants? This may take some time.`)) {
+            return
+        }
+
+        setIsSendingBulkEmail(true)
+        
+        const batchSize = 5;
+        let totalSuccess = 0;
+        let totalFailures = 0;
+
+        try {
+            for (let i = 0; i < participantIds.length; i += batchSize) {
+                const batch = participantIds.slice(i, i + batchSize);
+                
+                const response = await fetch("/api/send-bulk-emails", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ participantIds: batch })
+                });
+
+                let result;
+                try {
+                    result = await response.json();
+                } catch (e) {
+                    console.error("Failed to parse JSON response:", e);
+                    totalFailures += batch.length;
+                    continue; // Continue to next batch even if this one failed completely (e.g. 504 Gateway Timeout)
+                }
+
+                if (response.ok) {
+                    totalSuccess += result.details?.successCount || 0;
+                    totalFailures += result.details?.failureCount || 0;
+                } else {
+                    console.error("Batch failed with error:", result.error);
+                    totalFailures += batch.length;
+                }
+            }
+
+            alert(`Bulk email process complete!\nSuccess: ${totalSuccess}\nFailures: ${totalFailures}`);
+        } catch (error) {
+            console.error("Bulk email error:", error)
+            alert("Error occurred during bulk email process. Some emails may not have been sent.")
+        } finally {
+            setIsSendingBulkEmail(false)
+        }
+    }
+
     /*
     const downloadPDF = async () => {
         try {
@@ -380,6 +436,26 @@ export function ParticipantsTable<TData, TValue>({
                                 })}
                         </DropdownMenuContent>
                     </DropdownMenu>
+                    <Button 
+                        variant="outline" 
+                        onClick={handleBulkEmail}
+                        disabled={isSendingBulkEmail}
+                        className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                    >
+                        {isSendingBulkEmail ? (
+                            <>
+                                <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Sending...
+                            </>
+                        ) : (
+                            <>
+                                <Mail className="h-4 w-4 mr-2" /> Bulk Email
+                            </>
+                        )}
+                    </Button>
                     <Button variant="outline" onClick={downloadCSV}>
                         <Download className="h-4 w-4 mr-2" /> Excel
                     </Button>

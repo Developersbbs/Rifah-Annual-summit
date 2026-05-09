@@ -5,7 +5,7 @@ import { IParticipant } from "@/lib/types"
 import { emailImages } from "./email-images"
 import path from "path"
 
-export async function sendRegistrationEmails(participant: IParticipant, eventName: string) {
+export async function sendRegistrationEmails(participant: IParticipant, eventName: string, skipAdmin: boolean = false) {
     try {
         await dbConnect()
 
@@ -405,32 +405,34 @@ export async function sendRegistrationEmails(participant: IParticipant, eventNam
             }
         }
 
-        // 5. Send to Admins & Additional Manual Emails
-        // Add any manual emails here
-        const manualEmails: string[] = ["info@rifah.org", "jeevanandam2708@gmail.com"]
-        
-        // Combine all admin recipients, including fromEmail, and exclude the participant themselves
-        const adminRecipientsList = [...manualEmails, fromEmail || user]
-        const finalAdminRecipients = [...new Set(adminRecipientsList.filter(email => email && email !== participant.email))]
+        if (!skipAdmin) {
+            // 5. Send to Admins & Additional Manual Emails
+            // Add any manual emails here
+            const manualEmails: string[] = ["info@rifah.org", "jeevanandam2708@gmail.com"]
+            
+            // Combine all admin recipients, including fromEmail, and exclude the participant themselves
+            const adminRecipientsList = [...manualEmails, fromEmail || user]
+            const finalAdminRecipients = [...new Set(adminRecipientsList.filter(email => email && email !== participant.email))]
 
-        if (finalAdminRecipients.length > 0) {
-            try {
-                await transporter.sendMail({
-                    from: fromEmail || user,
-                    to: finalAdminRecipients.join(','),
-                    subject: adminSubject,
-                    html: adminHtml,
-                    attachments: [
-                        {
-                            filename: 'logo.png',
-                            path: path.join(process.cwd(), 'public', 'assets', 'logo.png'),
-                            cid: 'logo'
-                        }
-                    ]
-                })
-                console.log(`Admin notification emails sent to: ${finalAdminRecipients.join(', ')}`)
-            } catch (adminErr) {
-                console.error("Failed to send admin notification emails:", adminErr)
+            if (finalAdminRecipients.length > 0) {
+                try {
+                    await transporter.sendMail({
+                        from: fromEmail || user,
+                        to: finalAdminRecipients.join(','),
+                        subject: adminSubject,
+                        html: adminHtml,
+                        attachments: [
+                            {
+                                filename: 'logo.png',
+                                path: path.join(process.cwd(), 'public', 'assets', 'logo.png'),
+                                cid: 'logo'
+                            }
+                        ]
+                    })
+                    console.log(`Admin notification emails sent to: ${finalAdminRecipients.join(', ')}`)
+                } catch (adminErr) {
+                    console.error("Failed to send admin notification emails:", adminErr)
+                }
             }
         }
 
