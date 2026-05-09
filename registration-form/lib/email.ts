@@ -27,13 +27,13 @@ export async function sendRegistrationEmails(participant: IParticipant, eventNam
 
         const language = participant.registrationLanguage || 'en'
         const isTamil = language === 'ta'
-        
+
         const isPending = participant.paymentStatus === 'pending'
-        
+
         console.log(`DEBUG - Sending emails for ${participant.name}. Language: ${language}, isTamil: ${isTamil}`)
-        
+
         // 2. Prepare Member Email Content
-        const memberSubject = isTamil 
+        const memberSubject = isTamil
             ? `${isPending ? 'பதிவு பெறப்பட்டது' : 'பதிவு உறுதிப்படுத்தப்பட்டது'} - ${eventName}`
             : `${isPending ? 'Registration Received' : 'Registration Confirmed'} - ${eventName}`
 
@@ -52,10 +52,7 @@ export async function sendRegistrationEmails(participant: IParticipant, eventNam
                         <div style="position: absolute; top: -50%; right: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);"></div>
                         <div style="position: relative; z-index: 1;">
                             <div style="width: 60px; height: 60px; background: rgba(255,255,255,0.2); border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;">
-                                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-                                    <path d="M9 11l3 3L22 4"></path>
-                                    <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path>
-                                </svg>
+                                <img src="cid:logo" alt="RIFAH Logo" style="width: 80px; height: auto; margin: 0 auto 15px; display: block;">
                             </div>
                             <h1 style="color: #ffffff; font-size: 28px; font-weight: 700; margin: 0; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                                 RIFAH ANNUAL SUMMIT 2026 REGISTRATION CONFIRMED
@@ -111,10 +108,10 @@ export async function sendRegistrationEmails(participant: IParticipant, eventNam
                             <div style="margin-top: 20px; padding: 15px; background: ${participant.paymentStatus === 'pending' ? '#fef3c7' : '#92400e'}; border-radius: 8px; border-left: 4px solid ${participant.paymentStatus === 'pending' ? '#f59e0b' : '#92400e'};">
                                 <div style="display: flex; align-items: center;">
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${participant.paymentStatus === 'pending' ? '#f59e0b' : '#92400e'}" stroke-width="2" style="margin-right: 10px;">
-                                        ${participant.paymentStatus === 'pending' 
-                                            ? '<circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline>'
-                                            : '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline>'
-                                        }
+                                        ${participant.paymentStatus === 'pending'
+                ? '<circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline>'
+                : '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline>'
+            }
                                     </svg>
                                     <span style="color: ${participant.paymentStatus === 'pending' ? '#92400e' : '#7c2d12'}; font-weight: 600;">
                                         ${participant.paymentStatus === 'pending' ? 'நிலுவையில் உள்ளது (நிர்வாக அனுமதிக்கு காத்திருக்கிறது)' : 'முடிந்தது'}
@@ -159,19 +156,23 @@ export async function sendRegistrationEmails(participant: IParticipant, eventNam
                 <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
                     <!-- Header -->
                     <div style="background: linear-gradient(135deg, #d10c09 0%, #f52404 100%); padding: 40px 30px; text-align: center; position: relative; overflow: hidden;">
-                        <div style="position: absolute; top: -50%; right: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);"></div>
-                        <div style="position: relative; z-index: 1;">
-                            <div style="width: 60px; height: 60px; background: rgba(255,255,255,0.2); border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;">
-                                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-                                    <path d="M9 11l3 3L22 4"></path>
-                                    <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path>
-                                </svg>
-                            </div>
-                            <h1 style="color: #ffffff; font-size: 28px; font-weight: 700; margin: 0; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                                RIFAH ANNUAL SUMMIT 2026 REGISTRATION CONFIRMED
-                            </h1>
-                        </div>
-                    </div>
+    <div style="position: absolute; top: -50%; right: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);"></div>
+    <div style="position: relative; z-index: 1;">
+        <!-- Fixed: removed flexbox, use line-height to center SVG -->
+        <div style="width: 60px; height: 60px; background: rgba(255,255,255,0.2); border-radius: 50%; margin: 0 auto 20px; line-height: 60px; text-align: center;">
+            <img 
+                src="cid:logo" 
+                width="30" 
+                height="30" 
+                alt="Confirmed" 
+                style="vertical-align: middle; display: inline-block;"
+            />
+        </div>
+        <h1 style="color: #ffffff; font-size: 28px; font-weight: 700; margin: 0; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            RIFAH ANNUAL SUMMIT 2026 REGISTRATION CONFIRMED
+        </h1>
+    </div>
+</div>
 
                     <!-- Content -->
                     <div style="padding: 40px 30px;">
@@ -220,10 +221,10 @@ export async function sendRegistrationEmails(participant: IParticipant, eventNam
                             <div style="margin-top: 20px; padding: 15px; background: ${participant.paymentStatus === 'pending' ? '#fef3c7' : '#92400e'}; border-radius: 8px; border-left: 4px solid ${participant.paymentStatus === 'pending' ? '#f59e0b' : '#92400e'};">
                                 <div style="display: flex; align-items: center;">
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${participant.paymentStatus === 'pending' ? '#f59e0b' : '#92400e'}" stroke-width="2" style="margin-right: 10px;">
-                                        ${participant.paymentStatus === 'pending' 
-                                            ? '<circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline>'
-                                            : '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline>'
-                                        }
+                                        ${participant.paymentStatus === 'pending'
+            ? '<circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline>'
+            : '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline>'
+        }
                                     </svg>
                                     <span style="color: ${participant.paymentStatus === 'pending' ? '#fcfcfc' : '#ffffff'}; font-weight: 600;">
                                         ${participant.paymentStatus === 'pending' ? 'Pending (Awaiting Admin Approval)' : 'Completed'}
@@ -278,13 +279,8 @@ export async function sendRegistrationEmails(participant: IParticipant, eventNam
                     <div style="background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); padding: 40px 30px; text-align: center; position: relative; overflow: hidden;">
                         <div style="position: absolute; top: -50%; right: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);"></div>
                         <div style="position: relative; z-index: 1;">
-                            <div style="width: 60px; height: 60px; background: rgba(255,255,255,0.2); border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;">
-                                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-                                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                                    <circle cx="8.5" cy="7" r="4"></circle>
-                                    <line x1="20" y1="8" x2="20" y2="14"></line>
-                                    <line x1="23" y1="11" x2="17" y2="11"></line>
-                                </svg>
+                            <div style="margin: 0 auto 15px; display: block;">
+                                <img src="cid:logo" alt="RIFAH Logo" style="width: 80px; height: auto; ">
                             </div>
                             <h1 style="color: #ffffff; font-size: 28px; font-weight: 700; margin: 0; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                                 New Registration Alert!
@@ -409,7 +405,7 @@ export async function sendRegistrationEmails(participant: IParticipant, eventNam
             // 5. Send to Admins & Additional Manual Emails
             // Add any manual emails here
             const manualEmails: string[] = ["info@rifah.org", "jeevanandam2708@gmail.com"]
-            
+
             // Combine all admin recipients, including fromEmail, and exclude the participant themselves
             const adminRecipientsList = [...manualEmails, fromEmail || user]
             const finalAdminRecipients = [...new Set(adminRecipientsList.filter(email => email && email !== participant.email))]

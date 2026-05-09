@@ -36,6 +36,7 @@ export function AdminRegistration({ onSuccess }: AdminRegistrationProps) {
         businessCategory: "",
         location: "",
         gender: "",
+        ticketType: "",
         paymentMethod: "cash" as "cash" | "online",
         guestCount: 0,
         isMember: false,
@@ -54,8 +55,11 @@ export function AdminRegistration({ onSuccess }: AdminRegistrationProps) {
             setIsLoadingEvent(true)
             try {
                 const eventResult = await getActiveEvent()
-                if (eventResult.success) {
+                if (eventResult.success && eventResult.event) {
                     setActiveEvent(eventResult.event)
+                    if (eventResult.event.ticketsPrice && eventResult.event.ticketsPrice.length > 0) {
+                        setFormData(prev => ({ ...prev, ticketType: eventResult.event.ticketsPrice[0].name }))
+                    }
                 } else {
                     console.error('Error loading active event:', eventResult.error)
                 }
@@ -116,6 +120,7 @@ export function AdminRegistration({ onSuccess }: AdminRegistrationProps) {
                     businessCategory: "",
                     location: "",
                     gender: "",
+                    ticketType: "",
                     paymentMethod: "cash",
                     guestCount: 0,
                     isMember: false,
@@ -207,6 +212,21 @@ export function AdminRegistration({ onSuccess }: AdminRegistrationProps) {
                                         <SelectItem value="female">Female</SelectItem>
                                         <SelectItem value="other">Other</SelectItem>
                                         <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="ticketType">Ticket Type *</Label>
+                                <Select value={formData.ticketType} onValueChange={(value) => handleInputChange("ticketType", value)}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select ticket type" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {activeEvent?.ticketsPrice?.map((ticket: any) => (
+                                            <SelectItem key={ticket.name} value={ticket.name}>
+                                                {ticket.name} (₹{ticket.price})
+                                            </SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
                             </div>
