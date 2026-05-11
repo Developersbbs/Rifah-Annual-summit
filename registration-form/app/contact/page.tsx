@@ -64,7 +64,7 @@ export default function ContactPage() {
               </h2>
               <p>
                 <a href="tel:9840412484" className="text-blue-600 hover:underline">
-                  +91 9840412484
+                  +91 9361643346
                 </a>
               </p>
             </div>

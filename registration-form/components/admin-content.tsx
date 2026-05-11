@@ -20,6 +20,7 @@ interface AdminStats {
   cashPayments: number
   onlinePayments: number
   totalMembers?: number
+  approvedMembers?: number
 }
 
 interface AdminContentProps {

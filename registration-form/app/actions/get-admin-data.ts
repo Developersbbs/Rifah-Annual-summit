@@ -27,6 +27,7 @@ export async function getAdminData() {
             totalAmount: 0,
             pendingApprovals: 0,
             approvedRegistrations: 0,
+            approvedMembers: 0,
             rejectedRegistrations: 0,
             cashPayments: 0,
             onlinePayments: 0,
@@ -55,6 +56,7 @@ export async function getAdminData() {
                 stats.pendingApprovals += 1
             } else if (approvalStatus === "approved") {
                 stats.approvedRegistrations += 1
+                stats.approvedMembers += totalMembers
             } else if (approvalStatus === "rejected") {
                 stats.rejectedRegistrations += 1
             }
