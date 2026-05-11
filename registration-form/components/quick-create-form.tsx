@@ -4,6 +4,8 @@ import { useState, useEffect, useMemo } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
+import { BulkUploadView } from "./bulk-upload-view"
+import { toast } from "sonner"
 import { registerParticipant } from "@/app/actions/register-participant"
 import { checkRegistration } from "@/app/actions/check-registration"
 import { getActiveEvent } from "@/app/actions/get-active-event"
@@ -15,7 +17,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Separator } from "@/components/ui/separator"
 import { Label } from "@/components/ui/label"
-import { CheckCircle2, Loader2, AlertCircle, Phone, Shield, ShieldOff, Plus, Trash2 } from "lucide-react"
+import { CheckCircle2, Loader2, AlertCircle, Phone, Shield, ShieldOff, Plus, Trash2, Users, ArrowLeft } from "lucide-react"
 import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from "@/components/ui/input-otp"
 
 interface SecondaryMember {
@@ -33,8 +35,9 @@ enum Step {
     MODE_SELECTION = 0,
     PHONE_INPUT = 1,
     OTP_VERIFICATION = 2,
-    PERSONAL_DETAILS = 3,
-    SUCCESS = 4,
+    STANDARD_REGISTRATION = 3,
+    BULK_UPLOAD = 4,
+    SUCCESS = 5,
 }
 
 const TAMIL_NADU_DISTRICTS = [
@@ -319,6 +322,24 @@ export function QuickCreateForm() {
                             </div>
                         </div>
                     </Button>
+
+                    <Button
+                        onClick={() => setStep(Step.BULK_UPLOAD)}
+                        className="w-full h-16 text-left justify-start"
+                        variant="outline"
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className="bg-purple-100 p-2 rounded-full">
+                                <Users className="h-5 w-5 text-purple-600" />
+                            </div>
+                            <div>
+                                <div className="font-semibold">Bulk Upload</div>
+                                <div className="text-sm text-muted-foreground">
+                                    Register via Excel, CSV or JSON
+                                </div>
+                            </div>
+                        </div>
+                    </Button>
                 </CardContent>
             </Card>
         )
@@ -437,6 +458,27 @@ export function QuickCreateForm() {
                     >
                         Back
                     </Button>
+                </CardContent>
+            </Card>
+        )
+    }
+
+    if (step === Step.BULK_UPLOAD) {
+        return (
+            <Card className="w-full max-w-4xl mx-auto">
+                <CardHeader>
+                    <div className="flex items-center gap-4">
+                        <Button variant="ghost" size="icon" onClick={() => setStep(Step.MODE_SELECTION)}>
+                            <ArrowLeft className="h-4 w-4" />
+                        </Button>
+                        <div>
+                            <CardTitle>Bulk Participant Upload</CardTitle>
+                            <CardDescription>Upload an Excel or JSON file to register multiple members at once</CardDescription>
+                        </div>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    <BulkUploadView onComplete={() => setStep(Step.SUCCESS)} />
                 </CardContent>
             </Card>
         )
