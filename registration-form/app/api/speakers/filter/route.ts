@@ -9,7 +9,7 @@ export async function GET(request: Request) {
   try {
     await dbConnect();
     
-    const query: any = {
+    const query: Record<string, unknown> = {
       approvalStatus: 'approved'
     };
 

@@ -18,7 +18,7 @@ interface BulkUploadViewProps {
 
 export function BulkUploadView({ onComplete }: BulkUploadViewProps) {
     const [file, setFile] = useState<File | null>(null)
-    const [data, setData] = useState<any[]>([])
+    const [data, setData] = useState<Record<string, unknown>[]>([])
     const [isParsing, setIsParsing] = useState(false)
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -45,7 +45,7 @@ export function BulkUploadView({ onComplete }: BulkUploadViewProps) {
                 const text = await file.text()
                 const json = JSON.parse(text)
                 if (Array.isArray(json)) {
-                    setData(json)
+                    setData(json as Record<string, unknown>[])
                 } else {
                     throw new Error("JSON file must contain an array of participants")
                 }
@@ -58,7 +58,7 @@ export function BulkUploadView({ onComplete }: BulkUploadViewProps) {
                         const sheetName = workbook.SheetNames[0]
                         const worksheet = workbook.Sheets[sheetName]
                         const json = XLSX.utils.sheet_to_json(worksheet)
-                        setData(json)
+                        setData(json as Record<string, unknown>[])
                     } catch (err) {
                         setError("Failed to parse Excel file")
                         console.error(err)
@@ -68,8 +68,9 @@ export function BulkUploadView({ onComplete }: BulkUploadViewProps) {
             } else {
                 throw new Error("Unsupported file format. Please upload .xlsx, .xls, .csv, or .json")
             }
-        } catch (err: any) {
-            setError(err.message || "An error occurred while parsing the file")
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : "An error occurred while parsing the file"
+            setError(message)
             setData([])
         } finally {
             setIsParsing(false)
@@ -90,18 +91,21 @@ export function BulkUploadView({ onComplete }: BulkUploadViewProps) {
         setIsSubmitting(true)
         try {
             // Map the parsed data to the expected format if needed
-            const formattedData = data.map(item => ({
-                mobileNumber: String(item["Mobile Number"] || item.mobileNumber || "").trim(),
-                name: String(item["Name"] || item.name || "").trim(),
-                email: String(item["Email"] || item.email || "").trim() || undefined,
-                businessName: String(item["Business Name"] || item.businessName || "").trim(),
-                businessCategory: String(item["Business Category"] || item.businessCategory || "").trim(),
-                location: String(item["Location"] || item.location || "").trim(),
-                gender: String(item["Gender"] || item.gender || "").toLowerCase().trim(),
-                ticketType: String(item["Ticket Type"] || item.ticketType || "").trim(),
-                isSponsor: Boolean(item["Is Sponsor"] || item.isSponsor === "true" || item.isSponsor === true),
-                paymentMethod: "cash" // Default for bulk upload
-            }))
+            const formattedData = data.map(item => {
+                const row = item as Record<string, unknown>
+                return {
+                    mobileNumber: String(row["Mobile Number"] || row.mobileNumber || "").trim(),
+                    name: String(row["Name"] || row.name || "").trim(),
+                    email: String(row["Email"] || row.email || "").trim() || undefined,
+                    businessName: String(row["Business Name"] || row.businessName || "").trim(),
+                    businessCategory: String(row["Business Category"] || row.businessCategory || "").trim(),
+                    location: String(row["Location"] || row.location || "").trim(),
+                    gender: String(row["Gender"] || row.gender || "").toLowerCase().trim(),
+                    ticketType: String(row["Ticket Type"] || row.ticketType || "").trim(),
+                    isSponsor: Boolean(row["Is Sponsor"] || row.isSponsor === "true" || row.isSponsor === true),
+                    paymentMethod: "cash" // Default for bulk upload
+                }
+            })
 
             const res = await bulkRegisterParticipants(formattedData)
             setResult(res)
@@ -224,16 +228,19 @@ export function BulkUploadView({ onComplete }: BulkUploadViewProps) {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {data.slice(0, 10).map((item, i) => (
-                                    <TableRow key={i}>
-                                        <TableCell>{item["Name"] || item.name || "-"}</TableCell>
-                                        <TableCell>{item["Mobile Number"] || item.mobileNumber || "-"}</TableCell>
-                                        <TableCell>{item["Email"] || item.email || "-"}</TableCell>
-                                        <TableCell>{item["Location"] || item.location || "-"}</TableCell>
-                                        <TableCell>{item["Ticket Type"] || item.ticketType || "-"}</TableCell>
-                                        <TableCell>{String(item["Is Sponsor"] || item.isSponsor || "false")}</TableCell>
-                                    </TableRow>
-                                ))}
+                                {data.slice(0, 10).map((item, i) => {
+                                    const row = item as Record<string, unknown>
+                                    return (
+                                        <TableRow key={i}>
+                                            <TableCell>{String(row["Name"] || row.name || "-")}</TableCell>
+                                            <TableCell>{String(row["Mobile Number"] || row.mobileNumber || "-")}</TableCell>
+                                            <TableCell>{String(row["Email"] || row.email || "-")}</TableCell>
+                                            <TableCell>{String(row["Location"] || row.location || "-")}</TableCell>
+                                            <TableCell>{String(row["Ticket Type"] || row.ticketType || "-")}</TableCell>
+                                            <TableCell>{String(row["Is Sponsor"] || row.isSponsor || "false")}</TableCell>
+                                        </TableRow>
+                                    )
+                                })}
                                 {data.length > 10 && (
                                     <TableRow>
                                         <TableCell colSpan={6} className="text-center text-muted-foreground">

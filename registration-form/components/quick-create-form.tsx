@@ -5,7 +5,6 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { BulkUploadView } from "./bulk-upload-view"
-import { toast } from "sonner"
 import { registerParticipant } from "@/app/actions/register-participant"
 import { checkRegistration } from "@/app/actions/check-registration"
 import { getActiveEvent } from "@/app/actions/get-active-event"
@@ -62,7 +61,7 @@ const quickCreateSchema = z.object({
     paymentMethod: z.enum(["cash", "online"]),
     guestCount: z.number().min(0).optional(),
     gstNumber: z.string().optional(),
-    isSponsor: z.boolean().default(false),
+    isSponsor: z.boolean(),
     termsAccepted: z.boolean().refine(val => val === true, "You must accept terms and conditions")
 })
 
@@ -124,7 +123,7 @@ export function QuickCreateForm() {
         if (!activeEvent || !selectedTicketType) return 0
         const ticket = activeEvent.ticketsPrice?.find((t) => t.name === selectedTicketType)
         return ticket?.price || 0
-    }, [activeEvent, selectedTicketType])
+    }, [activeEvent, selectedTicketType, isSponsor])
 
     const totalMembers = 1 + secondaryMembers.filter(m => m.name.trim() !== '').length
     const baseAmount = totalMembers * pricePerPerson
@@ -225,7 +224,7 @@ export function QuickCreateForm() {
             setStep(Step.PHONE_INPUT)
         } else {
             setUseOtp(false)
-            setStep(Step.PERSONAL_DETAILS)
+            setStep(Step.STANDARD_REGISTRATION)
         }
     }
 
@@ -250,7 +249,7 @@ export function QuickCreateForm() {
                     setError("This number is already registered")
                     return
                 }
-                setStep(Step.PERSONAL_DETAILS)
+                setStep(Step.STANDARD_REGISTRATION)
                 form.setValue("mobileNumber", phoneNumber)
             }
         } catch {

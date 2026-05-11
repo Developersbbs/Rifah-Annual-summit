@@ -22,7 +22,7 @@ interface SecondaryMemberInput {
     isMember?: boolean
 }
 
-interface RegisterParticipantData {
+export interface RegisterParticipantData {
     mobileNumber: string
     name: string
     email?: string

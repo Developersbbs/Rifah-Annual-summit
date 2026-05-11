@@ -1,9 +1,9 @@
 "use server"
 
-import { registerParticipant } from "./register-participant"
+import { registerParticipant, type RegisterParticipantData } from "./register-participant"
 import { getCurrentUser } from "@/lib/auth"
 
-export async function bulkRegisterParticipants(participants: any[]) {
+export async function bulkRegisterParticipants(participants: RegisterParticipantData[]) {
     const user = await getCurrentUser()
     
     if (!user || !['admin', 'super-admin'].includes(user.role)) {
@@ -38,9 +38,10 @@ export async function bulkRegisterParticipants(participants: any[]) {
                 results.failed++
                 results.errors.push(`${data.name || 'Unknown'}: ${result.error}`)
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             results.failed++
-            results.errors.push(`${data.name || 'Unknown'}: ${error.message || 'Unknown error'}`)
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+            results.errors.push(`${data.name || 'Unknown'}: ${errorMessage}`)
         }
     }
 

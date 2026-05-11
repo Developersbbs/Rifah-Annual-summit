@@ -220,7 +220,6 @@ export function RegisterForm() {
 
   const taxCalculation = useMemo(() => {
     const baseAmount = totalMembers * pricePerPerson
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const taxRate = activeEvent?.taxRate || 0
     const taxAmount = Math.round((baseAmount * taxRate) / 100)
     const totalAmount = baseAmount + taxAmount

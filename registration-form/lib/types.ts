@@ -79,6 +79,7 @@ export interface IParticipant {
     rejectionReason?: string;
     approvalLogs?: IApprovalLog[];
     registrationLanguage?: "en" | "ta";
+    isSponsor?: boolean;
 }
 
 export interface IEvent {
