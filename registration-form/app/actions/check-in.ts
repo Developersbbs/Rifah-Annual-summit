@@ -311,7 +311,10 @@ export async function getParticipantsByStatus(status: 'all' | 'checked-in' | 'pe
             ]
         }
 
+        const total = await Participant.countDocuments(dbQuery)
+        const totalPages = Math.ceil(total / limit)
         const skip = (page - 1) * limit
+        
         const sort = status === 'checked-in' 
             ? { "checkIn.timestamp": -1 } as const 
             : { createdAt: -1 } as const
@@ -323,7 +326,7 @@ export async function getParticipantsByStatus(status: 'all' | 'checked-in' | 'pe
             .lean()
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return (participants as unknown as IParticipant[]).map((p: any) => ({
+        const records = (participants as unknown as IParticipant[]).map((p: any) => ({
             ...p,
             _id: p._id.toString(),
             eventId: p.eventId?.toString(),
@@ -344,8 +347,26 @@ export async function getParticipantsByStatus(status: 'all' | 'checked-in' | 'pe
                 timestamp: log.timestamp instanceof Date ? log.timestamp.toISOString() : log.timestamp
             }))
         }))
+
+        return {
+            records,
+            pagination: {
+                total,
+                page,
+                limit,
+                totalPages
+            }
+        }
     } catch (error) {
         console.error("List error:", error)
-        return []
+        return {
+            records: [],
+            pagination: {
+                total: 0,
+                page: 1,
+                limit: 20,
+                totalPages: 0
+            }
+        }
     }
 }

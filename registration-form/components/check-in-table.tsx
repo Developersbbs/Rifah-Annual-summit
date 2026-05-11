@@ -211,6 +211,13 @@ export function CheckInTable() {
         checkedInMembers: 0,
         checkedInParticipants: 0
     })
+    const [page, setPage] = React.useState(1)
+    const [pagination, setPagination] = React.useState({
+        total: 0,
+        page: 1,
+        limit: 20,
+        totalPages: 0
+    })
 
     // Optimistic update function
     const handleOptimisticCheckIn = (participantId: string, type: 'primary' | 'secondary', memberId?: string) => {
@@ -265,12 +272,11 @@ export function CheckInTable() {
     // Fetch Logic based on View
     const fetchData = async () => {
         setLoading(true)
-        let data = []
         // Treat 'search' view as 'all' status
         const status = view === 'search' ? 'all' : view
-        // Increased limit for better search experience, or implement pagination later
-        data = await getParticipantsByStatus(status, 1, 50, debouncedQuery)
-        setResults(data)
+        const data = await getParticipantsByStatus(status, page, 20, debouncedQuery)
+        setResults(data.records)
+        setPagination(data.pagination)
         setLoading(false)
     }
 
@@ -281,7 +287,7 @@ export function CheckInTable() {
         }
         fetchAll()
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [debouncedQuery, view])
+    }, [debouncedQuery, view, page])
 
     const handleRefresh = () => {
         fetchData()
@@ -317,6 +323,7 @@ export function CheckInTable() {
 
             <Tabs value={view} onValueChange={(v) => {
                 setView(v as ViewMode)
+                setPage(1)
             }} className="w-full">
                 <div className="flex items-center justify-between mb-4">
                     <TabsList>
@@ -335,7 +342,10 @@ export function CheckInTable() {
                         placeholder="Search by Name or Mobile..."
                         className="pl-9 h-12 text-lg"
                         value={query}
-                        onChange={(e) => setQuery(e.target.value)}
+                        onChange={(e) => {
+                            setQuery(e.target.value)
+                            setPage(1)
+                        }}
                     />
                 </div>
 
@@ -371,8 +381,33 @@ export function CheckInTable() {
                         </TableBody>
                     </Table>
                 </div>
-                {view !== 'search' && results.length >= 20 && (
-                    <div className="text-center text-xs text-muted-foreground mt-2">Showing recent 20 items. Search to find specific users.</div>
+                {pagination.totalPages > 1 && (
+                    <div className="flex items-center justify-between p-4 border-t">
+                        <div className="text-sm text-muted-foreground">
+                            Showing {((page - 1) * pagination.limit) + 1} to {Math.min(page * pagination.limit, pagination.total)} of {pagination.total} records
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setPage(p => Math.max(1, p - 1))}
+                                disabled={page === 1}
+                            >
+                                Previous
+                            </Button>
+                            <span className="text-sm">
+                                Page {page} of {pagination.totalPages}
+                            </span>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))}
+                                disabled={page === pagination.totalPages}
+                            >
+                                Next
+                            </Button>
+                        </div>
+                    </div>
                 )}
             </Tabs>
         </div>
