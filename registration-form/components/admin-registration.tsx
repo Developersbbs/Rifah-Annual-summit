@@ -13,6 +13,16 @@ import { registerParticipant } from "@/app/actions/register-participant"
 import { getActiveEvent } from "@/app/actions/get-active-event"
 import { IEvent } from "@/lib/types"
 
+const TAMIL_NADU_DISTRICTS = [
+    "Ariyalur", "Chengalpattu", "Chennai", "Coimbatore", "Cuddalore",
+    "Dharmapuri", "Dindigul", "Erode", "Kallakurichi", "Kanchipuram",
+    "Kanyakumari", "Karur", "Krishnagiri", "Madurai", "Nagapattinam",
+    "Namakkal", "Nilgiris", "Perambalur", "Pudukkottai", "Ramanathapuram",
+    "Ranipet", "Salem", "Sivaganga", "Tenkasi", "Thanjavur", "Theni",
+    "Thoothukudi", "Tiruchirappalli", "Tirunelveli", "Tirupathur", "Tiruppur",
+    "Tiruvallur", "Tiruvannamalai", "Tiruvarur", "Vellore", "Viluppuram", "Virudhunagar"
+]
+
 interface SecondaryMember {
     name: string
     mobileNumber?: string
@@ -189,13 +199,19 @@ export function AdminRegistration({ onSuccess }: AdminRegistrationProps) {
                                     onChange={(e) => handleInputChange("businessCategory", e.target.value)}
                                 />
                             </div>
-                            <div className="space-y-2">
+                             <div className="space-y-2">
                                 <Label htmlFor="location">Location</Label>
-                                <Input
+                                <select
                                     id="location"
                                     value={formData.location}
                                     onChange={(e) => handleInputChange("location", e.target.value)}
-                                />
+                                    className="w-full p-2 border rounded-md bg-white"
+                                >
+                                    <option value="">Select location</option>
+                                    {TAMIL_NADU_DISTRICTS.map(district => (
+                                        <option key={district} value={district}>{district}</option>
+                                    ))}
+                                </select>
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="gender">Gender</Label>
@@ -324,12 +340,18 @@ export function AdminRegistration({ onSuccess }: AdminRegistrationProps) {
                                             onChange={(e) => updateSecondaryMember(index, "businessCategory", e.target.value)}
                                         />
                                     </div>
-                                    <div className="space-y-2">
+                                     <div className="space-y-2">
                                         <Label>Location</Label>
-                                        <Input
+                                        <select
                                             value={member.location || ""}
                                             onChange={(e) => updateSecondaryMember(index, "location", e.target.value)}
-                                        />
+                                            className="w-full p-2 border rounded-md bg-white"
+                                        >
+                                            <option value="">Select location</option>
+                                            {TAMIL_NADU_DISTRICTS.map(district => (
+                                                <option key={district} value={district}>{district}</option>
+                                            ))}
+                                        </select>
                                     </div>
                                     <div className="space-y-2">
                                         <Label>Gender</Label>

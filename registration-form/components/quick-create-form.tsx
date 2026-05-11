@@ -37,6 +37,16 @@ enum Step {
     SUCCESS = 4,
 }
 
+const TAMIL_NADU_DISTRICTS = [
+    "Ariyalur", "Chengalpattu", "Chennai", "Coimbatore", "Cuddalore",
+    "Dharmapuri", "Dindigul", "Erode", "Kallakurichi", "Kanchipuram",
+    "Kanyakumari", "Karur", "Krishnagiri", "Madurai", "Nagapattinam",
+    "Namakkal", "Nilgiris", "Perambalur", "Pudukkottai", "Ramanathapuram",
+    "Ranipet", "Salem", "Sivaganga", "Tenkasi", "Thanjavur", "Theni",
+    "Thoothukudi", "Tiruchirappalli", "Tirunelveli", "Tirupathur", "Tiruppur",
+    "Tiruvallur", "Tiruvannamalai", "Tiruvarur", "Vellore", "Viluppuram", "Virudhunagar"
+]
+
 const quickCreateSchema = z.object({
     mobileNumber: z.string().regex(/^\+?[1-9]\d{1,14}$/, "Please enter a valid phone number"),
     name: z.string().min(2, "Name must be at least 2 characters"),
@@ -477,12 +487,17 @@ export function QuickCreateForm() {
                             </div>
                             <div>
                                 <Label htmlFor="location">Location *</Label>
-                                <Input
+                                <select
                                     id="location"
-                                    placeholder="Chennai"
                                     value={form.watch("location")}
                                     onChange={(e) => form.setValue("location", e.target.value)}
-                                />
+                                    className="w-full p-2 border rounded-md bg-white"
+                                >
+                                    <option value="">Select location</option>
+                                    {TAMIL_NADU_DISTRICTS.map(district => (
+                                        <option key={district} value={district}>{district}</option>
+                                    ))}
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -646,12 +661,17 @@ export function QuickCreateForm() {
                                             </div>
                                             <div>
                                                 <Label htmlFor={`guest-location-${index}`}>Location</Label>
-                                                <Input
+                                                <select
                                                     id={`guest-location-${index}`}
                                                     value={member.location || ""}
                                                     onChange={(e) => updateSecondaryMember(index, "location", e.target.value)}
-                                                    placeholder="Location"
-                                                />
+                                                    className="w-full p-2 border rounded-md bg-white"
+                                                >
+                                                    <option value="">Select location</option>
+                                                    {TAMIL_NADU_DISTRICTS.map(district => (
+                                                        <option key={district} value={district}>{district}</option>
+                                                    ))}
+                                                </select>
                                             </div>
                                             <div className="flex items-center space-x-2">
                                                 <input
