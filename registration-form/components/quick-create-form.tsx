@@ -153,6 +153,16 @@ export function QuickCreateForm() {
         setError(null)
 
         try {
+            // Check for existing registration if not using OTP
+            if (!useOtp) {
+                const checkResult = await checkRegistration(data.mobileNumber)
+                if (checkResult.exists) {
+                    setError("This mobile number is already registered")
+                    setIsSubmitting(false)
+                    return
+                }
+            }
+
             const result = await registerParticipant({
                 mobileNumber: data.mobileNumber,
                 name: data.name,
@@ -182,6 +192,22 @@ export function QuickCreateForm() {
             console.error("Registration error:", err)
         } finally {
             setIsSubmitting(false)
+        }
+    }
+
+    const handleMobileBlur = async () => {
+        const mobile = form.getValues("mobileNumber")
+        if (mobile && mobile.length >= 10 && !useOtp) {
+            try {
+                const result = await checkRegistration(mobile)
+                if (result.exists) {
+                    setError("This mobile number is already registered")
+                } else if (error === "This mobile number is already registered") {
+                    setError(null)
+                }
+            } catch (err) {
+                console.error("Check registration error:", err)
+            }
         }
     }
 
@@ -430,7 +456,13 @@ export function QuickCreateForm() {
                                     id="mobileNumber"
                                     placeholder="+91 98765 43210"
                                     value={form.watch("mobileNumber")}
-                                    onChange={(e) => form.setValue("mobileNumber", e.target.value)}
+                                    onChange={(e) => {
+                                        form.setValue("mobileNumber", e.target.value)
+                                        if (error === "This mobile number is already registered") {
+                                            setError(null)
+                                        }
+                                    }}
+                                    onBlur={handleMobileBlur}
                                 />
                             </div>
                             <div>
