@@ -40,7 +40,13 @@ export async function updateParticipant(id: string, data: Partial<IParticipant>)
         if (location !== undefined) existingParticipant.location = location
         if (gender !== undefined) existingParticipant.gender = gender
         if (ticketType !== undefined) existingParticipant.ticketType = ticketType
-        if (isSponsor !== undefined) existingParticipant.isSponsor = isSponsor
+        if (isSponsor !== undefined) {
+            existingParticipant.isSponsor = isSponsor
+            if (isSponsor === true) {
+                existingParticipant.approvalStatus = "approved"
+                existingParticipant.paymentStatus = "completed"
+            }
+        }
         if (registrationLanguage !== undefined) existingParticipant.registrationLanguage = registrationLanguage
 
         // Allow editing secondary members' name, email, business name, business category, location only

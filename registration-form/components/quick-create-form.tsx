@@ -115,7 +115,9 @@ export function QuickCreateForm() {
     }, [form])
 
     const selectedTicketType = form.watch("ticketType")
+    const isSponsor = form.watch("isSponsor")
     const pricePerPerson = useMemo(() => {
+        if (isSponsor) return 0
         if (!activeEvent || !selectedTicketType) return 0
         const ticket = activeEvent.ticketsPrice?.find((t) => t.name === selectedTicketType)
         return ticket?.price || 0

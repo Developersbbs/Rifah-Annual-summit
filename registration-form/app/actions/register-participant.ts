@@ -187,6 +187,10 @@ export async function registerParticipant(data: RegisterParticipantData) {
 
         let pricePerPerson = selectedTicket ? selectedTicket.price : 0
 
+        if (isSponsor) {
+            pricePerPerson = 0
+        }
+
         // Validate price
         if (pricePerPerson < 0) {
             return {
@@ -215,14 +219,15 @@ export async function registerParticipant(data: RegisterParticipantData) {
         const createdBy = (data as any).createdBy
         const isAdmin = createdBy && (createdBy.role === 'admin' || createdBy.role === 'super-admin')
 
-        if (paymentMethod === "online") {
-            paymentStatus = "pending" // Set to pending until verified
-            approvalStatus = "pending"
-        } else if (isAdmin) {
-            // Admin-created participants are automatically approved and marked as paid for cash
+        if (isSponsor) {
+            // Sponsors are automatically approved and marked as paid
             approvalStatus = "approved"
             paymentStatus = "completed"
+        } else if (paymentMethod === "online") {
+            paymentStatus = "pending" // Set to pending until verified
+            approvalStatus = "pending"
         }
+        // For cash payments NOT created by admin, they stay as pending (default values)
 
         // Initialize approval logs array
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -238,12 +243,19 @@ export async function registerParticipant(data: RegisterParticipantData) {
             })
         }
 
-        // Add approval logs for admin-approved registrations
-        if (isAdmin) {
+        // Add approval logs for admin-approved or sponsor registrations
+        if (isAdmin && approvalStatus === "approved") {
             approvalLogs.push({
                 role: createdBy.role === 'super-admin' ? 'super-admin' : 'admin',
                 status: 'approved',
                 approvedBy: createdBy._id,
+                timestamp: new Date(),
+            })
+        } else if (isSponsor) {
+            approvalLogs.push({
+                role: 'system',
+                status: 'approved',
+                approvedBy: null,
                 timestamp: new Date(),
             })
         }
