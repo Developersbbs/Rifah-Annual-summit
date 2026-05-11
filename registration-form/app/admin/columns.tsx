@@ -249,6 +249,16 @@ export const columns: ColumnDef<Participant>[] = [
         },
     },
     {
+        accessorKey: "isSponsor",
+        header: "Sponsor",
+        cell: ({ row }) => {
+            const isSponsor = row.getValue("isSponsor") as boolean
+            return isSponsor ? (
+                <Badge className="bg-purple-600 hover:bg-purple-700">Sponsor</Badge>
+            ) : null
+        },
+    },
+    {
         id: "checkInStatus",
         accessorFn: (row) => row.checkIn?.isCheckedIn,
         header: "Check-in",

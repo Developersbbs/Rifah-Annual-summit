@@ -59,6 +59,7 @@ const quickCreateSchema = z.object({
     paymentMethod: z.enum(["cash", "online"]),
     guestCount: z.number().min(0).optional(),
     gstNumber: z.string().optional(),
+    isSponsor: z.boolean().default(false),
     termsAccepted: z.boolean().refine(val => val === true, "You must accept terms and conditions")
 })
 
@@ -88,6 +89,7 @@ export function QuickCreateForm() {
             paymentMethod: "cash",
             guestCount: 0,
             gstNumber: "",
+            isSponsor: false,
             termsAccepted: false
         }
     })
@@ -176,6 +178,7 @@ export function QuickCreateForm() {
                 ageGuest: data.guestCount || 0,
                 isMember: false,
                 gstNumber: data.gstNumber || undefined,
+                isSponsor: data.isSponsor,
                 secondaryMembers,
                 registrationLanguage: "en"
             })
@@ -587,6 +590,15 @@ export function QuickCreateForm() {
                                     value={form.watch("gstNumber")}
                                     onChange={(e) => form.setValue("gstNumber", e.target.value)}
                                 />
+                            </div>
+                            <div className="flex items-center space-x-2 pt-8">
+                                <input
+                                    type="checkbox"
+                                    id="isSponsor"
+                                    checked={form.watch("isSponsor")}
+                                    onChange={(e) => form.setValue("isSponsor", e.target.checked)}
+                                />
+                                <Label htmlFor="isSponsor">Is Sponsor</Label>
                             </div>
                         </div>
                     </div>

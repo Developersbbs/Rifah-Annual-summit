@@ -21,6 +21,7 @@ interface AdminStats {
   onlinePayments: number
   totalMembers?: number
   approvedMembers?: number
+  totalSponsors?: number
 }
 
 interface AdminContentProps {

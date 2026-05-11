@@ -95,6 +95,7 @@ export function ParticipantsTable<TData, TValue>({
     const [dateRange, setDateRange] = React.useState<DateRange | undefined>()
     const [locationFilter, setLocationFilter] = React.useState<string>("all")
     const [genderFilter, setGenderFilter] = React.useState<string>("all")
+    const [sponsorFilter, setSponsorFilter] = React.useState<string>("all")
 
     // Calculate Location Counts
     const locationOptions = React.useMemo(() => {
@@ -137,8 +138,16 @@ export function ParticipantsTable<TData, TValue>({
             )
         }
 
+        // Sponsor Filter
+        if (sponsorFilter !== "all") {
+            const isSponsor = sponsorFilter === "sponsor"
+            processedData = processedData.filter((item) =>
+                (item as unknown as IParticipant).isSponsor === isSponsor
+            )
+        }
+
         return processedData
-    }, [data, dateRange, locationFilter, genderFilter])
+    }, [data, dateRange, locationFilter, genderFilter, sponsorFilter])
 
     const tableColumns = React.useMemo(() => {
         const baseColumns = [...columns]
@@ -390,6 +399,20 @@ export function ParticipantsTable<TData, TValue>({
                                 <SelectItem value="male">Male</SelectItem>
                                 <SelectItem value="female">Female</SelectItem>
                                 <SelectItem value="other">Other</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    {/* Sponsor Filter */}
+                    <div className="w-[150px]">
+                        <Select value={sponsorFilter} onValueChange={setSponsorFilter}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Filter by Sponsor" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Members</SelectItem>
+                                <SelectItem value="sponsor">Sponsors Only</SelectItem>
+                                <SelectItem value="non-sponsor">Non-Sponsors</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>

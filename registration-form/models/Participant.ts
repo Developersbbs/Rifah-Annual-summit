@@ -145,6 +145,10 @@ const ParticipantSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
+    isSponsor: {
+        type: Boolean,
+        default: false,
+    },
     secondaryMembers: [
         {
             name: { type: String, required: true },

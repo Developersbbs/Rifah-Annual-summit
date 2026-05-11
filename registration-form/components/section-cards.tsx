@@ -21,6 +21,7 @@ interface SectionCardsProps {
     onlinePayments: number
     totalMembers?: number
     approvedMembers?: number
+    totalSponsors?: number
   }
 }
 
@@ -84,6 +85,23 @@ export function SectionCards({ stats }: SectionCardsProps) {
           </div>
           <div className="line-clamp-1 flex gap-2 font-medium">
             <IconX className="size-4 text-red-500" /> {t("Rejected")}: {stats.rejectedRegistrations}
+          </div>
+        </CardFooter>
+      </Card>
+
+      <Card className="@container/card">
+        <CardHeader>
+          <CardDescription>{t("Sponsorship")}</CardDescription>
+          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+            {stats.totalSponsors || 0}
+          </CardTitle>
+        </CardHeader>
+        <CardFooter className="flex-col items-start gap-1.5 text-sm">
+          <div className="line-clamp-1 flex gap-2 font-medium">
+            <IconUsers className="size-4 text-purple-500" /> {t("Total Sponsors")}: {stats.totalSponsors || 0}
+          </div>
+          <div className="text-muted-foreground text-xs">
+            {t("Participants marked as event sponsors")}
           </div>
         </CardFooter>
       </Card>

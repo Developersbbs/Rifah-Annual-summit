@@ -18,6 +18,7 @@ export async function updateParticipant(id: string, data: Partial<IParticipant>)
             gender,
             ticketType,
             secondaryMembers,
+            isSponsor,
             registrationLanguage,
         } = data
 
@@ -39,6 +40,7 @@ export async function updateParticipant(id: string, data: Partial<IParticipant>)
         if (location !== undefined) existingParticipant.location = location
         if (gender !== undefined) existingParticipant.gender = gender
         if (ticketType !== undefined) existingParticipant.ticketType = ticketType
+        if (isSponsor !== undefined) existingParticipant.isSponsor = isSponsor
         if (registrationLanguage !== undefined) existingParticipant.registrationLanguage = registrationLanguage
 
         // Allow editing secondary members' name, email, business name, business category, location only

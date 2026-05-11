@@ -32,6 +32,7 @@ export async function getAdminData() {
             cashPayments: 0,
             onlinePayments: 0,
             totalMembers: 0,
+            totalSponsors: 0,
         };
 
         (participants as unknown as IParticipant[]).forEach((p: IParticipant) => {
@@ -59,6 +60,10 @@ export async function getAdminData() {
                 stats.approvedMembers += totalMembers
             } else if (approvalStatus === "rejected") {
                 stats.rejectedRegistrations += 1
+            }
+
+            if (p.isSponsor) {
+                stats.totalSponsors += 1
             }
         })
 

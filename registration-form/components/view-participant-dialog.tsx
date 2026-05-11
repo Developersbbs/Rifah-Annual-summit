@@ -65,6 +65,10 @@ export function ViewParticipantDialog({ participant, open, onOpenChange }: ViewP
                                 <span className="font-medium text-muted-foreground">Ticket Type:</span>
                                 <div className="mt-1">{participant.ticketType || "-"}</div>
                             </div>
+                            <div>
+                                <span className="font-medium text-muted-foreground">Is Sponsor:</span>
+                                <div className="mt-1">{participant.isSponsor ? "Yes" : "No"}</div>
+                            </div>
                         </div>
                     </div>
 

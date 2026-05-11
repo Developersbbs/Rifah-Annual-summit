@@ -18,6 +18,7 @@ export default async function Page() {
     cashPayments: 0,
     onlinePayments: 0,
     totalMembers: 0,
+    totalSponsors: 0,
   }
 
   return (

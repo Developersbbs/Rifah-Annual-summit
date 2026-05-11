@@ -30,6 +30,7 @@ const personalDetailsSchema = z.object({
     location: z.string().optional(),
     gender: z.string().optional(),
     ticketType: z.string().optional(),
+    isSponsor: z.boolean().optional(),
 })
 
 interface EditParticipantDialogProps {
@@ -54,6 +55,7 @@ export function EditParticipantDialog({ participant, open, onOpenChange, onSucce
             location: participant.location || "",
             gender: participant.gender || "",
             ticketType: participant.ticketType || "",
+            isSponsor: participant.isSponsor || false,
         }
     })
 
@@ -68,6 +70,7 @@ export function EditParticipantDialog({ participant, open, onOpenChange, onSucce
                 location: participant.location || "",
                 gender: participant.gender || "",
                 ticketType: participant.ticketType || "",
+                isSponsor: participant.isSponsor || false,
             })
             // Initialize secondary members
             setSecondaryMembers(
@@ -185,6 +188,22 @@ export function EditParticipantDialog({ participant, open, onOpenChange, onSucce
                                             </FormItem>
                                         )} />
                                     </div>
+                                    <FormField control={form.control} name="isSponsor" render={({ field }) => (
+                                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                                            <FormControl>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={field.value}
+                                                    onChange={field.onChange}
+                                                />
+                                            </FormControl>
+                                            <div className="space-y-1 leading-none">
+                                                <FormLabel>
+                                                    Is Sponsor
+                                                </FormLabel>
+                                            </div>
+                                        </FormItem>
+                                    )} />
                                 </div>
                             </div>
 

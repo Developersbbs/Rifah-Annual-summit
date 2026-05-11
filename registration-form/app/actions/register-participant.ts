@@ -38,6 +38,7 @@ interface RegisterParticipantData {
     isMember?: boolean
     secondaryMembers?: SecondaryMemberInput[]
     gstNumber?: string
+    isSponsor?: boolean
     registrationLanguage?: "en" | "ta"
 }
 
@@ -62,6 +63,7 @@ export async function registerParticipant(data: RegisterParticipantData) {
             isMember = false,
             secondaryMembers = [],
             gstNumber,
+            isSponsor = false,
             registrationLanguage = "en"
         } = data
 
@@ -335,6 +337,7 @@ export async function registerParticipant(data: RegisterParticipantData) {
             primaryAmount,
             gstNumber: gstNumber ? sanitizeInput(gstNumber) : undefined,
             isMember,
+            isSponsor,
             secondaryMembers: formattedSecondaryMembersWithTax,
             approvalLogs: approvalLogs,
             registrationLanguage
