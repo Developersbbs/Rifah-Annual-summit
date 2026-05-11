@@ -262,7 +262,7 @@ export async function sendRegistrationEmails(participant: IParticipant, eventNam
         const adminSubject = `New Registration: ${participant.name} - ${eventName}`
         const appUrl = process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === "production"
             ? "https://rifahtn.com"
-            : "http://localhost:3000")
+            : "http://localhost:3011")
 
         const adminHtml = `
             <!DOCTYPE html>
@@ -344,7 +344,7 @@ export async function sendRegistrationEmails(participant: IParticipant, eventNam
 
                         <!-- Action Button -->
                         <div style="text-align: center; margin: 30px 0;">
-                            <a href="${appUrl}/admin/participants" style="display: inline-block; padding: 15px 30px; background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3); transition: all 0.2s;">
+                            <a href="${appUrl}/admin" style="display: inline-block; padding: 15px 30px; background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3); transition: all 0.2s;">
                                 View in Admin Dashboard
                             </a>
                         </div>
