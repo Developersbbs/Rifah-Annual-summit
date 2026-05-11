@@ -181,6 +181,18 @@ export default function PongalLandingPage() {
       name: "Mr. Mirza Afzal Baig ",
       role: "General Secretary Rifah Chamber Of Commerce & Industry",
       image: "/assets/speaker-14.jpeg"
+    },
+    {
+      id: 13,
+      name: "JAWAD I M ",
+      role: "DIRECTOR - SALES & MARKETING ALARTECH DS PVT. LTD",
+      image: "/assets/speaker17.jpeg"
+    },
+    {
+      id: 14,
+      name: "Janaki maya ",
+      role: "Founder - Cake Square",
+      image: "/assets/speaker16.jpeg"
     }
   ]
 
@@ -586,7 +598,7 @@ export default function PongalLandingPage() {
             </div>
 
             {/* Cards Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-10 max-w-7xl mx-auto">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-10 max-w-8xl mx-auto">
               {speakers.map((speaker) => (
                 <div
                   key={speaker.id}
