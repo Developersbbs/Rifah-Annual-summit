@@ -95,11 +95,18 @@ export async function sendRegistrationEmails(participant: IParticipant, eventNam
                                     <span style="color: #6b7280; font-weight: 500;">பெயர்</span>
                                     <span style="color: #1f2937; font-weight: 600;">${participant.name}</span>
                                 </div>
-                                <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e2e8f0;">
+                                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e2e8f0;">
                                     <span style="color: #6b7280; font-weight: 500;">கைபேசி</span>
                                     <span style="color: #1f2937; font-weight: 600;">${participant.mobileNumber}</span>
                                 </div>
-                                                                <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e2e8f0;">
+                                ${participant.isSponsor ? `
+                                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e2e8f0;">
+                                    <span style="color: #6b7280; font-weight: 500;">வகை</span>
+                                    <span style="color: #16a34a; font-weight: 700; background: #f0fdf4; padding: 4px 12px; border-radius: 6px;">ஸ்பான்சர் (Sponsor)</span>
+                                </div>
+                                ` : ''}
+                                                                ${!participant.isSponsor ? `
+                                <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e2e8f0;">
                                     <span style="color: #6b7280; font-weight: 500;">பணம் செலுத்தும் முறை</span>
                                     <span style="color: #1f2937; font-weight: 600;">${participant.paymentMethod === 'online' ? 'ஆன்லைன்' : 'ரொக்கம்'}</span>
                                 </div>
@@ -107,6 +114,7 @@ export async function sendRegistrationEmails(participant: IParticipant, eventNam
                                     <span style="color: #6b7280; font-weight: 500;">தொகை</span>
                                     <span style="color: #16a34a; font-weight: 700; font-size: 18px;">₹${participant.totalAmount}</span>
                                 </div>
+                                ` : ''}
                             </div>
                             <div style="margin-top: 20px; padding: 15px; background: ${participant.paymentStatus === 'pending' ? '#fef3c7' : '#92400e'}; border-radius: 8px; border-left: 4px solid ${participant.paymentStatus === 'pending' ? '#f59e0b' : '#92400e'};">
                                 <div style="display: flex; align-items: center;">
@@ -212,10 +220,17 @@ export async function sendRegistrationEmails(participant: IParticipant, eventNam
                                     <span style="color: #6b7280; font-weight: 500;">Name : </span>
                                     <span style="color: #1f2937; font-weight: 600;">${participant.name}</span>
                                 </div>
-                                <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e2e8f0;">
+                                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e2e8f0;">
                                     <span style="color: #6b7280; font-weight: 500;">Mobile : </span>
                                     <span style="color: #1f2937; font-weight: 600;">${participant.mobileNumber}</span>
                                 </div>
+                                ${participant.isSponsor ? `
+                                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e2e8f0;">
+                                    <span style="color: #6b7280; font-weight: 500;">Type : </span>
+                                    <span style="color: #16a34a; font-weight: 700; background: #f0fdf4; padding: 4px 12px; border-radius: 6px;">Sponsor</span>
+                                </div>
+                                ` : ''}
+                                ${!participant.isSponsor ? `
                                 <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e2e8f0;">
                                     <span style="color: #6b7280; font-weight: 500;">Payment Method : </span>
                                     <span style="color: #1f2937; font-weight: 600;">${participant.paymentMethod}</span>
@@ -224,6 +239,7 @@ export async function sendRegistrationEmails(participant: IParticipant, eventNam
                                     <span style="color: #6b7280; font-weight: 500;">Amount : </span>
                                     <span style="color: #16a34a; font-weight: 700; font-size: 18px;">₹${participant.totalAmount}</span>
                                 </div>
+                                ` : ''}
                             </div>
                             <div style="margin-top: 20px; padding: 15px; background: ${participant.paymentStatus === 'pending' ? '#fef3c7' : '#92400e'}; border-radius: 8px; border-left: 4px solid ${participant.paymentStatus === 'pending' ? '#f59e0b' : '#92400e'};">
                                 <div style="display: flex; align-items: center;">
