@@ -89,7 +89,8 @@ function MembersDialog({ participant, open, onOpenChange, onRefresh, onOptimisti
         if (!searchQuery) return true
         const query = searchQuery.toLowerCase()
         return member.name.toLowerCase().includes(query) || 
-               (member.mobileNumber && member.mobileNumber.toLowerCase().includes(query))
+               (member.mobileNumber && member.mobileNumber.toLowerCase().includes(query)) ||
+               (member.registrationId && member.registrationId.toLowerCase().includes(query))
     }) || []
 
     return (
@@ -109,7 +110,7 @@ function MembersDialog({ participant, open, onOpenChange, onRefresh, onOptimisti
                 <div className="relative">
                     <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     <Input
-                        placeholder="Search by name or mobile number..."
+                        placeholder="Search by name, mobile or register id..."
                         className="pl-9"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
@@ -129,6 +130,7 @@ function MembersDialog({ participant, open, onOpenChange, onRefresh, onOptimisti
                             </Badge>
                         </div>
                         <div className="text-sm space-y-1">
+                            <p className="font-mono text-xs font-bold text-blue-600">{participant.registrationId || "-"}</p>
                             <p><span className="font-medium">Name:</span> {participant.name}</p>
                             <p><span className="font-medium">Mobile:</span> {participant.mobileNumber}</p>
                         </div>
@@ -167,6 +169,7 @@ function MembersDialog({ participant, open, onOpenChange, onRefresh, onOptimisti
                                         </Badge>
                                     </div>
                                     <div className="text-sm space-y-1">
+                                        <p className="font-mono text-xs font-bold text-orange-600">{member.registrationId || "-"}</p>
                                         <p><span className="font-medium">Name:</span> {member.name}</p>
                                         {member.mobileNumber && <p><span className="font-medium">Mobile:</span> {member.mobileNumber}</p>}
                                         <p><span className="font-medium">Primary Member:</span> {participant.name}</p>
@@ -339,7 +342,7 @@ export function CheckInTable() {
                 <div className="relative mb-6">
                     <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     <Input
-                        placeholder="Search by Name or Mobile..."
+                        placeholder="Search by Name, Mobile or Register ID..."
                         className="pl-9 h-12 text-lg"
                         value={query}
                         onChange={(e) => {
@@ -433,6 +436,7 @@ function CheckInRow({ participant, onRefresh, onOptimisticCheckIn }: { participa
         <>
             <TableRow>
                 <TableCell>
+                    <div className="font-mono text-xs font-bold text-orange-600 mb-1">{participant.registrationId || "-"}</div>
                     <div className="font-semibold">{participant.name}</div>
                     <div className="text-xs text-muted-foreground">{participant.mobileNumber}</div>
                     <Badge variant="outline" className="mt-1">{participant.location || "Unassigned"}</Badge>

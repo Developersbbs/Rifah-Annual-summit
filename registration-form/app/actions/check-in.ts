@@ -17,8 +17,10 @@ export async function searchParticipants(query: string) {
             $or: [
                 { name: { $regex: regex } },
                 { mobileNumber: { $regex: regex } },
+                { registrationId: { $regex: regex } },
                 { "secondaryMembers.mobileNumber": { $regex: regex } },
-                { "secondaryMembers.name": { $regex: regex } }
+                { "secondaryMembers.name": { $regex: regex } },
+                { "secondaryMembers.registrationId": { $regex: regex } }
             ]
         }).sort({ createdAt: -1 }).limit(10).lean()
 
@@ -306,8 +308,10 @@ export async function getParticipantsByStatus(status: 'all' | 'checked-in' | 'pe
             dbQuery["$or"] = [
                 { name: { $regex: regex } },
                 { mobileNumber: { $regex: regex } },
+                { registrationId: { $regex: regex } },
                 { "secondaryMembers.mobileNumber": { $regex: regex } },
-                { "secondaryMembers.name": { $regex: regex } }
+                { "secondaryMembers.name": { $regex: regex } },
+                { "secondaryMembers.registrationId": { $regex: regex } }
             ]
         }
 
