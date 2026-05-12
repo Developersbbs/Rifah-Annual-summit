@@ -6,6 +6,7 @@ import Event from "@/models/Event"
 import Counter from "@/models/Counter"
 import { sendRegistrationEmails } from "@/lib/email"
 import { getCurrentUser } from "@/lib/auth"
+import { IApprovalLog } from "@/lib/types"
 
 // Helper function for input sanitization
 function sanitizeInput(input: string): string {
@@ -150,7 +151,6 @@ export async function registerParticipant(data: RegisterParticipantData) {
         //     }
         // }
 
-        const now = new Date()
 
         // Get current user (admin/staff) if logged in
         const adminUser = await getCurrentUser()
@@ -189,7 +189,7 @@ export async function registerParticipant(data: RegisterParticipantData) {
         // PAYMENT & APPROVAL LOGIC
         let paymentStatus = "pending"
         let approvalStatus = "pending"
-        const approvalLogs: any[] = []
+        const approvalLogs: IApprovalLog[] = []
 
         if (isSponsor) {
             paymentStatus = "completed"
@@ -197,7 +197,7 @@ export async function registerParticipant(data: RegisterParticipantData) {
 
             if (isAdminAction) {
                 approvalLogs.push({
-                    role: adminUser.role,
+                    role: adminUser.role as IApprovalLog['role'],
                     status: 'approved',
                     approvedBy: adminUser.id,
                     approvedByEmail: adminUser.email,

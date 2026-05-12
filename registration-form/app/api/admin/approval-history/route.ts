@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import dbConnect from "@/lib/db"
 import Participant from "@/models/Participant"
 import { getCurrentUser } from "@/lib/auth"
+import { IParticipant, IApprovalLog } from "@/lib/types"
 
 export async function GET(request: Request) {
     try {
@@ -46,19 +47,29 @@ export async function GET(request: Request) {
             .lean()
 
         // Flatten approval logs into records
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const records: any[] = []
+        interface ApprovalHistoryRecord {
+            participantName: string
+            participantPhone: string
+            participantEmail: string
+            approvedBy: string
+            approvedByEmail: string
+            role: string
+            status: string
+            date: string | Date
+            participantId: string
+        }
+        const records: ApprovalHistoryRecord[] = []
 
         console.log("DEBUG: Total participants found:", participants.length)
 
-        participants.forEach((participant: any) => {
-            participant.approvalLogs?.forEach((log: any) => {
+        participants.forEach((participant: IParticipant) => {
+            participant.approvalLogs?.forEach((log: IApprovalLog) => {
                 // Resolve approver label
                 // Priority: stored approvedByEmail string → populated approvedBy.email → system label → Unknown
                 let approverLabel = "Unknown"
                 if (log.approvedByEmail) {
                     approverLabel = log.approvedByEmail
-                } else if (log.approvedBy?.email) {
+                } else if (log.approvedBy && typeof log.approvedBy === 'object' && log.approvedBy.email) {
                     approverLabel = log.approvedBy.email
                 } else if (log.role === "system") {
                     approverLabel = "System (Auto-approved)"
@@ -86,9 +97,9 @@ export async function GET(request: Request) {
                     participantEmail: participant.email || "",
                     approvedBy: approverLabel,
                     approvedByEmail: approverLabel,
-                    role: log.role,
-                    status: log.status,
-                    date: log.timestamp,
+                    role: log.role || "Unknown",
+                    status: log.status || "Unknown",
+                    date: log.timestamp || new Date(),
                     participantId: participant._id
                 })
             })

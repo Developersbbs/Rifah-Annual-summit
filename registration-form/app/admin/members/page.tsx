@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import {
     IconDownload,
     IconSearch,
@@ -53,7 +53,7 @@ export default function MembersPage() {
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState("")
 
-    const fetchMembers = async () => {
+    const fetchMembers = useCallback(async () => {
         setLoading(true)
         try {
             const response = await fetch('/api/admin/members')
@@ -66,11 +66,11 @@ export default function MembersPage() {
         } finally {
             setLoading(false)
         }
-    }
+    }, [t])
 
     useEffect(() => {
         fetchMembers()
-    }, [])
+    }, [fetchMembers])
 
     const filteredMembers = members.filter(m =>
         m.name.toLowerCase().includes(search.toLowerCase()) ||

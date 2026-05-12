@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import dbConnect from "@/lib/db"
 import Participant from "@/models/Participant"
 import { getCurrentUser } from "@/lib/auth"
+import { IParticipant, ISecondaryMember } from "@/lib/types"
 
 export async function GET(request: Request) {
     try {
@@ -15,6 +16,7 @@ export async function GET(request: Request) {
         const { searchParams } = new URL(request.url)
         const search = searchParams.get('search') || ''
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const query: any = { isRegistered: true }
 
         if (search) {
@@ -27,9 +29,23 @@ export async function GET(request: Request) {
 
         const participants = await Participant.find(query).lean()
 
-        const allMembers: any[] = []
+        interface MemberRecord {
+            registrationId: string
+            name?: string
+            mobileNumber: string
+            email: string
+            location: string
+            type: string
+            gender: string
+            businessName: string
+            businessCategory: string
+            paymentStatus?: string
+            approvalStatus?: string
+            createdAt: string | Date
+        }
+        const allMembers: MemberRecord[] = []
 
-        participants.forEach((p: any) => {
+        participants.forEach((p: IParticipant) => {
             // Add primary member
             allMembers.push({
                 registrationId: p.registrationId || "N/A",
@@ -48,7 +64,7 @@ export async function GET(request: Request) {
 
             // Add secondary members
             if (p.secondaryMembers && p.secondaryMembers.length > 0) {
-                p.secondaryMembers.forEach((sm: any) => {
+                p.secondaryMembers.forEach((sm: ISecondaryMember) => {
                     allMembers.push({
                         registrationId: sm.registrationId || "N/A",
                         name: sm.name,

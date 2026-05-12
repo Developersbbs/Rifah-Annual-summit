@@ -31,7 +31,7 @@ export interface ISecondaryMember {
 }
 
 export interface IApprovalLog {
-    approvedBy?: string;
+    approvedBy?: string | { name?: string; email?: string };
     approvedByEmail?: string;
     role?: "admin" | "super-admin" | "system";
     status?: "approved" | "rejected";

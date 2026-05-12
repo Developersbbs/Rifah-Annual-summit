@@ -1,7 +1,7 @@
 import nodemailer from "nodemailer"
 import SystemConfig from "@/models/SystemConfig"
 import dbConnect from "@/lib/db"
-import { IParticipant } from "@/lib/types"
+import { IParticipant, ISecondaryMember } from "@/lib/types"
 import path from "path"
 
 export async function sendRegistrationEmails(participant: IParticipant, eventName: string, skipAdmin: boolean = false) {
@@ -205,7 +205,7 @@ export async function sendRegistrationEmails(participant: IParticipant, eventNam
                 if (sm.email) {
                     try {
                         const smHtml = getMemberEmailHtml({
-                            participant: sm as any,
+                            participant: sm as unknown as IParticipant,
                             eventName,
                             isTamil,
                             isPending,
@@ -283,7 +283,13 @@ export async function sendRegistrationEmails(participant: IParticipant, eventNam
 }
 
 function getMemberEmailHtml(params: {
-    participant: any,
+    participant: IParticipant | (ISecondaryMember & { 
+        secondaryMembers?: ISecondaryMember[]; 
+        isSponsor?: boolean;
+        paymentMethod?: string;
+        totalAmount?: number;
+        ticketType?: string;
+    }),
     eventName: string,
     isTamil: boolean,
     isPending: boolean,
@@ -296,7 +302,7 @@ function getMemberEmailHtml(params: {
         ? (isTamil ? `
             <div style="margin-top: 15px; border-top: 2px solid #e2e8f0; padding-top: 15px;">
                 <h4 style="color: #1f2937; font-size: 15px; font-weight: 600; margin: 0 0 10px;">கூடுதல் உறுப்பினர்கள்</h4>
-                ${participant.secondaryMembers.map((sm: any) => `
+                ${participant.secondaryMembers.map((sm: ISecondaryMember) => `
                     <div style="display: flex; justify-content: space-between; padding: 5px 0;">
                         <span style="color: #6b7280; font-size: 14px;">${sm.name}</span>
                         <span style="color: #2563eb; font-weight: 600; font-size: 14px;">${sm.registrationId || 'நிலுவையில் உள்ளது'}</span>
@@ -306,7 +312,7 @@ function getMemberEmailHtml(params: {
         ` : `
             <div style="margin-top: 15px; border-top: 2px solid #e2e8f0; padding-top: 15px;">
                 <h4 style="color: #1f2937; font-size: 15px; font-weight: 600; margin: 0 0 10px;">Additional Members</h4>
-                ${participant.secondaryMembers.map((sm: any) => `
+                ${participant.secondaryMembers.map((sm: ISecondaryMember) => `
                     <div style="display: flex; justify-content: space-between; padding: 5px 0;">
                         <span style="color: #6b7280; font-size: 14px;">${sm.name}</span>
                         <span style="color: #2563eb; font-weight: 600; font-size: 14px;">${sm.registrationId || 'Pending'}</span>
