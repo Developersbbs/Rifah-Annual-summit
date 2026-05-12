@@ -154,6 +154,11 @@ export const columns: ColumnDef<Participant>[] = [
         cell: ({ row }) => <div className="font-medium ml-4">{row.getValue("name") || "N/A"}</div>,
     },
     {
+        accessorKey: "registrationId",
+        header: "Reg ID",
+        cell: ({ row }) => <Badge variant="secondary" className="font-mono">{row.getValue("registrationId") || "-"}</Badge>,
+    },
+    {
         accessorKey: "email",
         header: "Email",
         cell: ({ row }) => <div className="text-sm">{row.getValue("email") || "-"}</div>,

@@ -25,6 +25,7 @@ export interface ISecondaryMember {
     location?: string;
     isMember?: boolean;
     isCheckedIn: boolean;
+    registrationId?: string;
     checkedInAt?: Date | string;
     gender?: string;
 }
@@ -58,6 +59,7 @@ export interface IParticipant {
     approvedRole?: "admin" | "super-admin";
     ageGroups?: IAgeGroups;
     isRegistered: boolean;
+    registrationId?: string;
     createdAt: string | Date;
     updatedAt: string | Date;
     checkIn?: ICheckIn;

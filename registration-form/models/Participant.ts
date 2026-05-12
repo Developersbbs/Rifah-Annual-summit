@@ -13,6 +13,11 @@ const ParticipantSchema = new mongoose.Schema({
     businessCategory: String,
     location: String,
     ticketType: String,
+    registrationId: {
+        type: String,
+        unique: true,
+        sparse: true,
+    },
 
     //  ADD THIS (EVENT LINK)
     eventId: {
@@ -168,7 +173,12 @@ const ParticipantSchema = new mongoose.Schema({
             gender: {
                 type: String,
                 enum: ["male", "female", "other", "prefer-not-to-say"],
-            }
+            },
+            registrationId: {
+                type: String,
+                unique: true,
+                sparse: true,
+            },
         }
     ],
 
