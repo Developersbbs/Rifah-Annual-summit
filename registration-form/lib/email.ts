@@ -329,7 +329,7 @@ function getMemberEmailHtml(params: {
                     <div style="background: linear-gradient(135deg, #ef0707 0%, #801515 100%); padding: 40px 30px; text-align: center; position: relative; overflow: hidden;">
                         <div style="position: absolute; top: -50%; right: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);"></div>
                         <div style="position: relative; z-index: 1;">
-                            <div style="width: 60px; height: 60px; background: rgba(255,255,255,0.2); border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;">
+                            <div style="width: 60px; height: 60px; background: rgba(221, 217, 217, 0.1); border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;">
                                 <img src="cid:logo" alt="RIFAH Logo" style="width: 80px; height: auto; margin: 0 auto 15px; display: block;">
                             </div>
                             <h1 style="color: #ffffff; font-size: 28px; font-weight: 700; margin: 0; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">
@@ -349,10 +349,7 @@ function getMemberEmailHtml(params: {
                             </p>
                         </div>
 
-                        <div style="text-align: center; margin: 30px 0;">
-                            <img src="cid:mail1" alt="Event Image" style="max-width: 100%; height: auto; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-                            <img src="cid:mail2" alt="Event Details" style="max-width: 100%; height: auto; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-                        </div>
+                        
 
                         <div style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border: 1px solid #e2e8f0; border-radius: 16px; padding: 30px; margin: 30px 0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
                             <h3 style="color: #1f2937; font-size: 18px; font-weight: 600; margin: 0 0 20px; display: flex; align-items: center;">
@@ -411,6 +408,10 @@ function getMemberEmailHtml(params: {
                         </div>
 
                         <div style="text-align: center; margin: 30px 0;">
+                            <img src="cid:mail2" alt="Event Details" style="max-width: 100%; height: auto; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+                        </div>
+
+                        <div style="text-align: center; margin: 30px 0;">
                             <div style="display: inline-block; padding: 15px 25px; background: ${isPending ? '#fef3c7' : '#92400e'}; border-radius: 50px; color: ${isPending ? '#92400e' : '#7c2d12'}; font-weight: 500;">
                                 ${isPending ? 'நிர்வாகம் உங்கள் பதிவை சரிபார்த்து விரைவில் உறுதி செய்யும்.' : 'மாநாட்டில் உங்களை சந்திக்க ஆவலாக உள்ளோம்.'}
                             </div>
@@ -447,10 +448,10 @@ function getMemberEmailHtml(params: {
                     <div style="background: linear-gradient(135deg, #d10c09 0%, #f52404 100%); padding: 40px 30px; text-align: center; position: relative; overflow: hidden;">
                         <div style="position: absolute; top: -50%; right: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);"></div>
                         <div style="position: relative; z-index: 1;">
-                            <div style="width: 60px; height: 60px; background: rgba(255,255,255,0.2); border-radius: 50%; margin: 0 auto 20px; line-height: 60px; text-align: center;">
-                                <img src="cid:logo" width="30" height="30" alt="Confirmed" style="vertical-align: middle; display: inline-block;" />
+                            <div style="width: 60px; height: 60px; background: rgba(221, 217, 217, 0.1); border-radius: 50%; margin: 0 auto 20px; line-height: 60px; text-align: center;">
+                                <img src="cid:logo" width="50" height="50" alt="Confirmed" style="vertical-align: middle; display: inline-block;" />
                             </div>
-                            <h1 style="color: #ffffff; font-size: 28px; font-weight: 700; margin: 0; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                            <h1 style="color: #ffffff; font-size: 24px; font-weight: 700; margin: 0; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                                 RIFAH ANNUAL SUMMIT 2026 REGISTRATION CONFIRMED
                             </h1>
                         </div>
