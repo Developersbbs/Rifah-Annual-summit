@@ -32,7 +32,7 @@ export interface ISecondaryMember {
 export interface IApprovalLog {
     approvedBy?: string;
     approvedByEmail?: string;
-    role?: "admin" | "super-admin";
+    role?: "admin" | "super-admin" | "system";
     status?: "approved" | "rejected";
     timestamp?: string | Date;
 }

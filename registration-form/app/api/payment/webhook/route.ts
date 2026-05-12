@@ -2,7 +2,7 @@ import crypto from "crypto"
 import dbConnect from "@/lib/db"
 import Participant from "@/models/Participant"
 import Event from "@/models/Event"
-import { IParticipant } from "@/lib/types"
+import { IParticipant, IApprovalLog } from "@/lib/types"
 
 export async function POST(req: Request) {
   try {
@@ -38,7 +38,6 @@ export async function POST(req: Request) {
 
     // ✅ Handle payment success (payment.captured or order.paid)
     if (event.event === "payment.captured" || event.event === "order.paid") {
-      const payload = event.payload.payment?.entity || event.payload.order?.entity
 
       const orderId = event.payload.order?.entity?.id || (event.payload.payment?.entity?.order_id)
       const paymentId = event.payload.payment?.entity?.id
@@ -80,7 +79,7 @@ export async function POST(req: Request) {
       participant.isRegistered = true
 
       // Add approval log if not already approved
-      const hasSystemApproval = participant.approvalLogs?.some((log: any) => log.role === "system" && log.status === "approved")
+      const hasSystemApproval = (participant.approvalLogs as IApprovalLog[])?.some((log: IApprovalLog) => log.role === "system" && log.status === "approved")
       if (!hasSystemApproval) {
         participant.approvalLogs.push({
           role: "system",
