@@ -43,6 +43,11 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
       url: "/admin/dashboard",
       icon: IconDashboard,
     },
+    {
+      title: t("Members"),
+      url: "/admin/members",
+      icon: IconUsers,
+    },
 
     // {
     //   title: "Quick Create",

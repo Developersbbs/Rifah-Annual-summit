@@ -256,6 +256,12 @@ const resources = {
       "All Status": "All Status",
       "All Genders": "All Genders",
       "Registrations": "Registrations",
+      "Members": "Members",
+      "All Members": "All Members",
+      "Member List": "Member List",
+      "Download": "Download",
+      "Export CSV": "Export CSV",
+      "Export JSON": "Export JSON",
 
     }
   },
@@ -589,7 +595,13 @@ const resources = {
       "Business name": "வணிகத்தின் பெயர்",
       "Business category": "வணிக வகை",
       "Already Registered": "ஏற்கனவே பதிவு செய்யப்பட்டுள்ளது",
-      "Error": "பிழை"
+      "Error": "பிழை",
+      "Members": "உறுப்பினர்கள்",
+      "All Members": "அனைத்து உறுப்பினர்கள்",
+      "Member List": "உறுப்பினர் பட்டியல்",
+      "Download": "பதிவிறக்கம்",
+      "Export CSV": "CSV ஏற்றுமதி",
+      "Export JSON": "JSON ஏற்றுமதி",
     }
   }
 };
