@@ -118,6 +118,13 @@ export async function sendRegistrationEmails(participant: IParticipant, eventNam
                                     <span style="color: #6b7280; font-weight: 500;">Location : </span>
                                     <span style="color: #1f2937; font-weight: 600;">${participant.location || 'N/A'}</span>
                                 </div>
+                                ${participant.isSponsor ? `
+                                <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e2e8f0;">
+                                    <span style="color: #6b7280; font-weight: 500;">Type : </span>
+                                    <span style="color: #16a34a; font-weight: 700; background: #f0fdf4; padding: 4px 12px; border-radius: 6px;">Sponsor</span>
+                                </div>
+                                ` : ''}
+                                ${!participant.isSponsor ? `
                                 <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e2e8f0;">
                                     <span style="color: #6b7280; font-weight: 500;">Amount : </span>
                                     <span style="color: #16a34a; font-weight: 700; font-size: 18px;">₹${participant.totalAmount}</span>
@@ -126,6 +133,7 @@ export async function sendRegistrationEmails(participant: IParticipant, eventNam
                                     <span style="color: #6b7280; font-weight: 500;">Payment : </span>
                                     <span style="color: #1f2937; font-weight: 600;">${participant.paymentMethod} (${participant.paymentStatus})</span>
                                 </div>
+                                ` : ''}
                                 <div style="display: flex; justify-content: space-between; padding: 12px 0;">
                                     <span style="color: #6b7280; font-weight: 500;">Language : </span>
                                     <span style="color: #1f2937; font-weight: 600;">${participant.registrationLanguage || 'en (defaulted)'}</span>
