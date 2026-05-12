@@ -5,6 +5,7 @@ import Participant from "@/models/Participant"
 import Event from "@/models/Event"
 import Counter from "@/models/Counter"
 import { sendRegistrationEmails } from "@/lib/email"
+import { getCurrentUser } from "@/lib/auth"
 
 // Helper function for input sanitization
 function sanitizeInput(input: string): string {
@@ -151,111 +152,68 @@ export async function registerParticipant(data: RegisterParticipantData) {
 
         const now = new Date()
 
-        // DEBUG: Log current time for event validation
-        console.log("=== EVENT VALIDATION DEBUG ===")
-        console.log("NOW (UTC):", now.toISOString())
-        console.log("NOW (Local):", now.toLocaleString())
+        // Get current user (admin/staff) if logged in
+        const adminUser = await getCurrentUser()
+        const isAdminAction = adminUser && (adminUser.role === 'admin' || adminUser.role === 'super-admin')
 
         // FIND EVENT - For admin quick-create, find any event regardless of date
-        // This allows admins to register participants for any event in the system
         const activeEvent = await Event.findOne({})
 
-        console.log("ACTIVE EVENT:", activeEvent ? {
-            _id: activeEvent._id,
-            eventName: activeEvent.eventName,
-            eventDate: activeEvent.eventDate,
-            startTime: activeEvent.startTime,
-            endTime: activeEvent.endTime,
-            isActive: activeEvent.isActive
-        } : "NOT FOUND")
-
         if (!activeEvent) {
-            console.log("ERROR: No event found in database")
             return {
                 success: false,
-                error: "No event found in the system. Please create an event first."
+                error: "No event found in the system."
             }
         }
 
-        // FIND TICKET - Only validate if ticketType is provided
+        // FIND TICKET
         let selectedTicket = null
         if (ticketType) {
             selectedTicket = activeEvent.ticketsPrice.find(
                 (t: { name: string; price: number; soldCount: number }) => t.name === ticketType
             )
-
             if (!selectedTicket) {
-                return {
-                    success: false,
-                    error: `Invalid ticket type: ${ticketType}. Please select a valid ticket.`
-                }
+                return { success: false, error: "Invalid ticket type" }
             }
         }
 
         // Check event capacity
         if (activeEvent.registeredCount + totalPeople > activeEvent.maxCapacity) {
-            return {
-                success: false,
-                error: "Event is at full capacity. No more registrations available."
-            }
+            return { success: false, error: "Event is at full capacity." }
         }
 
         let pricePerPerson = selectedTicket ? selectedTicket.price : 0
+        if (isSponsor) pricePerPerson = 0
+        if (isMember) pricePerPerson = Math.max(0, pricePerPerson - 200)
 
-        if (isSponsor) {
-            pricePerPerson = 0
-        }
-
-        // Validate price
-        if (pricePerPerson < 0) {
-            return {
-                success: false,
-                error: "Invalid ticket price"
-            }
-        }
-
-        // FOOD PREFERENCE - Commented out
-        // const normalizedFoodPreference = {
-        //     veg: Math.max(0, foodPreference?.veg || 0),
-        //     nonVeg: Math.max(0, foodPreference?.nonVeg || 0)
-        // }
-
-        // Apply member discount
-        if (isMember) {
-            pricePerPerson = Math.max(0, pricePerPerson - 200)
-        }
-
-        // PAYMENT LOGIC
+        // PAYMENT & APPROVAL LOGIC
         let paymentStatus = "pending"
         let approvalStatus = "pending"
-
-        // Check if this is admin-created participant
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const createdBy = (data as any).createdBy
-        const isAdmin = createdBy && (createdBy.role === 'admin' || createdBy.role === 'super-admin')
-
-        if (isSponsor) {
-            // Sponsors get payment completed but need admin approval
-            paymentStatus = "completed"
-            approvalStatus = "pending"
-        } else if (paymentMethod === "online") {
-            paymentStatus = "pending" // Set to pending until verified
-            approvalStatus = "pending"
-        }
-        // For cash payments NOT created by admin, they stay as pending (default values)
-
-        // Initialize approval logs array
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const approvalLogs: any[] = []
 
-        // Add approval logs only for admin-created registrations
-        if (isAdmin && approvalStatus === "approved") {
-            approvalLogs.push({
-                role: createdBy.role === 'super-admin' ? 'super-admin' : 'admin',
-                status: 'approved',
-                approvedBy: createdBy._id,
-                timestamp: new Date(),
-            })
+        if (isSponsor) {
+            paymentStatus = "completed"
+            approvalStatus = "approved"
+
+            if (isAdminAction) {
+                approvalLogs.push({
+                    role: adminUser.role,
+                    status: 'approved',
+                    approvedBy: adminUser.id,
+                    approvedByEmail: adminUser.email,
+                    timestamp: new Date(),
+                })
+            } else {
+                approvalLogs.push({
+                    role: 'system',
+                    status: 'approved',
+                    approvedByEmail: 'system-auto-approve',
+                    timestamp: new Date(),
+                })
+            }
+        } else if (paymentMethod === "online") {
+            paymentStatus = "pending"
+            approvalStatus = "pending"
         }
 
         // Build secondary members array with defaults and sanitization
@@ -347,7 +305,7 @@ export async function registerParticipant(data: RegisterParticipantData) {
             paymentMethod,
             paymentStatus,
             approvalStatus,
-            isRegistered: (paymentMethod === "cash" || isAdmin || isSponsor),
+            isRegistered: (paymentMethod === "cash" || isAdminAction || isSponsor),
             eventId: activeEvent._id,
             eventDate: activeEvent.eventDate,
             ageGroups: finalAgeGroups,
@@ -406,7 +364,7 @@ export async function registerParticipant(data: RegisterParticipantData) {
         )
 
         // Send confirmation emails (Async) - ONLY for completed payments or admin created
-        if (paymentStatus === "completed" || isAdmin) {
+        if (paymentStatus === "completed" || isAdminAction) {
             sendRegistrationEmails(participant, activeEvent.eventName).catch(err => 
                 console.error("Failed to send registration emails:", err)
             )
