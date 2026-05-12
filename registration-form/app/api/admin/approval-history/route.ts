@@ -51,18 +51,19 @@ export async function GET(request: Request) {
 
         console.log("DEBUG: Total participants found:", participants.length)
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         participants.forEach((participant: any) => {
-            console.log("DEBUG: Participant:", participant.name, "Logs:", participant.approvalLogs?.length)
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             participant.approvalLogs?.forEach((log: any) => {
-                console.log("DEBUG: Log entry:", {
-                    role: log.role,
-                    status: log.status,
-                    approvedBy: log.approvedBy,
-                    approvedByName: log.approvedBy?.name,
-                    approvedByEmail: log.approvedBy?.email
-                })
+                // Resolve approver label
+                // Priority: stored approvedByEmail string → populated approvedBy.email → system label → Unknown
+                let approverLabel = "Unknown"
+                if (log.approvedByEmail) {
+                    approverLabel = log.approvedByEmail
+                } else if (log.approvedBy?.email) {
+                    approverLabel = log.approvedBy.email
+                } else if (log.role === "system") {
+                    approverLabel = "System (Auto-approved)"
+                }
+
                 // Apply filters
                 if (role !== 'all' && log.role !== role) return
                 if (status !== 'all' && log.status !== status) return
@@ -70,11 +71,11 @@ export async function GET(request: Request) {
                     const searchLower = search.toLowerCase()
                     const participantName = participant.name?.toLowerCase() || ""
                     const participantPhone = participant.mobileNumber?.toLowerCase() || ""
-                    const approvedByEmail = log.approvedByEmail?.toLowerCase() || ""
+                    const approvedByStr = approverLabel.toLowerCase()
 
                     if (!participantName.includes(searchLower) &&
                         !participantPhone.includes(searchLower) &&
-                        !approvedByEmail.includes(searchLower)) {
+                        !approvedByStr.includes(searchLower)) {
                         return
                     }
                 }
@@ -83,8 +84,8 @@ export async function GET(request: Request) {
                     participantName: participant.name || "",
                     participantPhone: participant.mobileNumber || "",
                     participantEmail: participant.email || "",
-                    approvedBy: log.approvedByEmail || "Unknown",
-                    approvedByEmail: log.approvedByEmail || "Unknown",
+                    approvedBy: approverLabel,
+                    approvedByEmail: approverLabel,
                     role: log.role,
                     status: log.status,
                     date: log.timestamp,
@@ -92,9 +93,6 @@ export async function GET(request: Request) {
                 })
             })
         })
-
-        console.log("DEBUG: Final records:", records.length)
-        console.log("DEBUG: Sample record:", records[0])
 
         // Sort by date (newest first)
         records.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
