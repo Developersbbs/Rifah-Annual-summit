@@ -27,7 +27,7 @@ export async function GET(request: Request) {
 
         // Build query
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const query: any = {}
+        const query: any = { isRegistered: true }
 
         // Add date range filter if provided
         if (startDate || endDate) {

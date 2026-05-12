@@ -12,83 +12,104 @@ export async function POST(req: Request) {
     const signature = req.headers.get("x-razorpay-signature")
 
     if (!signature) {
+      console.warn("Webhook: Missing signature")
       return Response.json({ error: "Missing signature" }, { status: 400 })
     }
 
     // 🔐 Verify signature
+    const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET
+    if (!webhookSecret) {
+      console.error("Webhook: RAZORPAY_WEBHOOK_SECRET not configured")
+      return Response.json({ error: "Configuration error" }, { status: 500 })
+    }
+
     const expectedSignature = crypto
-      .createHmac("sha256", process.env.RAZORPAY_WEBHOOK_SECRET!)
+      .createHmac("sha256", webhookSecret)
       .update(rawBody)
       .digest("hex")
 
     if (expectedSignature !== signature) {
+      console.warn("Webhook: Invalid signature")
       return Response.json({ error: "Invalid signature" }, { status: 400 })
     }
 
     const event = JSON.parse(rawBody)
+    console.log("Webhook Event Received:", event.event)
 
-    console.log("Webhook Event:", event.event)
+    // ✅ Handle payment success (payment.captured or order.paid)
+    if (event.event === "payment.captured" || event.event === "order.paid") {
+      const payload = event.payload.payment?.entity || event.payload.order?.entity
 
-    // ✅ Handle payment success
-    if (event.event === "payment.captured") {
-      const payment = event.payload.payment.entity
+      const orderId = event.payload.order?.entity?.id || (event.payload.payment?.entity?.order_id)
+      const paymentId = event.payload.payment?.entity?.id
 
-      const orderId = payment.order_id
-      const paymentId = payment.id
+      if (!orderId) {
+        console.warn("Webhook: No orderId found in payload")
+        return Response.json({ success: true, message: "No orderId to process" })
+      }
 
-      console.log("Processing orderId:", orderId)
+      console.log("Webhook: Processing orderId:", orderId, "paymentId:", paymentId)
 
-      // 🔍 Find participant
+      // 🔍 Find participant by razorpayOrderId
       let participant = await Participant.findOne({
         razorpayOrderId: orderId,
       })
 
-      // 🔥 Fallback: create if missing
-      if (!participant) {
-        console.warn("Participant not found. Creating fallback record.")
-
-        participant = await Participant.create({
-          razorpayOrderId: orderId,
-          paymentStatus: "completed",
-          paymentId: paymentId,
-          approvalStatus: "approved",
-          isRegistered: true,
-          name: "Unknown",
-          mobileNumber: "0000000000",
-        })
-
-        return Response.json({ success: true })
+      // 🔥 Fallback: find by mobile if notes contains it (optional, but good for safety)
+      if (!participant && event.payload.payment?.entity?.notes?.participantId) {
+        participant = await Participant.findById(event.payload.payment.entity.notes.participantId)
       }
 
-      // 🔁 Idempotency check
-      if (participant.paymentStatus === "completed") {
-        console.log("Already processed:", participant._id)
-        return Response.json({ success: true })
+      if (!participant) {
+        console.warn("Webhook: Participant not found for orderId:", orderId)
+        // We return 200 to Razorpay because we don't want retries for a non-existent participant
+        return Response.json({ success: true, message: "Participant not found" })
+      }
+
+      // 🔁 Idempotency check: if already completed, just return success
+      if (participant.paymentStatus === "completed" && participant.isRegistered) {
+        console.log("Webhook: Already processed participant:", participant._id)
+        return Response.json({ success: true, message: "Already processed" })
       }
 
       // ✅ Update participant
       participant.paymentStatus = "completed"
-      participant.paymentId = paymentId
+      participant.paymentId = paymentId || participant.paymentId
+      participant.razorpayPaymentId = paymentId || participant.razorpayPaymentId
       participant.approvalStatus = "approved"
       participant.isRegistered = true
 
+      // Add approval log if not already approved
+      const hasSystemApproval = participant.approvalLogs?.some((log: any) => log.role === "system" && log.status === "approved")
+      if (!hasSystemApproval) {
+        participant.approvalLogs.push({
+          role: "system",
+          status: "approved",
+          timestamp: new Date()
+        })
+      }
+
       await participant.save()
+      console.log("Webhook: Participant updated successfully:", participant._id)
 
-      console.log("Participant updated:", participant._id)
-
-      // 📧 Send email (only once)
-      const activeEvent = await Event.findById(participant.eventId)
-
-      if (activeEvent && !participant.emailSent) {
-        const { sendRegistrationEmails } = await import("@/lib/email")
-
-        await sendRegistrationEmails(
-          participant as unknown as IParticipant,
-          activeEvent.eventName
-        )
-
-        participant.emailSent = true
-        await participant.save()
+      // 📧 Send email if not already sent
+      if (!participant.emailSent) {
+        try {
+          const activeEvent = await Event.findById(participant.eventId)
+          if (activeEvent) {
+            const { sendRegistrationEmails } = await import("@/lib/email")
+            await sendRegistrationEmails(
+              participant as unknown as IParticipant,
+              activeEvent.eventName
+            )
+            participant.emailSent = true
+            await participant.save()
+            console.log("Webhook: Confirmation email sent to:", participant.email)
+          }
+        } catch (emailError) {
+          console.error("Webhook: Failed to send email:", emailError)
+          // Don't fail the webhook if email fails
+        }
       }
     }
 

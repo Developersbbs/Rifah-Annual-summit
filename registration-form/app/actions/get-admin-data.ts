@@ -19,7 +19,7 @@ export async function getAdminData() {
     await dbConnect()
 
     try {
-        const participants = await Participant.find({}).sort({ createdAt: -1 }).lean()
+        const participants = await Participant.find({ isRegistered: true }).sort({ createdAt: -1 }).lean()
 
         const stats = {
             totalRegistrations: participants.length,
@@ -108,7 +108,7 @@ export async function getLocationStats(from?: string, to?: string) {
 
     try {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const matchStage: any = {}
+        const matchStage: any = { isRegistered: true }
 
         if (from) {
             const startDate = startOfDay(new Date(from))

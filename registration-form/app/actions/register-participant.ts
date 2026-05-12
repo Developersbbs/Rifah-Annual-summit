@@ -322,6 +322,21 @@ export async function registerParticipant(data: RegisterParticipantData) {
         const totalTaxAmount = primaryAmount.taxAmount + formattedSecondaryMembersWithTax.reduce((sum, m) => sum + m.taxAmount, 0)
         const totalAmount = totalBaseAmount + totalTaxAmount
 
+        // Check for existing registration before creating
+        const existingParticipant = await Participant.findOne({ mobileNumber: sanitizeInput(mobileNumber) })
+        if (existingParticipant) {
+            // Allow re-registration if the existing one is pending and not fully registered
+            if (existingParticipant.paymentStatus === "pending" && !existingParticipant.isRegistered) {
+                await Participant.findByIdAndDelete(existingParticipant._id)
+                console.log(`Deleted existing pending registration for ${mobileNumber} to allow retry`)
+            } else {
+                return {
+                    success: false,
+                    error: "This mobile number is already registered. If you have a pending registration, please try again after a few minutes."
+                }
+            }
+        }
+
         // Create participant with validated and sanitized data
         const participant = await Participant.create({
             mobileNumber: sanitizeInput(mobileNumber),
@@ -334,7 +349,7 @@ export async function registerParticipant(data: RegisterParticipantData) {
             paymentMethod,
             paymentStatus,
             approvalStatus,
-            isRegistered: true,
+            isRegistered: (paymentMethod === "cash" || isAdmin || isSponsor),
             eventId: activeEvent._id,
             eventDate: activeEvent.eventDate,
             ageGroups: finalAgeGroups,

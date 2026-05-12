@@ -216,6 +216,14 @@ const ParticipantSchema = new mongoose.Schema({
         default: false,
     },
 
+    razorpayOrderId: {
+        type: String,
+    },
+
+    razorpayPaymentId: {
+        type: String,
+    },
+
 }, { timestamps: true })
 
 // Force re-compilation of model in dev to apply schema changes

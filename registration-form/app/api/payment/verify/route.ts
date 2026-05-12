@@ -47,6 +47,8 @@ export async function POST(req: Request) {
         paymentStatus: "completed",
         paymentMethod: "online",
         paymentId: razorpay_payment_id,
+        razorpayPaymentId: razorpay_payment_id,
+        razorpayOrderId: razorpay_order_id,
         approvalStatus: "approved",
         isRegistered: true,
       })
@@ -63,6 +65,7 @@ export async function POST(req: Request) {
               paymentStatus: "completed",
               paymentMethod: "online",
               paymentId: razorpay_payment_id,
+              razorpayPaymentId: razorpay_payment_id,
               approvalStatus: "approved",
               isRegistered: true,
               razorpayOrderId: razorpay_order_id,
