@@ -27,7 +27,7 @@ export async function sendRegistrationEmails(participant: IParticipant, eventNam
         const language = participant.registrationLanguage || 'en'
         const isTamil = language === 'ta'
 
-        const isPending = participant.paymentStatus === 'pending'
+        const isPending = participant.paymentStatus === 'pending' && !participant.isSponsor
 
         console.log(`DEBUG - Sending emails for ${participant.name}. Language: ${language}, isTamil: ${isTamil}`)
 
@@ -176,11 +176,11 @@ export async function sendRegistrationEmails(participant: IParticipant, eventNam
                     subject: memberSubject,
                     html: memberHtml,
                     attachments: [
-                        {
-                            filename: 'mail1.jpeg',
-                            path: path.join(process.cwd(), 'public', 'assets', 'mail1.jpeg'),
-                            cid: 'mail1'
-                        },
+                        // {
+                        //     filename: 'mail1.jpeg',
+                        //     path: path.join(process.cwd(), 'public', 'assets', 'mail1.jpeg'),
+                        //     cid: 'mail1'
+                        // },
                         {
                             filename: 'mail2.jpeg',
                             path: path.join(process.cwd(), 'public', 'assets', 'mail2.jpeg'),
@@ -219,11 +219,11 @@ export async function sendRegistrationEmails(participant: IParticipant, eventNam
                             subject: memberSubject,
                             html: smHtml,
                             attachments: [
-                                {
-                                    filename: 'mail1.jpeg',
-                                    path: path.join(process.cwd(), 'public', 'assets', 'mail1.jpeg'),
-                                    cid: 'mail1'
-                                },
+                                // {
+                                //     filename: 'mail1.jpeg',
+                                //     path: path.join(process.cwd(), 'public', 'assets', 'mail1.jpeg'),
+                                //     cid: 'mail1'
+                                // },
                                 {
                                     filename: 'mail2.jpeg',
                                     path: path.join(process.cwd(), 'public', 'assets', 'mail2.jpeg'),
@@ -467,10 +467,7 @@ function getMemberEmailHtml(params: {
                             </p>
                         </div>
 
-                        <div style="text-align: center; margin: 30px 0;">
-                            <img src="cid:mail1" alt="Event Image" style="max-width: 100%; height: auto; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-                            <img src="cid:mail2" alt="Event Details" style="max-width: 100%; height: auto; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-                        </div>
+                        
 
                         <div style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border: 1px solid #e2e8f0; border-radius: 16px; padding: 30px; margin: 30px 0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
                             <h3 style="color: #1f2937; font-size: 18px; font-weight: 600; margin: 0 0 20px; display: flex; align-items: center;">
@@ -526,6 +523,10 @@ function getMemberEmailHtml(params: {
                                     </span>
                                 </div>
                             </div>
+                        </div>
+                        <div style="text-align: center; margin: 30px 0;">
+                            
+                            <img src="cid:mail2" alt="Event Details" style="max-width: 100%; height: auto; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
                         </div>
 
                         <div style="text-align: center; margin: 30px 0;">

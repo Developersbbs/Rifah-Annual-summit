@@ -28,6 +28,8 @@ export async function getAdminData() {
             pendingApprovals: 0,
             approvedRegistrations: 0,
             approvedMembers: 0,
+            approvedPrimary: 0,
+            approvedSecondary: 0,
             rejectedRegistrations: 0,
             cashPayments: 0,
             onlinePayments: 0,
@@ -57,7 +59,12 @@ export async function getAdminData() {
                 stats.pendingApprovals += 1
             } else if (approvalStatus === "approved") {
                 stats.approvedRegistrations += 1
-                stats.approvedMembers += totalMembers
+                // Only count as "Approved Member" if not a sponsor
+                if (!p.isSponsor) {
+                    stats.approvedMembers += totalMembers
+                    stats.approvedPrimary += 1
+                    stats.approvedSecondary += secondaryMembersCount
+                }
             } else if (approvalStatus === "rejected") {
                 stats.rejectedRegistrations += 1
             }

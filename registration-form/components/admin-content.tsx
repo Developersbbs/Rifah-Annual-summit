@@ -25,6 +25,8 @@ interface AdminStats {
   onlinePayments: number
   totalMembers?: number
   approvedMembers?: number
+  approvedPrimary?: number
+  approvedSecondary?: number
   totalSponsors?: number
 }
 

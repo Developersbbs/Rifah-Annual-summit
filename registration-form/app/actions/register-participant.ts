@@ -363,8 +363,8 @@ export async function registerParticipant(data: RegisterParticipantData) {
             { $inc: { registeredCount: actualTotalPeople } }
         )
 
-        // Send confirmation emails (Async) - ONLY for completed payments or admin created
-        if (paymentStatus === "completed" || isAdminAction) {
+        // Send confirmation emails (Async) - ONLY for completed payments, admin created, or sponsors
+        if (paymentStatus === "completed" || isAdminAction || isSponsor) {
             sendRegistrationEmails(participant, activeEvent.eventName).catch(err => 
                 console.error("Failed to send registration emails:", err)
             )

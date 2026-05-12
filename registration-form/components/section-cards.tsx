@@ -21,6 +21,8 @@ interface SectionCardsProps {
     onlinePayments: number
     totalMembers?: number
     approvedMembers?: number
+    approvedPrimary?: number
+    approvedSecondary?: number
     totalSponsors?: number
   }
 }
@@ -45,6 +47,9 @@ export function SectionCards({ stats }: SectionCardsProps) {
           </div>
           <div className="line-clamp-1 flex gap-2 font-medium">
             <IconCheck className="size-4 text-green-500" /> {t("Approved Members")}: {stats.approvedMembers || 0}
+          </div>
+          <div className="text-muted-foreground text-xs">
+            ({stats.approvedPrimary || 0} {t("Primary")} + {stats.approvedSecondary || 0} {t("Secondary")})
           </div>
           <div className="text-muted-foreground">
             {t("Total Amount")}: ₹{stats.totalAmount}
