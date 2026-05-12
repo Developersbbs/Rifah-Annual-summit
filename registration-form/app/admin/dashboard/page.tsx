@@ -44,6 +44,7 @@ interface DashboardRecord {
     location: string
     primaryMember: string
     primaryPhone: string
+    registrationId: string
     approvalStatus?: string
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     originalParticipant?: any
@@ -242,6 +243,7 @@ export default function DashboardPage() {
                     <Table>
                         <TableHeader>
                             <TableRow>
+                                <TableHead className="w-[100px]">{t("Reg ID")}</TableHead>
                                 <TableHead className="w-[200px]">{t("Name")}</TableHead>
                                 <TableHead>{t("Type")}</TableHead>
                                 <TableHead>{t("Phone")}</TableHead>
@@ -262,13 +264,16 @@ export default function DashboardPage() {
                                 </TableRow>
                             ) : records.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                                    <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                                         {t("No records found")}
                                     </TableCell>
                                 </TableRow>
                             ) : (
                                 memoizedRecords.map((record, index) => (
                                     <TableRow key={index}>
+                                        <TableCell className="font-mono text-xs font-bold text-blue-600">
+                                            {record.registrationId || "-"}
+                                        </TableCell>
                                         <TableCell className="font-medium">
                                             {search && (record.name.toLowerCase().includes(search.toLowerCase()) || record.phone.includes(search)) ? (
                                                 <span className="bg-yellow-200 dark:bg-yellow-800">{record.name}</span>

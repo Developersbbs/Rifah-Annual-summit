@@ -42,7 +42,8 @@ export async function GET(request: Request) {
             approvalStatus: 1,
             businessName: 1,
             businessCategory: 1,
-            ticketType: 1
+            ticketType: 1,
+            registrationId: 1
         }).lean()
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -55,6 +56,7 @@ export async function GET(request: Request) {
                 records.push({
                     _id: p._id.toString(),
                     type: "Primary",
+                    registrationId: p.registrationId || "",
                     name: p.name,
                     phone: p.mobileNumber,
                     email: p.email || "",
@@ -77,6 +79,7 @@ export async function GET(request: Request) {
                         records.push({
                             _id: p._id.toString(),
                             type: "Secondary",
+                            registrationId: m.registrationId || "",
                             name: m.name,
                             phone: m.mobileNumber,
                             email: m.email || "",

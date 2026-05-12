@@ -34,6 +34,10 @@ export function ViewParticipantDialog({ participant, open, onOpenChange }: ViewP
                         <h3 className="font-semibold text-lg border-b pb-2">Primary Member</h3>
                         <div className="grid grid-cols-2 gap-4 text-sm">
                             <div>
+                                <span className="font-medium text-muted-foreground">Registration ID:</span>
+                                <div className="mt-1 font-mono font-bold text-blue-600">{participant.registrationId || "-"}</div>
+                            </div>
+                            <div>
                                 <span className="font-medium text-muted-foreground">Name:</span>
                                 <div className="mt-1">{participant.name || "-"}</div>
                             </div>
@@ -81,6 +85,10 @@ export function ViewParticipantDialog({ participant, open, onOpenChange }: ViewP
                                     <div key={index} className="border rounded-lg p-4 bg-muted/30">
                                         <div className="font-medium mb-3">Member {index + 1}</div>
                                         <div className="grid grid-cols-2 gap-4 text-sm">
+                                            <div>
+                                                <span className="font-medium text-muted-foreground">Registration ID:</span>
+                                                <div className="mt-1 font-mono font-bold text-blue-600">{member.registrationId || "-"}</div>
+                                            </div>
                                             <div>
                                                 <span className="font-medium text-muted-foreground">Name:</span>
                                                 <div className="mt-1">{member.name || "-"}</div>
