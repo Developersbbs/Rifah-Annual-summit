@@ -3,12 +3,27 @@
 import dbConnect from "@/lib/db"
 import Participant from "@/models/Participant"
 import Event from "@/models/Event"
+import Counter from "@/models/Counter"
 import { sendRegistrationEmails } from "@/lib/email"
 
 // Helper function for input sanitization
 function sanitizeInput(input: string): string {
     if (!input) return ""
     return input.trim().replace(/[<>"'&]/g, "")
+}
+
+/**
+ * Generate a registration ID from the member's name and a sequence number.
+ * Format: First 3 letters of name (uppercase) + 3-digit padded sequence.
+ * Example: name="Imran", seq=1 → "IMR001"
+ */
+function buildRegistrationId(name: string, seq: number): string {
+    const prefix = (name || "REG")
+        .replace(/[^a-zA-Z]/g, "")
+        .substring(0, 3)
+        .toUpperCase()
+        .padEnd(3, "X")
+    return `${prefix}${String(seq).padStart(3, '0')}`
 }
 
 interface SecondaryMemberInput {
@@ -352,6 +367,32 @@ export async function registerParticipant(data: RegisterParticipantData) {
             approvalLogs: approvalLogs,
             registrationLanguage
         })
+
+        // Auto-generate Registration IDs for primary and secondary members
+        try {
+            let counter = await Counter.findOne({ id: "registrationId" })
+            if (!counter) {
+                counter = await Counter.create({ id: "registrationId", seq: 0 })
+            }
+
+            // Primary member
+            counter.seq += 1
+            participant.registrationId = buildRegistrationId(participant.name || "", counter.seq)
+
+            // Secondary members
+            if (participant.secondaryMembers && participant.secondaryMembers.length > 0) {
+                for (const member of participant.secondaryMembers) {
+                    counter.seq += 1
+                    member.registrationId = buildRegistrationId(member.name || "", counter.seq)
+                }
+            }
+
+            await counter.save()
+            await participant.save()
+        } catch (idError) {
+            console.error("Failed to auto-generate registration IDs:", idError)
+            // Don't fail registration if ID generation fails
+        }
 
         // Update event counts atomically - Only if ticket type was provided
         if (selectedTicket) {
