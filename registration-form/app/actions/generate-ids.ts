@@ -5,6 +5,22 @@ import Participant from "@/models/Participant"
 import Counter from "@/models/Counter"
 import { revalidatePath } from "next/cache"
 
+/**
+ * Generate a registration ID from the member's name and a sequence number.
+ * Format: First 3 letters of name (uppercase) + 3-digit padded sequence.
+ * Example: name="Imran", seq=1 → "IMR001"
+ */
+function buildRegistrationId(name: string, seq: number): string {
+    // Take first 3 characters of the name, uppercase, fallback to "REG" if name is too short
+    const prefix = (name || "REG")
+        .replace(/[^a-zA-Z]/g, "") // Remove non-alpha characters
+        .substring(0, 3)
+        .toUpperCase()
+        .padEnd(3, "X") // Pad with X if name has fewer than 3 letters
+
+    return `${prefix}${String(seq).padStart(3, '0')}`
+}
+
 export async function generateRegisterIds() {
     try {
         await dbConnect()
@@ -24,7 +40,7 @@ export async function generateRegisterIds() {
             // Generate ID for primary member if missing
             if (!participant.registrationId) {
                 counter.seq += 1
-                participant.registrationId = `RAS-${String(counter.seq).padStart(4, '0')}`
+                participant.registrationId = buildRegistrationId(participant.name || "", counter.seq)
                 participantUpdated = true
                 updatedCount += 1
             }
@@ -34,7 +50,7 @@ export async function generateRegisterIds() {
                 for (const member of participant.secondaryMembers) {
                     if (!member.registrationId) {
                         counter.seq += 1
-                        member.registrationId = `RAS-${String(counter.seq).padStart(4, '0')}`
+                        member.registrationId = buildRegistrationId(member.name || "", counter.seq)
                         participantUpdated = true
                         updatedCount += 1
                     }
@@ -55,3 +71,4 @@ export async function generateRegisterIds() {
         return { success: false, error: "Failed to generate IDs" }
     }
 }
+

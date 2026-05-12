@@ -220,9 +220,9 @@ export async function registerParticipant(data: RegisterParticipantData) {
         const isAdmin = createdBy && (createdBy.role === 'admin' || createdBy.role === 'super-admin')
 
         if (isSponsor) {
-            // Sponsors are automatically approved and marked as paid
-            approvalStatus = "approved"
+            // Sponsors get payment completed but need admin approval
             paymentStatus = "completed"
+            approvalStatus = "pending"
         } else if (paymentMethod === "online") {
             paymentStatus = "pending" // Set to pending until verified
             approvalStatus = "pending"
@@ -233,29 +233,12 @@ export async function registerParticipant(data: RegisterParticipantData) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const approvalLogs: any[] = []
 
-        // For online payments, auto-approve and add approval log with system role
-        if (paymentMethod === "online" && approvalStatus === "approved") {
-            approvalLogs.push({
-                role: "system",
-                status: "approved",
-                approvedBy: null,
-                timestamp: new Date()
-            })
-        }
-
-        // Add approval logs for admin-approved or sponsor registrations
+        // Add approval logs only for admin-created registrations
         if (isAdmin && approvalStatus === "approved") {
             approvalLogs.push({
                 role: createdBy.role === 'super-admin' ? 'super-admin' : 'admin',
                 status: 'approved',
                 approvedBy: createdBy._id,
-                timestamp: new Date(),
-            })
-        } else if (isSponsor) {
-            approvalLogs.push({
-                role: 'system',
-                status: 'approved',
-                approvedBy: null,
                 timestamp: new Date(),
             })
         }

@@ -87,7 +87,11 @@ export async function sendRegistrationEmails(participant: IParticipant, eventNam
                                 பதிவு விவரங்கள்
                             </h3>
                             <div style="display: grid; gap: 15px;">
-                                <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e2e8f0;">
+                                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e2e8f0;">
+                                    <span style="color: #6b7280; font-weight: 500;">பதிவு எண்</span>
+                                    <span style="color: #2563eb; font-weight: 700; font-size: 16px; background: #eff6ff; padding: 4px 12px; border-radius: 6px;">${participant.registrationId || 'N/A'}</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e2e8f0;">
                                     <span style="color: #6b7280; font-weight: 500;">பெயர்</span>
                                     <span style="color: #1f2937; font-weight: 600;">${participant.name}</span>
                                 </div>
@@ -200,7 +204,11 @@ export async function sendRegistrationEmails(participant: IParticipant, eventNam
                                 Registration Details
                             </h3>
                             <div style="display: grid; gap: 15px;">
-                                <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e2e8f0;">
+                                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e2e8f0;">
+                                    <span style="color: #6b7280; font-weight: 500;">Registration ID : </span>
+                                    <span style="color: #2563eb; font-weight: 700; font-size: 16px; background: #eff6ff; padding: 4px 12px; border-radius: 6px; text-align: right;">${participant.registrationId || 'N/A'}</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e2e8f0;">
                                     <span style="color: #6b7280; font-weight: 500;">Name : </span>
                                     <span style="color: #1f2937; font-weight: 600;">${participant.name}</span>
                                 </div>
@@ -311,6 +319,10 @@ export async function sendRegistrationEmails(participant: IParticipant, eventNam
                                 Participant Details
                             </h3>
                             <div style="display: grid; gap: 15px;">
+                                <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e2e8f0;">
+                                    <span style="color: #6b7280; font-weight: 500;">Registration ID : </span>
+                                    <span style="color: #2563eb; font-weight: 700; font-size: 16px; background: #eff6ff; padding: 4px 12px; border-radius: 6px;">${participant.registrationId || 'N/A'}</span>
+                                </div>
                                 <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e2e8f0;">
                                     <span style="color: #6b7280; font-weight: 500;">Name : </span>
                                     <span style="color: #1f2937; font-weight: 600;">${participant.name}</span>

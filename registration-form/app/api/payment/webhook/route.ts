@@ -2,7 +2,7 @@ import crypto from "crypto"
 import dbConnect from "@/lib/db"
 import Participant from "@/models/Participant"
 import Event from "@/models/Event"
-import { IParticipant, IApprovalLog } from "@/lib/types"
+import { IParticipant } from "@/lib/types"
 
 export async function POST(req: Request) {
   try {
@@ -16,7 +16,7 @@ export async function POST(req: Request) {
       return Response.json({ error: "Missing signature" }, { status: 400 })
     }
 
-    // 🔐 Verify signature
+    //  Verify signature
     const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET
     if (!webhookSecret) {
       console.error("Webhook: RAZORPAY_WEBHOOK_SECRET not configured")
@@ -49,12 +49,12 @@ export async function POST(req: Request) {
 
       console.log("Webhook: Processing orderId:", orderId, "paymentId:", paymentId)
 
-      // 🔍 Find participant by razorpayOrderId
+      //  Find participant by razorpayOrderId
       let participant = await Participant.findOne({
         razorpayOrderId: orderId,
       })
 
-      // 🔥 Fallback: find by mobile if notes contains it (optional, but good for safety)
+      //  Fallback: find by mobile if notes contains it (optional, but good for safety)
       if (!participant && event.payload.payment?.entity?.notes?.participantId) {
         participant = await Participant.findById(event.payload.payment.entity.notes.participantId)
       }
@@ -71,22 +71,15 @@ export async function POST(req: Request) {
         return Response.json({ success: true, message: "Already processed" })
       }
 
-      // ✅ Update participant
+      // ✅ Update participant - payment completed but approval stays pending for admin/super-admin
       participant.paymentStatus = "completed"
       participant.paymentId = paymentId || participant.paymentId
       participant.razorpayPaymentId = paymentId || participant.razorpayPaymentId
-      participant.approvalStatus = "approved"
-      participant.isRegistered = true
-
-      // Add approval log if not already approved
-      const hasSystemApproval = (participant.approvalLogs as IApprovalLog[])?.some((log: IApprovalLog) => log.role === "system" && log.status === "approved")
-      if (!hasSystemApproval) {
-        participant.approvalLogs.push({
-          role: "system",
-          status: "approved",
-          timestamp: new Date()
-        })
+      // Keep approvalStatus as pending - only admin/super-admin can approve
+      if (participant.approvalStatus !== "approved") {
+        participant.approvalStatus = "pending"
       }
+      participant.isRegistered = true
 
       await participant.save()
       console.log("Webhook: Participant updated successfully:", participant._id)
