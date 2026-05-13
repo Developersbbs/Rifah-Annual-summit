@@ -36,6 +36,7 @@ export async function GET(request: Request) {
             email: string
             location: string
             type: string
+            isSponsor: boolean
             gender: string
             businessName: string
             businessCategory: string
@@ -54,6 +55,7 @@ export async function GET(request: Request) {
                 email: p.email || "N/A",
                 location: p.location || "N/A",
                 type: "Primary",
+                isSponsor: p.isSponsor || false,
                 gender: p.gender || "N/A",
                 businessName: p.businessName || "N/A",
                 businessCategory: p.businessCategory || "N/A",
@@ -72,6 +74,7 @@ export async function GET(request: Request) {
                         email: sm.email || "N/A",
                         location: sm.location || p.location || "N/A",
                         type: "Secondary",
+                        isSponsor: false, // secondary members don't carry sponsor flag
                         gender: sm.gender || "N/A",
                         businessName: sm.businessName || p.businessName || "N/A",
                         businessCategory: sm.businessCategory || p.businessCategory || "N/A",

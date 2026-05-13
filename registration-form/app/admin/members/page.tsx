@@ -39,6 +39,7 @@ interface Member {
     email: string
     location: string
     type: string
+    isSponsor: boolean
     gender: string
     businessName: string
     businessCategory: string
@@ -78,15 +79,21 @@ export default function MembersPage() {
         m.registrationId.toLowerCase().includes(search.toLowerCase())
     )
 
+    const toExportRows = (data: Member[]) =>
+        data.map(({ isSponsor, type, ...rest }) => ({
+            ...rest,
+            type: isSponsor ? "Sponsor" : type,
+        }))
+
     const exportToExcel = () => {
-        const worksheet = XLSX.utils.json_to_sheet(filteredMembers)
+        const worksheet = XLSX.utils.json_to_sheet(toExportRows(filteredMembers))
         const workbook = XLSX.utils.book_new()
         XLSX.utils.book_append_sheet(workbook, worksheet, "Members")
         XLSX.writeFile(workbook, `RIFAH_Members_${new Date().toISOString().split('T')[0]}.xlsx`)
     }
 
     const exportToCSV = () => {
-        const worksheet = XLSX.utils.json_to_sheet(filteredMembers)
+        const worksheet = XLSX.utils.json_to_sheet(toExportRows(filteredMembers))
         const csv = XLSX.utils.sheet_to_csv(worksheet)
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
         const link = document.createElement("a")
@@ -100,7 +107,7 @@ export default function MembersPage() {
     }
 
     const exportToJSON = () => {
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(filteredMembers, null, 2))
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(toExportRows(filteredMembers), null, 2))
         const downloadAnchorNode = document.createElement('a')
         downloadAnchorNode.setAttribute("href", dataStr)
         downloadAnchorNode.setAttribute("download", `RIFAH_Members_${new Date().toISOString().split('T')[0]}.json`)
@@ -200,9 +207,15 @@ export default function MembersPage() {
                                             <TableCell className="font-medium">{member.name}</TableCell>
                                             <TableCell>{member.mobileNumber}</TableCell>
                                             <TableCell>
-                                                <Badge variant={member.type === 'Primary' ? 'default' : 'secondary'}>
-                                                    {t(member.type)}
-                                                </Badge>
+                                                {member.isSponsor ? (
+                                                    <Badge variant="outline" className="border-purple-400 text-purple-600 bg-purple-50">
+                                                        {t("Sponsor")}
+                                                    </Badge>
+                                                ) : (
+                                                    <Badge variant={member.type === 'Primary' ? 'default' : 'secondary'}>
+                                                        {t(member.type)}
+                                                    </Badge>
+                                                )}
                                             </TableCell>
                                             <TableCell>{member.location}</TableCell>
                                             <TableCell>
