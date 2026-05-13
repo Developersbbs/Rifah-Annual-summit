@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { useMemo } from "react"
+import * as XLSX from "xlsx"
 import { Download, CheckCircle2, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useTranslation } from "react-i18next"
@@ -15,6 +16,17 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
+    IconFileSpreadsheet,
+    IconFileDescription,
+    IconFileCode,
+} from "@tabler/icons-react"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { ViewParticipantDialog } from "@/components/view-participant-dialog"
@@ -46,6 +58,7 @@ interface DashboardRecord {
     primaryPhone: string
     registrationId: string
     approvalStatus?: string
+    createdAt?: string
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     originalParticipant?: any
 }
@@ -68,7 +81,7 @@ export default function DashboardPage() {
     const [search, setSearch] = React.useState("")
     const [page, setPage] = React.useState(1)
     const [pagination, setPagination] = React.useState<PaginationData | null>(null)
-    const [downloading, setDownloading] = React.useState(false)
+    const [downloading, setDownloading] = React.useState<string | null>(null)
     const [viewingParticipant, setViewingParticipant] = React.useState<IParticipant | null>(null)
 
     const loadStats = React.useCallback(async () => {
@@ -114,21 +127,21 @@ export default function DashboardPage() {
         loadRecords()
     }, [loadRecords, filter, type, page, search])
 
-    const downloadExcel = async () => {
-        setDownloading(true)
+    const download = async (format: "xlsx" | "csv" | "json") => {
+        setDownloading(format)
         try {
-            const res = await fetch("/api/dashboard/export")
+            const res = await fetch(`/api/dashboard/export?format=${format}`)
             const blob = await res.blob()
             const url = window.URL.createObjectURL(blob)
             const a = document.createElement("a")
             a.href = url
-            a.download = "participants.xlsx"
+            a.download = `Dashboard_${new Date().toISOString().split("T")[0]}.${format}`
             a.click()
             window.URL.revokeObjectURL(url)
         } catch (error) {
-            console.error("Failed to download Excel:", error)
+            console.error("Failed to download:", error)
         } finally {
-            setDownloading(false)
+            setDownloading(null)
         }
     }
 
@@ -140,18 +153,32 @@ export default function DashboardPage() {
         <div className="space-y-6 p-5">
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-bold">{t("Dashboard")}</h1>
-                <Button
-                    onClick={downloadExcel}
-                    disabled={downloading}
-                    className="flex items-center gap-2"
-                >
-                    {downloading ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                        <Download className="h-4 w-4" />
-                    )}
-                    {t("Export Excel")}
-                </Button>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button className="flex items-center gap-2" disabled={!!downloading}>
+                            {downloading ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                                <Download className="h-4 w-4" />
+                            )}
+                            {downloading ? t("Downloading...") : t("Download")}
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => download("xlsx")} disabled={!!downloading}>
+                            <IconFileSpreadsheet className="h-4 w-4 mr-2 text-green-600" />
+                            Excel (.xlsx)
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => download("csv")} disabled={!!downloading}>
+                            <IconFileDescription className="h-4 w-4 mr-2 text-blue-600" />
+                            CSV (.csv)
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => download("json")} disabled={!!downloading}>
+                            <IconFileCode className="h-4 w-4 mr-2 text-orange-600" />
+                            JSON (.json)
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
 
             {/* Stats Cards */}
@@ -252,6 +279,7 @@ export default function DashboardPage() {
                                 <TableHead>{t("Location")}</TableHead>
                                 <TableHead>{t("Status")}</TableHead>
                                 <TableHead className="text-center">{t("Checked-in")}</TableHead>
+                                <TableHead>{t("Created")}</TableHead>
                                 <TableHead className="text-center">{t("Actions")}</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -324,6 +352,14 @@ export default function DashboardPage() {
                                             ) : (
                                                 <span className="text-gray-400">○</span>
                                             )}
+                                        </TableCell>
+                                        <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                                            {record.createdAt ? (
+                                                <>
+                                                    <div>{new Date(record.createdAt).toLocaleDateString()}</div>
+                                                    <div>{new Date(record.createdAt).toLocaleTimeString()}</div>
+                                                </>
+                                            ) : "—"}
                                         </TableCell>
                                         <TableCell className="text-center">
                                             <Button

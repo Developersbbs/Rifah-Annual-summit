@@ -3,17 +3,23 @@ import dbConnect from "@/lib/db"
 import Participant from "@/models/Participant"
 import * as XLSX from "xlsx"
 
-export async function GET() {
+const FILENAME = `Dashboard_${new Date().toISOString().split("T")[0]}`
+
+export async function GET(request: Request) {
+    const { searchParams } = new URL(request.url)
+    const format = searchParams.get("format") || "xlsx"
+
     try {
         await dbConnect()
-        const participants = await Participant.find({ isRegistered: true, approvalStatus: 'approved' }).lean()
+        const participants = await Participant.find({ isRegistered: true, approvalStatus: "approved" })
+            .select("+createdAt")
+            .lean()
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const data: any[] = []
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         participants.forEach((p: any) => {
-            // primary
             data.push({
                 Name: p.name,
                 Type: "Primary",
@@ -30,10 +36,11 @@ export async function GET() {
                 TotalAmount: p.totalAmount || 0,
                 TaxRate: p.taxRate || 0,
                 PaymentMethod: p.paymentMethod || "",
-                PaymentStatus: p.paymentStatus || ""
+                PaymentStatus: p.paymentStatus || "",
+                "Created Date": p.createdAt ? new Date(p.createdAt).toLocaleDateString() : "",
+                "Created Time": p.createdAt ? new Date(p.createdAt).toLocaleTimeString() : "",
             })
 
-            // secondary
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             p.secondaryMembers?.forEach((m: any) => {
                 data.push({
@@ -52,31 +59,46 @@ export async function GET() {
                     TotalAmount: m.totalAmount || 0,
                     TaxRate: p.taxRate || 0,
                     PaymentMethod: p.paymentMethod || "",
-                    PaymentStatus: p.paymentStatus || ""
+                    PaymentStatus: p.paymentStatus || "",
+                    "Created Date": p.createdAt ? new Date(p.createdAt).toLocaleDateString() : "",
+                    "Created Time": p.createdAt ? new Date(p.createdAt).toLocaleTimeString() : "",
                 })
             })
         })
+
+        if (format === "json") {
+            return new Response(JSON.stringify(data, null, 2), {
+                headers: {
+                    "Content-Disposition": `attachment; filename=${FILENAME}.json`,
+                    "Content-Type": "application/json",
+                },
+            })
+        }
 
         const worksheet = XLSX.utils.json_to_sheet(data)
         const workbook = XLSX.utils.book_new()
         XLSX.utils.book_append_sheet(workbook, worksheet, "Participants")
 
-        const buffer = XLSX.write(workbook, {
-            type: "buffer",
-            bookType: "xlsx"
-        })
+        if (format === "csv") {
+            const csv = XLSX.utils.sheet_to_csv(worksheet)
+            return new Response(csv, {
+                headers: {
+                    "Content-Disposition": `attachment; filename=${FILENAME}.csv`,
+                    "Content-Type": "text/csv;charset=utf-8;",
+                },
+            })
+        }
 
+        // default: xlsx
+        const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" })
         return new Response(new Uint8Array(buffer as ArrayBuffer), {
             headers: {
-                "Content-Disposition": "attachment; filename=participants.xlsx",
-                "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            }
+                "Content-Disposition": `attachment; filename=${FILENAME}.xlsx`,
+                "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            },
         })
     } catch (error) {
-        console.error("Excel export error:", error)
-        return NextResponse.json(
-            { error: "Failed to export to Excel" },
-            { status: 500 }
-        )
+        console.error("Export error:", error)
+        return NextResponse.json({ error: "Failed to export data" }, { status: 500 })
     }
 }

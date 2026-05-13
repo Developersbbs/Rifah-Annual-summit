@@ -43,7 +43,8 @@ export async function GET(request: Request) {
             businessName: 1,
             businessCategory: 1,
             ticketType: 1,
-            registrationId: 1
+            registrationId: 1,
+            createdAt: 1
         }).lean()
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -67,6 +68,7 @@ export async function GET(request: Request) {
                     primaryMember: "",
                     primaryPhone: "",
                     approvalStatus: p.approvalStatus || "pending",
+                    createdAt: p.createdAt ? new Date(p.createdAt).toISOString() : "",
                     originalParticipant: p
                 })
             }
@@ -90,6 +92,7 @@ export async function GET(request: Request) {
                             primaryMember: p.name,
                             primaryPhone: p.mobileNumber,
                             approvalStatus: p.approvalStatus || "pending",
+                            createdAt: p.createdAt ? new Date(p.createdAt).toISOString() : "",
                             originalParticipant: p
                         })
                     }

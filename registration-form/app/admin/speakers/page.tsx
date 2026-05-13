@@ -59,7 +59,8 @@ function toExportRows(data: SpeakerVolunteer[]) {
         Designation: r.designation || "",
         "Topic / Session": r.role === "speaker" ? r.topic || "" : "",
         "Bio / Notes": r.bio || "",
-        "Created At": new Date(r.createdAt).toLocaleDateString(),
+        "Created Date": new Date(r.createdAt).toLocaleDateString(),
+        "Created Time": new Date(r.createdAt).toLocaleTimeString(),
     }))
 }
 
@@ -295,6 +296,7 @@ export default function SpeakersVolunteersPage() {
                                     <TableHead>Designation</TableHead>
                                     <TableHead>Topic / Notes</TableHead>
                                     <TableHead>Contact</TableHead>
+                                    <TableHead className="w-[140px]">Created</TableHead>
                                     <TableHead className="w-[100px]">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -302,7 +304,7 @@ export default function SpeakersVolunteersPage() {
                                 {loading ? (
                                     Array.from({ length: 4 }).map((_, i) => (
                                         <TableRow key={i}>
-                                            {Array.from({ length: 8 }).map((_, j) => (
+                                            {Array.from({ length: 9 }).map((_, j) => (
                                                 <TableCell key={j}>
                                                     <div className="h-4 w-full bg-muted animate-pulse rounded" />
                                                 </TableCell>
@@ -311,7 +313,7 @@ export default function SpeakersVolunteersPage() {
                                     ))
                                 ) : filtered.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={8} className="text-center py-10 text-muted-foreground">
+                                        <TableCell colSpan={9} className="text-center py-10 text-muted-foreground">
                                             No records found
                                         </TableCell>
                                     </TableRow>
@@ -338,6 +340,10 @@ export default function SpeakersVolunteersPage() {
                                             <TableCell className="text-sm text-muted-foreground">
                                                 <div>{record.email || ""}</div>
                                                 <div>{record.mobileNumber || ""}</div>
+                                            </TableCell>
+                                            <TableCell className="text-sm text-muted-foreground">
+                                                <div>{new Date(record.createdAt).toLocaleDateString()}</div>
+                                                <div>{new Date(record.createdAt).toLocaleTimeString()}</div>
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex items-center gap-1">
