@@ -80,9 +80,19 @@ export default function MembersPage() {
     )
 
     const toExportRows = (data: Member[]) =>
-        data.map(({ isSponsor, type, ...rest }) => ({
+        data.map(({ isSponsor, type, createdAt, ...rest }) => ({
             ...rest,
             type: isSponsor ? "Sponsor" : type,
+            createdAt: createdAt
+                ? new Date(createdAt).toLocaleString('en-IN', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: true,
+                })
+                : "",
         }))
 
     const exportToExcel = () => {
@@ -182,6 +192,7 @@ export default function MembersPage() {
                                     <TableHead>{t("Mobile")}</TableHead>
                                     <TableHead>{t("Type")}</TableHead>
                                     <TableHead>{t("Location")}</TableHead>
+                                    <TableHead>{t("Created")}</TableHead>
                                     <TableHead>{t("Status")}</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -189,14 +200,14 @@ export default function MembersPage() {
                                 {loading ? (
                                     Array.from({ length: 5 }).map((_, i) => (
                                         <TableRow key={i}>
-                                            {Array.from({ length: 6 }).map((_, j) => (
+                                            {Array.from({ length: 7 }).map((_, j) => (
                                                 <TableCell key={j}><div className="h-4 w-full bg-muted animate-pulse rounded" /></TableCell>
                                             ))}
                                         </TableRow>
                                     ))
                                 ) : filteredMembers.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
+                                        <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
                                             {t("No members found")}
                                         </TableCell>
                                     </TableRow>
@@ -218,6 +229,14 @@ export default function MembersPage() {
                                                 )}
                                             </TableCell>
                                             <TableCell>{member.location}</TableCell>
+                                            <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
+                                                {member.createdAt ? (
+                                                    <>
+                                                        <div>{new Date(member.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
+                                                        <div className="text-xs">{new Date(member.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}</div>
+                                                    </>
+                                                ) : "—"}
+                                            </TableCell>
                                             <TableCell>
                                                 <Badge variant={
                                                     member.approvalStatus === 'approved' ? 'success' :
