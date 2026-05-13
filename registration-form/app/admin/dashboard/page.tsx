@@ -2,7 +2,6 @@
 
 import * as React from "react"
 import { useMemo } from "react"
-import * as XLSX from "xlsx"
 import { Download, CheckCircle2, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useTranslation } from "react-i18next"

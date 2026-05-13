@@ -13,7 +13,7 @@ import {
     getSortedRowModel,
     useReactTable,
 } from "@tanstack/react-table"
-import { ChevronDown, Download, Search, Pencil, Eye, Mail } from "lucide-react"
+import { ChevronDown, Search, Pencil, Eye, Mail } from "lucide-react"
 import { EditParticipantDialog } from "@/components/edit-participant-dialog"
 import { DeleteUserDialog } from "@/components/delete-user-dialog"
 import { ViewParticipantDialog } from "@/components/view-participant-dialog"
@@ -155,7 +155,7 @@ export function ParticipantsTable<TData, TValue>({
         }
 
         return processedData
-    }, [data, dateRange, locationFilter, genderFilter, sponsorFilter])
+    }, [data, dateRange, locationFilter, genderFilter, sponsorFilter, statusFilter])
 
     const tableColumns = React.useMemo(() => {
         const baseColumns = [...columns]
@@ -203,45 +203,6 @@ export function ParticipantsTable<TData, TValue>({
             globalFilter,
         },
     })
-
-    // Export to CSV function
-    const downloadCSV = () => {
-        const headers = [
-            "Name", "Mobile", "Email", "Business", "Location",
-            "Amount", "Secondary Members", "Payment",
-            "Payment Status", "Approval Status", "Status",
-            "Registered At"
-        ]
-
-        const csvContent = "data:text/csv;charset=utf-8,"
-            + headers.join(",") + "\n"
-            + (filteredData as unknown as IParticipant[]).map((row) => {
-                const secondaryMembersCount = row.secondaryMembers?.length || 0
-
-                return [
-                    `"${row.name || ''}"`,
-                    `"${row.mobileNumber}"`,
-                    `"${row.email || ''}"`,
-                    `"${row.businessName || ''}"`,
-                    `"${row.location || ''}"`,
-                    `"${row.totalAmount || 0}"`,
-                    secondaryMembersCount,
-                    `"${row.paymentMethod || ''}"`,
-                    `"${row.paymentStatus || ''}"`,
-                    `"${row.approvalStatus || ''}"`,
-                    row.isRegistered ? "Registered" : "Pending",
-                    `"${new Date(row.createdAt).toLocaleDateString()}"`
-                ].join(",")
-            }).join("\n");
-
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", "participants_export.csv");
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
 
     const handleBulkEmail = async () => {
         const participantIds = (filteredData as unknown as IParticipant[]).map(p => p._id)
