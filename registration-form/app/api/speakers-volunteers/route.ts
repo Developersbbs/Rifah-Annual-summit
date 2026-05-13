@@ -1,6 +1,16 @@
 import { NextResponse } from "next/server"
 import dbConnect from "@/lib/db"
 import SpeakerVolunteer from "@/models/SpeakerVolunteer"
+import Counter from "@/models/Counter"
+
+function buildRegistrationId(name: string, seq: number): string {
+    const prefix = (name || "REG")
+        .replace(/[^a-zA-Z]/g, "")
+        .substring(0, 3)
+        .toUpperCase()
+        .padEnd(3, "X")
+    return `${prefix}${String(seq).padStart(3, "0")}`
+}
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
@@ -30,9 +40,19 @@ export async function POST(request: Request) {
         }
 
         await dbConnect()
+
+        // Auto-generate a registration ID using the shared counter
+        const counter = await Counter.findOneAndUpdate(
+            { id: "registrationId" },
+            { $inc: { seq: 1 } },
+            { new: true, upsert: true }
+        )
+        const registrationId = buildRegistrationId(name.trim(), counter.seq)
+
         const record = await SpeakerVolunteer.create({
             role,
             name: name.trim(),
+            registrationId,
             email: email?.trim() || undefined,
             mobileNumber: mobileNumber?.trim() || undefined,
             organization: organization?.trim() || undefined,

@@ -11,6 +11,11 @@ const SpeakerVolunteerSchema = new mongoose.Schema(
             type: String,
             required: true,
         },
+        registrationId: {
+            type: String,
+            unique: true,
+            sparse: true,
+        },
         email: {
             type: String,
         },

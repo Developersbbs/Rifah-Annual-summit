@@ -36,6 +36,7 @@ interface SpeakerVolunteer {
     _id: string
     role: "speaker" | "volunteer"
     name: string
+    registrationId?: string
     email?: string
     mobileNumber?: string
     organization?: string
@@ -49,6 +50,7 @@ const FILENAME_BASE = `Speakers_Volunteers_${new Date().toISOString().split("T")
 
 function toExportRows(data: SpeakerVolunteer[]) {
     return data.map((r) => ({
+        "Registration ID": r.registrationId || "",
         Role: r.role,
         Name: r.name,
         Email: r.email || "",
@@ -286,6 +288,7 @@ export default function SpeakersVolunteersPage() {
                         <Table>
                             <TableHeader>
                                 <TableRow className="bg-muted/50">
+                                    <TableHead className="w-[110px]">Reg ID</TableHead>
                                     <TableHead>Name</TableHead>
                                     <TableHead>Role</TableHead>
                                     <TableHead>Organization</TableHead>
@@ -299,7 +302,7 @@ export default function SpeakersVolunteersPage() {
                                 {loading ? (
                                     Array.from({ length: 4 }).map((_, i) => (
                                         <TableRow key={i}>
-                                            {Array.from({ length: 7 }).map((_, j) => (
+                                            {Array.from({ length: 8 }).map((_, j) => (
                                                 <TableCell key={j}>
                                                     <div className="h-4 w-full bg-muted animate-pulse rounded" />
                                                 </TableCell>
@@ -308,13 +311,16 @@ export default function SpeakersVolunteersPage() {
                                     ))
                                 ) : filtered.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
+                                        <TableCell colSpan={8} className="text-center py-10 text-muted-foreground">
                                             No records found
                                         </TableCell>
                                     </TableRow>
                                 ) : (
                                     filtered.map((record) => (
                                         <TableRow key={record._id}>
+                                            <TableCell className="font-bold text-primary">
+                                                {record.registrationId || <span className="text-muted-foreground text-xs">—</span>}
+                                            </TableCell>
                                             <TableCell className="font-medium">{record.name}</TableCell>
                                             <TableCell>
                                                 <Badge

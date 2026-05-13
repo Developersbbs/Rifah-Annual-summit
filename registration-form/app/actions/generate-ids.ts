@@ -2,6 +2,7 @@
 
 import dbConnect from "@/lib/db"
 import Participant from "@/models/Participant"
+import SpeakerVolunteer from "@/models/SpeakerVolunteer"
 import Counter from "@/models/Counter"
 import { revalidatePath } from "next/cache"
 
@@ -62,8 +63,18 @@ export async function generateRegisterIds() {
             }
         }
 
+        // Backfill IDs for speakers/volunteers that are missing one
+        const svRecords = await SpeakerVolunteer.find({ registrationId: { $exists: false } })
+        for (const sv of svRecords) {
+            counter.seq += 1
+            sv.registrationId = buildRegistrationId(sv.name || "", counter.seq)
+            await sv.save()
+            updatedCount += 1
+        }
+
         await counter.save()
         revalidatePath("/admin")
+        revalidatePath("/admin/speakers")
 
         return { success: true, message: `Generated ${updatedCount} IDs` }
     } catch (error) {
