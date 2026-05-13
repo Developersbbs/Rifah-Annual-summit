@@ -96,6 +96,7 @@ export function ParticipantsTable<TData, TValue>({
     const [locationFilter, setLocationFilter] = React.useState<string>("all")
     const [genderFilter, setGenderFilter] = React.useState<string>("all")
     const [sponsorFilter, setSponsorFilter] = React.useState<string>("all")
+    const [statusFilter, setStatusFilter] = React.useState<string>("all")
 
     // Calculate Location Counts
     const locationOptions = React.useMemo(() => {
@@ -143,6 +144,13 @@ export function ParticipantsTable<TData, TValue>({
             const isSponsor = sponsorFilter === "sponsor"
             processedData = processedData.filter((item) =>
                 (item as unknown as IParticipant).isSponsor === isSponsor
+            )
+        }
+
+        // Status Filter
+        if (statusFilter !== "all") {
+            processedData = processedData.filter((item) =>
+                ((item as unknown as IParticipant).approvalStatus || "pending").toString().toLowerCase() === statusFilter.toLowerCase()
             )
         }
 
@@ -417,6 +425,21 @@ export function ParticipantsTable<TData, TValue>({
                         </Select>
                     </div>
 
+                    {/* Status Filter */}
+                    <div className="w-[150px]">
+                        <Select value={statusFilter} onValueChange={setStatusFilter}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Filter by Status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Statuses</SelectItem>
+                                <SelectItem value="pending">Pending</SelectItem>
+                                <SelectItem value="approved">Approved</SelectItem>
+                                <SelectItem value="rejected">Rejected</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
                     {/* Date Range Picker */}
                     <DatePickerWithRange date={dateRange} setDate={setDateRange} />
 
@@ -478,9 +501,9 @@ export function ParticipantsTable<TData, TValue>({
                             </>
                         )}
                     </Button>
-                    <Button variant="outline" onClick={downloadCSV}>
+                    {/* <Button variant="outline" onClick={downloadCSV}>
                         <Download className="h-4 w-4 mr-2" /> Excel
-                    </Button>
+                    </Button> */}
                     {/* <Button variant="outline" onClick={downloadPDF}>
                         <FileText className="h-4 w-4 mr-2" /> PDF
                     </Button> */}

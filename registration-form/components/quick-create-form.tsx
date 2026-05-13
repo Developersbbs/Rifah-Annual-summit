@@ -16,8 +16,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Separator } from "@/components/ui/separator"
 import { Label } from "@/components/ui/label"
-import { CheckCircle2, Loader2, AlertCircle, Phone, Shield, ShieldOff, Plus, Trash2, Users, ArrowLeft } from "lucide-react"
+import { CheckCircle2, Loader2, AlertCircle, Phone, Shield, ShieldOff, Plus, Trash2, Users, ArrowLeft, Download } from "lucide-react"
 import { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from "@/components/ui/input-otp"
+import { Participant } from "@/app/admin/columns"
+import { IParticipant } from "@/lib/types"
 
 interface SecondaryMember {
     name: string
@@ -65,7 +67,11 @@ const quickCreateSchema = z.object({
     termsAccepted: z.boolean().refine(val => val === true, "You must accept terms and conditions")
 })
 
-export function QuickCreateForm() {
+interface QuickCreateFormProps {
+    participants?: Participant[]
+}
+
+export function QuickCreateForm({ participants = [] }: QuickCreateFormProps) {
     const [step, setStep] = useState<Step>(Step.MODE_SELECTION)
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -257,6 +263,45 @@ export function QuickCreateForm() {
         }
     }
 
+    // Export to CSV function (moved from ParticipantsTable)
+    const downloadCSV = () => {
+        const headers = [
+            "Name", "Mobile", "Email", "Business", "Location",
+            "Amount", "Secondary Members", "Payment",
+            "Payment Status", "Approval Status", "Status",
+            "Registered At"
+        ]
+
+        const csvContent = "data:text/csv;charset=utf-8,"
+            + headers.join(",") + "\n"
+            + (participants as unknown as IParticipant[]).map((row) => {
+                const secondaryMembersCount = row.secondaryMembers?.length || 0
+
+                return [
+                    `"${row.name || ''}"`,
+                    `"${row.mobileNumber}"`,
+                    `"${row.email || ''}"`,
+                    `"${row.businessName || ''}"`,
+                    `"${row.location || ''}"`,
+                    `"${row.totalAmount || 0}"`,
+                    secondaryMembersCount,
+                    `"${row.paymentMethod || ''}"`,
+                    `"${row.paymentStatus || ''}"`,
+                    `"${row.approvalStatus || ''}"`,
+                    row.isRegistered ? "Registered" : "Pending",
+                    `"${new Date(row.createdAt).toLocaleDateString()}"`
+                ].join(",")
+            }).join("\n");
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "participants_export.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
     if (step === Step.SUCCESS) {
         return (
             <Card className="w-full max-w-md mx-auto text-center py-10">
@@ -335,6 +380,26 @@ export function QuickCreateForm() {
                                 <div className="font-semibold">Bulk Upload</div>
                                 <div className="text-sm text-muted-foreground">
                                     Register via Excel, CSV or JSON
+                                </div>
+                            </div>
+                        </div>
+                    </Button>
+
+                    <Separator className="my-2" />
+
+                    <Button
+                        onClick={downloadCSV}
+                        className="w-full h-16 text-left justify-start border-blue-200 bg-blue-50/50 hover:bg-blue-100/50"
+                        variant="outline"
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className="bg-blue-100 p-2 rounded-full">
+                                <Download className="h-5 w-5 text-blue-600" />
+                            </div>
+                            <div>
+                                <div className="font-semibold text-blue-700">Export All Records (Excel)</div>
+                                <div className="text-sm text-blue-600/70">
+                                    Download all participant data from the record page
                                 </div>
                             </div>
                         </div>

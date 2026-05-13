@@ -48,7 +48,7 @@ export async function getAdminData() {
             stats.totalGuests += totalMembers
             stats.totalAmount += totalAmount
             stats.totalMembers += totalMembers
-            
+
             if (paymentMethod === "cash") {
                 stats.cashPayments += 1
             } else {
@@ -194,7 +194,7 @@ export async function getLocationStats(from?: string, to?: string) {
         const statsArray = Object.values(stats).sort((a, b) => {
             const numA = parseInt(a._id) || 0
             const numB = parseInt(b._id) || 0
-            
+
             const isANum = !isNaN(parseInt(a._id))
             const isBNum = !isNaN(parseInt(b._id))
 

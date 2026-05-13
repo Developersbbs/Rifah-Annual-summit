@@ -81,7 +81,19 @@ export function AdminContent({ participants, stats, userRole }: AdminContentProp
           </div>
           <SectionCards stats={stats} />
           <div className="px-4 lg:px-6">
-            <h2 className="text-xl font-semibold mb-4">{t("Participants")}</h2>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+              <h2 className="text-xl font-semibold">{t("Participants")}</h2>
+              <div className="flex items-center gap-2 text-sm font-medium bg-primary/5 border border-primary/10 px-4 py-2 rounded-full shadow-sm">
+                <span className="text-muted-foreground">{t("Approved Members")}:</span>
+                <span className="text-blue-600">{stats.approvedMembers || 0}</span>
+                <span className="text-muted-foreground mx-1">+</span>
+                <span className="text-muted-foreground">{t("Sponsors")}:</span>
+                <span className="text-purple-600">{stats.totalSponsors || 0}</span>
+                <span className="text-muted-foreground mx-1">=</span>
+                <span className="text-muted-foreground">{t("Total Approval")}:</span>
+                <span className="font-bold text-green-600 text-base">{(stats.approvedMembers || 0) + (stats.totalSponsors || 0)}</span>
+              </div>
+            </div>
             <ParticipantsTable columns={columns} data={participants || []} userRole={userRole} />
           </div>
         </div>
