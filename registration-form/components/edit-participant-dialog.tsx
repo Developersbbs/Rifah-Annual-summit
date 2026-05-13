@@ -17,7 +17,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Loader2, AlertCircle } from "lucide-react"
+import { Loader2, AlertCircle, Plus, Trash2 } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { IParticipant } from "@/lib/types"
@@ -208,17 +208,46 @@ export function EditParticipantDialog({ participant, open, onOpenChange, onSucce
                             </div>
 
                             {/* SECTION 2: Secondary Members */}
-                            {secondaryMembers.length > 0 && (
-                                <div className="space-y-4">
-                                    <div className="flex items-center gap-2">
-                                        <h3 className="font-semibold text-lg">Secondary Members</h3>
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="font-semibold text-lg">Secondary Members</h3>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setSecondaryMembers(prev => [...prev, {
+                                            name: "", email: "", businessName: "",
+                                            businessCategory: "", location: "", gender: "", isCheckedIn: false
+                                        }])}
+                                        className="flex items-center gap-1"
+                                    >
+                                        <Plus className="h-4 w-4" />
+                                        Add Member
+                                    </Button>
+                                </div>
+
+                                {secondaryMembers.length === 0 ? (
+                                    <div className="text-center py-6 border-2 border-dashed rounded-lg text-muted-foreground text-sm">
+                                        No secondary members. Click &quot;Add Member&quot; to add one.
                                     </div>
-                                    {secondaryMembers.map((member, index) => (
+                                ) : (
+                                    secondaryMembers.map((member, index) => (
                                         <div key={index} className="border rounded-lg p-4 space-y-3 bg-muted/30">
-                                            <span className="text-sm font-medium text-muted-foreground">Member {index + 1}</span>
-                                            <div className="space-y-3">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-sm font-medium">Member {index + 1}</span>
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => setSecondaryMembers(prev => prev.filter((_, i) => i !== index))}
+                                                    className="h-7 w-7 text-destructive hover:text-destructive"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-3">
                                                 <div>
-                                                    <Label className="text-xs">Name</Label>
+                                                    <Label className="text-xs">Name *</Label>
                                                     <Input
                                                         value={member.name}
                                                         onChange={(e) => {
@@ -226,6 +255,7 @@ export function EditParticipantDialog({ participant, open, onOpenChange, onSucce
                                                             updated[index] = { ...updated[index], name: e.target.value }
                                                             setSecondaryMembers(updated)
                                                         }}
+                                                        placeholder="Full name"
                                                     />
                                                 </div>
                                                 <div>
@@ -238,6 +268,7 @@ export function EditParticipantDialog({ participant, open, onOpenChange, onSucce
                                                             updated[index] = { ...updated[index], email: e.target.value }
                                                             setSecondaryMembers(updated)
                                                         }}
+                                                        placeholder="email@example.com"
                                                     />
                                                 </div>
                                                 <div>
@@ -249,6 +280,7 @@ export function EditParticipantDialog({ participant, open, onOpenChange, onSucce
                                                             updated[index] = { ...updated[index], businessName: e.target.value }
                                                             setSecondaryMembers(updated)
                                                         }}
+                                                        placeholder="Business name"
                                                     />
                                                 </div>
                                                 <div>
@@ -260,6 +292,7 @@ export function EditParticipantDialog({ participant, open, onOpenChange, onSucce
                                                             updated[index] = { ...updated[index], businessCategory: e.target.value }
                                                             setSecondaryMembers(updated)
                                                         }}
+                                                        placeholder="Category"
                                                     />
                                                 </div>
                                                 <div>
@@ -271,12 +304,13 @@ export function EditParticipantDialog({ participant, open, onOpenChange, onSucce
                                                             updated[index] = { ...updated[index], location: e.target.value }
                                                             setSecondaryMembers(updated)
                                                         }}
+                                                        placeholder="Location"
                                                     />
                                                 </div>
                                                 <div>
                                                     <Label className="text-xs">Gender</Label>
-                                                    <Select 
-                                                        value={member.gender} 
+                                                    <Select
+                                                        value={member.gender}
                                                         onValueChange={(value) => {
                                                             const updated = [...secondaryMembers]
                                                             updated[index] = { ...updated[index], gender: value }
@@ -284,7 +318,7 @@ export function EditParticipantDialog({ participant, open, onOpenChange, onSucce
                                                         }}
                                                     >
                                                         <SelectTrigger className="h-10">
-                                                            <SelectValue placeholder="Select Gender" />
+                                                            <SelectValue placeholder="Select gender" />
                                                         </SelectTrigger>
                                                         <SelectContent>
                                                             <SelectItem value="male">Male</SelectItem>
@@ -296,9 +330,9 @@ export function EditParticipantDialog({ participant, open, onOpenChange, onSucce
                                                 </div>
                                             </div>
                                         </div>
-                                    ))}
-                                </div>
-                            )}
+                                    ))
+                                )}
+                            </div>
 
                             {dbError && <Alert variant="destructive"><AlertCircle className="h-4 w-4" /><AlertTitle>Error</AlertTitle><AlertDescription>{dbError}</AlertDescription></Alert>}
 
