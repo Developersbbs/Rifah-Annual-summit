@@ -22,6 +22,16 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { IParticipant } from "@/lib/types"
 
+const TAMIL_NADU_DISTRICTS = [
+    "Ariyalur", "Chengalpattu", "Chennai", "Coimbatore", "Cuddalore",
+    "Dharmapuri", "Dindigul", "Erode", "Kallakurichi", "Kanchipuram",
+    "Kanyakumari", "Karur", "Krishnagiri", "Madurai", "Nagapattinam",
+    "Namakkal", "Nilgiris", "Perambalur", "Pudukkottai", "Ramanathapuram",
+    "Ranipet", "Salem", "Sivaganga", "Tenkasi", "Thanjavur", "Theni",
+    "Thoothukudi", "Tiruchirappalli", "Tirunelveli", "Tirupathur", "Tiruppur",
+    "Tiruvallur", "Tiruvannamalai", "Tiruvarur", "Vellore", "Viluppuram", "Virudhunagar"
+]
+
 const personalDetailsSchema = z.object({
     name: z.string().min(2, "Name must be at least 2 characters"),
     email: z.string().email("Invalid email format").optional(),
@@ -43,7 +53,7 @@ interface EditParticipantDialogProps {
 export function EditParticipantDialog({ participant, open, onOpenChange, onSuccess }: EditParticipantDialogProps) {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [dbError, setDbError] = useState<string | null>(null)
-    const [secondaryMembers, setSecondaryMembers] = useState<Array<{ name: string; email: string; businessName: string; businessCategory: string; location: string; gender: string; isCheckedIn: boolean }>>([])
+    const [secondaryMembers, setSecondaryMembers] = useState<Array<{ name: string; mobileNumber: string; email: string; businessName: string; businessCategory: string; location: string; gender: string; isCheckedIn: boolean }>>([])
 
     const form = useForm<z.infer<typeof personalDetailsSchema>>({
         resolver: zodResolver(personalDetailsSchema),
@@ -76,6 +86,7 @@ export function EditParticipantDialog({ participant, open, onOpenChange, onSucce
             setSecondaryMembers(
                 participant.secondaryMembers?.map((member) => ({
                     name: member.name || "",
+                    mobileNumber: (member as { mobileNumber?: string }).mobileNumber || "",
                     email: member.email || "",
                     businessName: member.businessName || "",
                     businessCategory: member.businessCategory || "",
@@ -216,7 +227,7 @@ export function EditParticipantDialog({ participant, open, onOpenChange, onSucce
                                         variant="outline"
                                         size="sm"
                                         onClick={() => setSecondaryMembers(prev => [...prev, {
-                                            name: "", email: "", businessName: "",
+                                            name: "", mobileNumber: "", email: "", businessName: "",
                                             businessCategory: "", location: "", gender: "", isCheckedIn: false
                                         }])}
                                         className="flex items-center gap-1"
@@ -259,6 +270,18 @@ export function EditParticipantDialog({ participant, open, onOpenChange, onSucce
                                                     />
                                                 </div>
                                                 <div>
+                                                    <Label className="text-xs">Mobile Number</Label>
+                                                    <Input
+                                                        value={member.mobileNumber}
+                                                        onChange={(e) => {
+                                                            const updated = [...secondaryMembers]
+                                                            updated[index] = { ...updated[index], mobileNumber: e.target.value }
+                                                            setSecondaryMembers(updated)
+                                                        }}
+                                                        placeholder="+91 98765 43210"
+                                                    />
+                                                </div>
+                                                <div>
                                                     <Label className="text-xs">Email</Label>
                                                     <Input
                                                         type="email"
@@ -297,15 +320,23 @@ export function EditParticipantDialog({ participant, open, onOpenChange, onSucce
                                                 </div>
                                                 <div>
                                                     <Label className="text-xs">Location</Label>
-                                                    <Input
+                                                    <Select
                                                         value={member.location}
-                                                        onChange={(e) => {
+                                                        onValueChange={(value) => {
                                                             const updated = [...secondaryMembers]
-                                                            updated[index] = { ...updated[index], location: e.target.value }
+                                                            updated[index] = { ...updated[index], location: value }
                                                             setSecondaryMembers(updated)
                                                         }}
-                                                        placeholder="Location"
-                                                    />
+                                                    >
+                                                        <SelectTrigger className="h-10">
+                                                            <SelectValue placeholder="Select location" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {TAMIL_NADU_DISTRICTS.map(district => (
+                                                                <SelectItem key={district} value={district}>{district}</SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
                                                 </div>
                                                 <div>
                                                     <Label className="text-xs">Gender</Label>
