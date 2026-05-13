@@ -10,6 +10,7 @@ import {
   IconDatabase,
   IconListDetails,
   IconHistory,
+  IconMicrophone,
 } from "@tabler/icons-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -68,6 +69,11 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
       title: t("Check-in"),
       url: "/admin/checkin",
       icon: IconListDetails,
+    },
+    {
+      title: t("Speakers & Volunteers"),
+      url: "/admin/speakers",
+      icon: IconMicrophone,
     },
     ...(user?.role === 'super-admin' ? [
       {
