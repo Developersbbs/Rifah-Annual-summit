@@ -22,6 +22,8 @@ export default async function Page() {
     onlinePayments: 0,
     totalMembers: 0,
     totalSponsors: 0,
+    speakerCount: 0,
+    volunteerCount: 0,
   }
 
   return (

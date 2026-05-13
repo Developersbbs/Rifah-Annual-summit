@@ -1,4 +1,4 @@
-import { IconUsers, IconCurrencyRupee, IconClock, IconCheck, IconX } from "@tabler/icons-react"
+import { IconUsers, IconCurrencyRupee, IconClock, IconCheck, IconX, IconMicrophone, IconHandStop } from "@tabler/icons-react"
 import {
   Card,
   CardDescription,
@@ -24,6 +24,8 @@ interface SectionCardsProps {
     approvedPrimary?: number
     approvedSecondary?: number
     totalSponsors?: number
+    speakerCount?: number
+    volunteerCount?: number
   }
 }
 
@@ -98,15 +100,18 @@ export function SectionCards({ stats }: SectionCardsProps) {
         <CardHeader>
           <CardDescription>{t("Sponsorship")}</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            {stats.totalSponsors || 0}
+            {(stats.totalSponsors || 0) + (stats.speakerCount || 0) + (stats.volunteerCount || 0)}
           </CardTitle>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="line-clamp-1 flex gap-2 font-medium">
             <IconUsers className="size-4 text-purple-500" /> {t("Total Sponsors")}: {stats.totalSponsors || 0}
           </div>
-          <div className="text-muted-foreground text-xs">
-            {t("Participants marked as event sponsors")}
+          <div className="line-clamp-1 flex gap-2 font-medium">
+            <IconMicrophone className="size-4 text-orange-500" /> {t("Speakers")}: {stats.speakerCount || 0}
+          </div>
+          <div className="line-clamp-1 flex gap-2 font-medium">
+            <IconHandStop className="size-4 text-teal-500" /> {t("Volunteers")}: {stats.volunteerCount || 0}
           </div>
         </CardFooter>
       </Card>

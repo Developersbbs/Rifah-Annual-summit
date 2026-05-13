@@ -2,6 +2,7 @@
 
 import dbConnect from "@/lib/db"
 import Participant from "@/models/Participant"
+import SpeakerVolunteer from "@/models/SpeakerVolunteer"
 import { startOfDay, endOfDay } from "date-fns"
 import { IParticipant } from "@/lib/types"
 
@@ -21,6 +22,11 @@ export async function getAdminData() {
     try {
         const participants = await Participant.find({ isRegistered: true }).sort({ createdAt: -1 }).lean()
 
+        const [speakerCount, volunteerCount] = await Promise.all([
+            SpeakerVolunteer.countDocuments({ role: "speaker" }),
+            SpeakerVolunteer.countDocuments({ role: "volunteer" }),
+        ])
+
         const stats = {
             totalRegistrations: participants.length,
             totalGuests: 0,
@@ -35,6 +41,8 @@ export async function getAdminData() {
             onlinePayments: 0,
             totalMembers: 0,
             totalSponsors: 0,
+            speakerCount,
+            volunteerCount,
         };
 
         (participants as unknown as IParticipant[]).forEach((p: IParticipant) => {
