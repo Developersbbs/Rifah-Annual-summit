@@ -22,6 +22,9 @@ export async function sendRegistrationEmails(participant: IParticipant, eventNam
             port,
             secure: port === 465,
             auth: { user, pass },
+            pool: true,
+            maxConnections: 5,
+            maxMessages: 100
         })
 
         const language = participant.registrationLanguage || 'en'
@@ -199,49 +202,43 @@ export async function sendRegistrationEmails(participant: IParticipant, eventNam
             }
         }
 
-        // 4.1 Send to Secondary Members (if they have emails)
+        // 4.1 Send to Secondary Members (if they have emails) concurrently
         if (participant.secondaryMembers && participant.secondaryMembers.length > 0) {
-            for (const sm of participant.secondaryMembers) {
-                if (sm.email) {
-                    try {
-                        const smHtml = getMemberEmailHtml({
-                            participant: sm as unknown as IParticipant,
-                            eventName,
-                            isTamil,
-                            isPending,
-                            isPrimary: false,
-                            primaryName: participant.name
-                        })
+            const smRecipients = participant.secondaryMembers.filter(sm => sm.email)
+            await Promise.all(smRecipients.map(async (sm) => {
+                try {
+                    const smHtml = getMemberEmailHtml({
+                        participant: sm as unknown as IParticipant,
+                        eventName,
+                        isTamil,
+                        isPending,
+                        isPrimary: false,
+                        primaryName: participant.name
+                    })
 
-                        await transporter.sendMail({
-                            from: fromEmail || user,
-                            to: sm.email,
-                            subject: memberSubject,
-                            html: smHtml,
-                            attachments: [
-                                // {
-                                //     filename: 'mail1.jpeg',
-                                //     path: path.join(process.cwd(), 'public', 'assets', 'mail1.jpeg'),
-                                //     cid: 'mail1'
-                                // },
-                                {
-                                    filename: 'mail2.jpeg',
-                                    path: path.join(process.cwd(), 'public', 'assets', 'mail2.jpeg'),
-                                    cid: 'mail2'
-                                },
-                                {
-                                    filename: 'logo.png',
-                                    path: path.join(process.cwd(), 'public', 'assets', 'logo.png'),
-                                    cid: 'logo'
-                                }
-                            ]
-                        })
-                        console.log(`Confirmation email sent to secondary member: ${sm.email}`)
-                    } catch (smErr) {
-                        console.error(`Failed to send email to secondary member (${sm.email}):`, smErr)
-                    }
+                    await transporter.sendMail({
+                        from: fromEmail || user,
+                        to: sm.email,
+                        subject: memberSubject,
+                        html: smHtml,
+                        attachments: [
+                            {
+                                filename: 'mail2.jpeg',
+                                path: path.join(process.cwd(), 'public', 'assets', 'mail2.jpeg'),
+                                cid: 'mail2'
+                            },
+                            {
+                                filename: 'logo.png',
+                                path: path.join(process.cwd(), 'public', 'assets', 'logo.png'),
+                                cid: 'logo'
+                            }
+                        ]
+                    })
+                    console.log(`Confirmation email sent to secondary member: ${sm.email}`)
+                } catch (smErr) {
+                    console.error(`Failed to send email to secondary member (${sm.email}):`, smErr)
                 }
-            }
+            }))
         }
 
         if (!skipAdmin) {
@@ -307,6 +304,9 @@ export async function sendAlertEmail(
             port,
             secure: port === 465,
             auth: { user, pass },
+            pool: true, // Use a connection pool for better performance with bulk emails
+            maxConnections: 5,
+            maxMessages: 100
         })
 
         let successCount = 0
@@ -321,35 +321,43 @@ export async function sendAlertEmail(
             return true
         })
 
-        for (const recipient of uniqueRecipients) {
-            if (!recipient.email || recipient.email === 'N/A') {
-                failureCount++
-                continue
-            }
+        const logoPath = path.join(process.cwd(), 'public', 'assets', 'logo.png')
 
-            const html = getAlertEmailHtml({ name: recipient.name, registrationId: recipient.registrationId })
+        // Send in batches to avoid overwhelming the SMTP server or hitting rate limits
+        const batchSize = 10
+        for (let i = 0; i < uniqueRecipients.length; i += batchSize) {
+            const batch = uniqueRecipients.slice(i, i + batchSize)
+            await Promise.all(batch.map(async (recipient) => {
+                if (!recipient.email || recipient.email === 'N/A') {
+                    failureCount++
+                    return
+                }
 
-            try {
-                await transporter.sendMail({
-                    from: fromEmail || user,
-                    to: recipient.email,
-                    subject,
-                    html,
-                    attachments: [
-                        {
-                            filename: 'logo.png',
-                            path: path.join(process.cwd(), 'public', 'assets', 'logo.png'),
-                            cid: 'logo'
-                        }
-                    ]
-                })
-                successCount++
-            } catch (err) {
-                console.error(`Failed to send alert email to ${recipient.email}:`, err)
-                failureCount++
-            }
+                const html = getAlertEmailHtml({ name: recipient.name, registrationId: recipient.registrationId })
+
+                try {
+                    await transporter.sendMail({
+                        from: fromEmail || user,
+                        to: recipient.email,
+                        subject,
+                        html,
+                        attachments: [
+                            {
+                                filename: 'logo.png',
+                                path: logoPath,
+                                cid: 'logo'
+                            }
+                        ]
+                    })
+                    successCount++
+                } catch (err) {
+                    console.error(`Failed to send alert email to ${recipient.email}:`, err)
+                    failureCount++
+                }
+            }))
         }
 
+        transporter.close() // Close the pool
         return { success: true, successCount, failureCount }
     } catch (error) {
         console.error("Error in sendAlertEmail:", error)
@@ -510,7 +518,6 @@ function getAlertEmailHtml(params: { name: string; registrationId: string }) {
           <td style="background:#1f2937;padding:28px 30px;text-align:center;">
             <img src="cid:logo" alt="RIFAH" style="width:60px;height:auto;margin-bottom:12px;display:block;margin-left:auto;margin-right:auto;">
             <p style="color:#ffffff;font-size:15px;font-weight:600;margin:0 0 4px;">RIFAH</p>
-            <p style="color:#9ca3af;font-size:13px;margin:0 0 16px;">Tamilnadu Traders Federation</p>
             <div style="border-top:1px solid #374151;padding-top:16px;">
               <p style="color:#6b7280;font-size:11px;margin:0;">This message was sent by the event organizers. Please do not reply to this email.</p>
             </div>
@@ -789,7 +796,6 @@ function getMemberEmailHtml(params: {
                         <div style="margin-bottom: 20px;">
                             <img src="cid:logo" alt="RIFAH Logo" style="width: 80px; height: auto; margin: 0 auto 15px; display: block;">
                             <h4 style="color: #ffffff; font-size: 18px; font-weight: 600; margin: 0;">RIFAH</h4>
-                            <p style="color: #9ca3af; font-size: 14px; margin: 5px 0 0;">Tamilnadu Traders Federation</p>
                         </div>
                         <div style="border-top: 1px solid #374151; padding-top: 20px;">
                             <p style="color: #9ca3af; font-size: 12px; margin: 0;">
