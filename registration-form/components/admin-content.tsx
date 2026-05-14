@@ -27,6 +27,8 @@ interface AdminStats {
   approvedMembers?: number
   approvedPrimary?: number
   approvedSecondary?: number
+  approvedNonSponsors?: number
+  approvedSponsorsCount?: number
   totalSponsors?: number
   speakerCount?: number
   volunteerCount?: number
@@ -87,10 +89,10 @@ export function AdminContent({ participants, stats, userRole }: AdminContentProp
               <h2 className="text-xl font-semibold">{t("Participants")}</h2>
               <div className="flex flex-wrap items-center gap-2 text-sm font-medium bg-primary/5 border border-primary/10 px-4 py-2 rounded-full shadow-sm">
                 <span className="text-muted-foreground">{t("Approved Members")}:</span>
-                <span className="text-blue-600">{stats.approvedMembers || 0}</span>
+                <span className="text-blue-600 font-bold">{stats.approvedNonSponsors || 0}</span>
                 <span className="text-muted-foreground mx-1">+</span>
                 <span className="text-muted-foreground">{t("Sponsors")}:</span>
-                <span className="text-purple-600">{stats.totalSponsors || 0}</span>
+                <span className="text-purple-600 font-bold">{stats.approvedSponsorsCount || 0}</span>
                 <span className="text-muted-foreground mx-1">+</span>
                 <span className="text-muted-foreground">{t("Speakers")}:</span>
                 <span className="text-orange-600">{stats.speakerCount || 0}</span>
@@ -100,7 +102,7 @@ export function AdminContent({ participants, stats, userRole }: AdminContentProp
                 <span className="text-muted-foreground mx-1">=</span>
                 <span className="text-muted-foreground">{t("Total Approval")}:</span>
                 <span className="font-bold text-green-600 text-base">
-                  {(stats.approvedMembers || 0) + (stats.totalSponsors || 0) + (stats.speakerCount || 0) + (stats.volunteerCount || 0)}
+                  {(stats.approvedNonSponsors || 0) + (stats.approvedSponsorsCount || 0) + (stats.speakerCount || 0) + (stats.volunteerCount || 0)}
                 </span>
               </div>
             </div>

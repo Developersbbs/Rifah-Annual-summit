@@ -36,11 +36,13 @@ export async function getAdminData() {
             approvedMembers: 0,
             approvedPrimary: 0,
             approvedSecondary: 0,
+            approvedNonSponsors: 0, // NEW: Approved people who are NOT sponsors
+            approvedSponsorsCount: 0, // NEW: Approved people who ARE sponsors
             rejectedRegistrations: 0,
             cashPayments: 0,
             onlinePayments: 0,
             totalMembers: 0,
-            totalSponsors: 0,
+            totalSponsors: 0, // All sponsor registrations
             speakerCount,
             volunteerCount,
         };
@@ -67,11 +69,14 @@ export async function getAdminData() {
                 stats.pendingApprovals += 1
             } else if (approvalStatus === "approved") {
                 stats.approvedRegistrations += 1
-                // Only count as "Approved Member" if not a sponsor
-                if (!p.isSponsor) {
-                    stats.approvedMembers += totalMembers
-                    stats.approvedPrimary += 1
-                    stats.approvedSecondary += secondaryMembersCount
+                stats.approvedMembers += totalMembers
+                stats.approvedPrimary += 1
+                stats.approvedSecondary += secondaryMembersCount
+                
+                if (p.isSponsor) {
+                    stats.approvedSponsorsCount += totalMembers
+                } else {
+                    stats.approvedNonSponsors += totalMembers
                 }
             } else if (approvalStatus === "rejected") {
                 stats.rejectedRegistrations += 1
