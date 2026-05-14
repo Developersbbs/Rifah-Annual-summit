@@ -285,6 +285,249 @@ export interface AlertEmailRecipient {
     email: string
 }
 
+export async function sendThankYouEmail(
+    recipients: AlertEmailRecipient[]
+): Promise<{ success: boolean; successCount: number; failureCount: number; error?: string }> {
+    const subject = "Thank You for Attending — RIFAH Annual Summit 2026"
+    try {
+        await dbConnect()
+
+        const config = await SystemConfig.findOne({ key: 'smtp' }).lean()
+        if (!config || !config.value) {
+            return { success: false, successCount: 0, failureCount: recipients.length, error: "SMTP not configured" }
+        }
+
+        const { host, port, user, pass, fromEmail } = config.value
+
+        const transporter = nodemailer.createTransport({
+            host,
+            port,
+            secure: port === 465,
+            auth: { user, pass },
+            pool: true,
+            maxConnections: 5,
+            maxMessages: 100
+        })
+
+        let successCount = 0
+        let failureCount = 0
+
+        const seen = new Set<string>()
+        const uniqueRecipients = recipients.filter(r => {
+            const addr = r.email?.toLowerCase()
+            if (!addr || addr === 'n/a' || !addr.includes('@') || seen.has(addr)) return false
+            seen.add(addr)
+            return true
+        })
+
+        const logoPath = path.join(process.cwd(), 'public', 'assets', 'logo.png')
+
+        const batchSize = 10
+        for (let i = 0; i < uniqueRecipients.length; i += batchSize) {
+            const batch = uniqueRecipients.slice(i, i + batchSize)
+            await Promise.all(batch.map(async (recipient) => {
+                if (!recipient.email || recipient.email === 'N/A') {
+                    failureCount++
+                    return
+                }
+
+                const html = getThankYouEmailHtml({ name: recipient.name, registrationId: recipient.registrationId })
+
+                try {
+                    await transporter.sendMail({
+                        from: fromEmail || user,
+                        to: recipient.email,
+                        subject,
+                        html,
+                        attachments: [
+                            {
+                                filename: 'logo.png',
+                                path: logoPath,
+                                cid: 'logo'
+                            }
+                        ]
+                    })
+                    successCount++
+                } catch (err) {
+                    console.error(`Failed to send thank you email to ${recipient.email}:`, err)
+                    failureCount++
+                }
+            }))
+        }
+
+        transporter.close()
+        return { success: true, successCount, failureCount }
+    } catch (error) {
+        console.error("Error in sendThankYouEmail:", error)
+        return { success: false, successCount: 0, failureCount: recipients.length, error: "Email process failed" }
+    }
+}
+
+function getThankYouEmailHtml(params: { name: string; registrationId: string }) {
+    const { name, registrationId } = params
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thank You — RIFAH Annual Summit 2026</title>
+  <style>
+    @media only screen and (max-width:600px){
+      .email-wrapper{width:100%!important;padding:0!important;}
+      .content-pad{padding:24px 16px!important;}
+      .info-card{padding:16px!important;}
+      h1.title{font-size:20px!important;}
+      .highlight-card{padding:20px 16px!important;}
+    }
+  </style>
+</head>
+<body style="margin:0;padding:0;background-color:#f1f5f9;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f1f5f9;">
+    <tr><td align="center" style="padding:24px 8px;">
+
+      <table role="presentation" class="email-wrapper" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.10);">
+
+        <!-- ===== HEADER ===== -->
+        <tr>
+          <td style="background:linear-gradient(135deg,#d10c09 0%,#f52404 100%);padding:44px 30px;text-align:center;position:relative;overflow:hidden;">
+            <div style="position:absolute;top:-60%;right:-40%;width:220%;height:220%;background:radial-gradient(circle,rgba(255,255,255,0.08) 0%,transparent 65%);pointer-events:none;"></div>
+            <div style="position:relative;z-index:1;">
+              <div style="width:76px;height:76px;background:rgba(255,255,255,0.15);border-radius:50%;margin:0 auto 18px;line-height:76px;text-align:center;">
+                <img src="cid:logo" width="56" height="56" alt="RIFAH" style="vertical-align:middle;display:inline-block;">
+              </div>
+              <h1 class="title" style="color:#ffffff;font-size:26px;font-weight:700;margin:0 0 10px;text-shadow:0 2px 6px rgba(0,0,0,0.18);line-height:1.3;">
+                Thank You for Attending!
+              </h1>
+              <p style="color:rgba(255,255,255,0.88);font-size:15px;margin:0;line-height:1.5;">
+                RIFAH Annual Summit 2026 &mdash; <em>Let&rsquo;s Grow Together</em>
+              </p>
+            </div>
+          </td>
+        </tr>
+
+        <!-- ===== BODY ===== -->
+        <tr>
+          <td class="content-pad" style="padding:36px 30px;">
+
+            <!-- Greeting -->
+            <p style="color:#1f2937;font-size:17px;font-weight:600;margin:0 0 14px;">Dear <strong>${name}</strong>,</p>
+            <p style="color:#374151;font-size:15px;line-height:1.8;margin:0 0 28px;">
+              On behalf of the entire <strong>RIFAH</strong> team, we extend our heartfelt gratitude for your presence at the
+              <strong>RIFAH Annual Summit 2026</strong>. Your participation made this event truly remarkable and memorable.
+            </p>
+
+            <!-- Thank You Highlight -->
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+              <tr>
+                <td class="highlight-card" style="background:linear-gradient(135deg,#fff7ed 0%,#fef9ec 100%);border:1.5px solid #fcd34d;border-radius:14px;padding:26px 24px;text-align:center;">
+                  <div style="font-size:34px;margin-bottom:12px;">🌟</div>
+                  <p style="color:#92400e;font-size:16px;font-weight:700;margin:0 0 10px;line-height:1.4;">
+                    Your presence meant the world to us!
+                  </p>
+                  <p style="color:#78350f;font-size:14px;margin:0;line-height:1.7;">
+                    Together, we shared ideas, built meaningful connections, and took a collective step forward in strengthening our business community.
+                  </p>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Registration ID -->
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+              <tr>
+                <td style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px 24px;">
+                  <p style="color:#6b7280;font-size:11px;font-weight:700;margin:0 0 8px;text-transform:uppercase;letter-spacing:0.08em;">Your Registration ID</p>
+                  <p style="color:#1e40af;font-size:26px;font-weight:800;margin:0 0 6px;letter-spacing:0.04em;">${registrationId}</p>
+                  <p style="color:#9ca3af;font-size:13px;margin:0;">Thank you for being part of this landmark event.</p>
+                </td>
+              </tr>
+            </table>
+
+            <!-- What We Achieved -->
+            <p style="color:#6b7280;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 12px;">What We Achieved Together</p>
+            <table role="presentation" class="info-card" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;">
+              <tr>
+                <td style="padding:20px;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td style="padding-bottom:12px;vertical-align:top;">
+                        <table role="presentation" cellpadding="0" cellspacing="0">
+                          <tr>
+                            <td style="width:30px;color:#dc2626;font-size:18px;font-weight:700;vertical-align:top;padding-top:2px;">&#x2736;</td>
+                            <td style="color:#374151;font-size:14px;line-height:1.7;">Inspiring keynotes and actionable business insights from industry leaders</td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding-bottom:12px;vertical-align:top;">
+                        <table role="presentation" cellpadding="0" cellspacing="0">
+                          <tr>
+                            <td style="width:30px;color:#dc2626;font-size:18px;font-weight:700;vertical-align:top;padding-top:2px;">&#x2736;</td>
+                            <td style="color:#374151;font-size:14px;line-height:1.7;">Meaningful networking with fellow entrepreneurs, traders, and business leaders</td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="vertical-align:top;">
+                        <table role="presentation" cellpadding="0" cellspacing="0">
+                          <tr>
+                            <td style="width:30px;color:#dc2626;font-size:18px;font-weight:700;vertical-align:top;padding-top:2px;">&#x2736;</td>
+                            <td style="color:#374151;font-size:14px;line-height:1.7;">A shared vision for a stronger, more unified and prosperous business community</td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Stay Connected -->
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+              <tr>
+                <td style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:12px;padding:22px 24px;text-align:center;">
+                  <p style="color:#991b1b;font-size:15px;font-weight:700;margin:0 0 8px;">Stay Connected with RIFAH</p>
+                  <p style="color:#7f1d1d;font-size:13px;margin:0;line-height:1.7;">
+                    Follow us for updates on future events, workshops, and community initiatives.
+                    Your journey with the RIFAH family has just begun &mdash; and we are excited for what lies ahead!
+                  </p>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Closing -->
+            <p style="color:#374151;font-size:15px;line-height:1.8;margin:0 0 24px;">
+              We hope you found the summit valuable, enriching, and inspiring. We look forward to welcoming you at our future events and continuing this wonderful journey of growth together.
+            </p>
+            <p style="color:#1f2937;font-size:15px;margin:0;line-height:1.9;">
+              With warm regards,<br>
+              <strong style="font-size:16px;">Team RIFAH</strong><br>
+              <span style="color:#6b7280;font-size:13px;">Tamilnadu Traders Federation</span>
+            </p>
+
+          </td>
+        </tr>
+
+        <!-- ===== FOOTER ===== -->
+        <tr>
+          <td style="background:#1f2937;padding:30px;text-align:center;">
+            <img src="cid:logo" alt="RIFAH" style="width:62px;height:auto;margin-bottom:12px;display:block;margin-left:auto;margin-right:auto;">
+            <p style="color:#ffffff;font-size:15px;font-weight:600;margin:0 0 4px;">RIFAH</p>
+            <p style="color:#9ca3af;font-size:13px;margin:0 0 18px;">Tamilnadu Traders Federation</p>
+            <div style="border-top:1px solid #374151;padding-top:18px;">
+              <p style="color:#6b7280;font-size:11px;margin:0;">This message was sent by the event organizers. Please do not reply to this email.</p>
+            </div>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+}
+
 export async function sendAlertEmail(
     recipients: AlertEmailRecipient[]
 ): Promise<{ success: boolean; successCount: number; failureCount: number; error?: string }> {

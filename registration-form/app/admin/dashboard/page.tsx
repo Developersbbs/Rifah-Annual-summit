@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useMemo } from "react"
-import { Download, CheckCircle2, Loader2 } from "lucide-react"
+import { Download, CheckCircle2, Loader2, Send, Mail } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useTranslation } from "react-i18next"
 import "@/lib/i18n"
@@ -21,6 +21,14 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
 import {
     IconFileSpreadsheet,
     IconFileDescription,
@@ -83,6 +91,10 @@ export default function DashboardPage() {
     const [pagination, setPagination] = React.useState<PaginationData | null>(null)
     const [downloading, setDownloading] = React.useState<string | null>(null)
     const [viewingParticipant, setViewingParticipant] = React.useState<IParticipant | null>(null)
+    const [showThankYouDialog, setShowThankYouDialog] = React.useState(false)
+    const [sendingThankYou, setSendingThankYou] = React.useState(false)
+    const [thankYouResult, setThankYouResult] = React.useState<{ successCount: number; failureCount: number } | null>(null)
+    const [sendingEmailId, setSendingEmailId] = React.useState<string | null>(null)
 
     const loadStats = React.useCallback(async () => {
         try {
@@ -128,6 +140,61 @@ export default function DashboardPage() {
         loadRecords()
     }, [loadRecords, filter, type, page, search, regId])
 
+    const handleSendThankYouEmails = async () => {
+        setSendingThankYou(true)
+        setThankYouResult(null)
+        try {
+            const res = await fetch("/api/admin/send-thank-you-email", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({})
+            })
+            const data = await res.json()
+            if (res.ok) {
+                setThankYouResult(data.details)
+            } else {
+                alert(data.error || "Failed to send emails")
+                setShowThankYouDialog(false)
+            }
+        } catch {
+            alert("An error occurred while sending emails.")
+            setShowThankYouDialog(false)
+        } finally {
+            setSendingThankYou(false)
+        }
+    }
+
+    const handleSendIndividualEmail = async (record: DashboardRecord) => {
+        if (!record.email || !record.email.includes("@")) {
+            alert(t("This participant has no valid email address."))
+            return
+        }
+        setSendingEmailId(record._id)
+        try {
+            const res = await fetch("/api/admin/send-thank-you-email", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    recipients: [{
+                        registrationId: record.registrationId || "N/A",
+                        name: record.name,
+                        email: record.email,
+                    }]
+                })
+            })
+            const data = await res.json()
+            if (res.ok && data.details?.successCount > 0) {
+                alert(`${t("Thank you email sent to")} ${record.name} (${record.email})`)
+            } else {
+                alert(data.error || t("Failed to send email."))
+            }
+        } catch {
+            alert(t("An error occurred while sending the email."))
+        } finally {
+            setSendingEmailId(null)
+        }
+    }
+
     const download = async (format: "xlsx" | "csv" | "json") => {
         setDownloading(format)
         try {
@@ -154,6 +221,15 @@ export default function DashboardPage() {
         <div className="space-y-6 p-5">
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-bold">{t("Dashboard")}</h1>
+                <div className="flex items-center gap-2">
+                <Button
+                    variant="outline"
+                    className="flex items-center gap-2 border-red-200 text-red-700 hover:bg-red-50"
+                    onClick={() => { setShowThankYouDialog(true); setThankYouResult(null) }}
+                >
+                    <Send className="h-4 w-4" />
+                    {t("Send Thank You")}
+                </Button>
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button className="flex items-center gap-2" disabled={!!downloading}>
@@ -180,6 +256,7 @@ export default function DashboardPage() {
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
+                </div>
             </div>
 
             {/* Stats Cards */}
@@ -372,13 +449,29 @@ export default function DashboardPage() {
                                             ) : "—"}
                                         </TableCell>
                                         <TableCell className="text-center">
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => setViewingParticipant(record.originalParticipant)}
-                                            >
-                                                {t("View")}
-                                            </Button>
+                                            <div className="flex items-center justify-center gap-1">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => setViewingParticipant(record.originalParticipant)}
+                                                >
+                                                    {t("View")}
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-8 w-8 text-red-600 hover:bg-red-50 hover:text-red-700 disabled:opacity-40"
+                                                    title={record.email && record.email.includes("@") ? `${t("Send thank you email to")} ${record.email}` : t("No email address")}
+                                                    disabled={!record.email || !record.email.includes("@") || sendingEmailId === record._id}
+                                                    onClick={() => handleSendIndividualEmail(record)}
+                                                >
+                                                    {sendingEmailId === record._id ? (
+                                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                                    ) : (
+                                                        <Mail className="h-4 w-4" />
+                                                    )}
+                                                </Button>
+                                            </div>
                                         </TableCell>
                                     </TableRow>
                                 ))
@@ -423,6 +516,75 @@ export default function DashboardPage() {
                     onOpenChange={(open) => !open && setViewingParticipant(null)}
                 />
             )}
+
+            <Dialog open={showThankYouDialog} onOpenChange={(open) => {
+                if (!sendingThankYou) {
+                    setShowThankYouDialog(open)
+                    if (!open) setThankYouResult(null)
+                }
+            }}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <Send className="h-5 w-5 text-red-600" />
+                            {thankYouResult ? t("Emails Sent") : t("Send Thank You Emails")}
+                        </DialogTitle>
+                        <DialogDescription>
+                            {thankYouResult
+                                ? t("The thank you emails have been sent to all approved participants.")
+                                : t("This will send a 'Thank You for Attending' email to all approved participants who have a valid email address.")}
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    {thankYouResult ? (
+                        <div className="space-y-3 py-2">
+                            <div className="flex items-center justify-between rounded-lg border p-3 bg-green-50">
+                                <span className="text-sm font-medium text-green-800">{t("Successfully sent")}</span>
+                                <span className="text-lg font-bold text-green-700">{thankYouResult.successCount}</span>
+                            </div>
+                            {thankYouResult.failureCount > 0 && (
+                                <div className="flex items-center justify-between rounded-lg border p-3 bg-red-50">
+                                    <span className="text-sm font-medium text-red-800">{t("Failed")}</span>
+                                    <span className="text-lg font-bold text-red-700">{thankYouResult.failureCount}</span>
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                            {t("Only participants with a valid email address will receive the email. This action cannot be undone.")}
+                        </div>
+                    )}
+
+                    <DialogFooter className="gap-2">
+                        <Button
+                            variant="outline"
+                            onClick={() => { setShowThankYouDialog(false); setThankYouResult(null) }}
+                            disabled={sendingThankYou}
+                        >
+                            {thankYouResult ? t("Close") : t("Cancel")}
+                        </Button>
+                        {!thankYouResult && (
+                            <Button
+                                onClick={handleSendThankYouEmails}
+                                disabled={sendingThankYou}
+                                className="bg-red-600 hover:bg-red-700 text-white"
+                            >
+                                {sendingThankYou ? (
+                                    <>
+                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                        {t("Sending...")}
+                                    </>
+                                ) : (
+                                    <>
+                                        <Send className="h-4 w-4 mr-2" />
+                                        {t("Send Emails")}
+                                    </>
+                                )}
+                            </Button>
+                        )}
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }
