@@ -87,23 +87,33 @@ export function AdminContent({ participants, stats, userRole }: AdminContentProp
           <div className="px-4 lg:px-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
               <h2 className="text-xl font-semibold">{t("Participants")}</h2>
-              <div className="flex flex-wrap items-center gap-2 text-sm font-medium bg-primary/5 border border-primary/10 px-4 py-2 rounded-full shadow-sm">
-                <span className="text-muted-foreground">{t("Approved Members")}:</span>
-                <span className="text-blue-600 font-bold">{stats.approvedNonSponsors || 0}</span>
-                <span className="text-muted-foreground mx-1">+</span>
-                <span className="text-muted-foreground">{t("Sponsors")}:</span>
-                <span className="text-purple-600 font-bold">{stats.approvedSponsorsCount || 0}</span>
-                <span className="text-muted-foreground mx-1">+</span>
-                <span className="text-muted-foreground">{t("Speakers")}:</span>
-                <span className="text-orange-600">{stats.speakerCount || 0}</span>
-                <span className="text-muted-foreground mx-1">+</span>
-                <span className="text-muted-foreground">{t("Volunteers")}:</span>
-                <span className="text-teal-600">{stats.volunteerCount || 0}</span>
-                <span className="text-muted-foreground mx-1">=</span>
-                <span className="text-muted-foreground">{t("Total Approval")}:</span>
-                <span className="font-bold text-green-600 text-base">
-                  {(stats.approvedNonSponsors || 0) + (stats.approvedSponsorsCount || 0) + (stats.speakerCount || 0) + (stats.volunteerCount || 0)}
-                </span>
+              <div className="flex flex-wrap items-center gap-3 text-sm font-medium bg-primary/5 border border-primary/10 px-4 py-2 rounded-full shadow-sm">
+                <div className="flex items-center gap-1">
+                  <span className="text-muted-foreground">{t("Approved")}:</span>
+                  <span className="text-blue-600 font-bold text-base">{stats.approvedMembers || 0}</span>
+                </div>
+                <div className="w-px h-4 bg-primary/10 mx-1" />
+                <div className="flex items-center gap-1">
+                  <span className="text-muted-foreground">{t("Sponsors")}:</span>
+                  <span className="text-purple-600 font-bold text-base">{stats.totalSponsors || 0}</span>
+                </div>
+                <div className="w-px h-4 bg-primary/10 mx-1" />
+                <div className="flex items-center gap-1">
+                  <span className="text-muted-foreground">{t("Speakers")}:</span>
+                  <span className="text-orange-600 font-bold text-base">{stats.speakerCount || 0}</span>
+                </div>
+                <div className="w-px h-4 bg-primary/10 mx-1" />
+                <div className="flex items-center gap-1">
+                  <span className="text-muted-foreground">{t("Volunteers")}:</span>
+                  <span className="text-teal-600 font-bold text-base">{stats.volunteerCount || 0}</span>
+                </div>
+                <div className="w-px h-4 bg-primary/10 mx-1" />
+                <div className="flex items-center gap-1">
+                  <span className="text-muted-foreground font-bold">{t("Total Count")}:</span>
+                  <span className="font-bold text-green-600 text-lg">
+                    {(stats.approvedMembers || 0) + (stats.totalSponsors || 0) + (stats.speakerCount || 0) + (stats.volunteerCount || 0)}
+                  </span>
+                </div>
               </div>
             </div>
             <ParticipantsTable columns={columns} data={participants || []} userRole={userRole} />
