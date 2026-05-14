@@ -309,7 +309,6 @@ export async function sendAlertEmail(
             auth: { user, pass },
         })
 
-        const eventName = "RIFAH Annual Summit"
         let successCount = 0
         let failureCount = 0
 
