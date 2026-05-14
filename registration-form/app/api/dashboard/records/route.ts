@@ -57,7 +57,8 @@ export async function GET(request: Request) {
             businessCategory: 1,
             ticketType: 1,
             registrationId: 1,
-            createdAt: 1
+            createdAt: 1,
+            isSponsor: 1
         }).lean()
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -91,6 +92,7 @@ export async function GET(request: Request) {
                     primaryPhone: "",
                     approvalStatus: p.approvalStatus || "pending",
                     createdAt: p.createdAt ? new Date(p.createdAt).toISOString() : "",
+                    isSponsor: p.isSponsor || false,
                     originalParticipant: p
                 })
             }

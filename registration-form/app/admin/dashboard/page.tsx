@@ -66,6 +66,7 @@ interface DashboardRecord {
     registrationId: string
     approvalStatus?: string
     createdAt?: string
+    isSponsor?: boolean
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     originalParticipant?: any
 }
@@ -395,9 +396,15 @@ export default function DashboardPage() {
                                             ) : record.name}
                                         </TableCell>
                                         <TableCell>
-                                            <Badge variant={record.checkedIn ? "default" : "outline"} className={record.checkedIn ? "bg-green-600" : "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300"}>
-                                                {t(record.type)}
-                                            </Badge>
+                                            {record.isSponsor ? (
+                                                <Badge className="bg-orange-700 text-white">
+                                                    {t("Sponsor")}
+                                                </Badge>
+                                            ) : (
+                                                <Badge variant={record.checkedIn ? "default" : "outline"} className={record.checkedIn ? "bg-green-600" : "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300"}>
+                                                    {t(record.type)}
+                                                </Badge>
+                                            )}
                                         </TableCell>
                                         <TableCell>
                                             {search && record.phone.includes(search) ? (
