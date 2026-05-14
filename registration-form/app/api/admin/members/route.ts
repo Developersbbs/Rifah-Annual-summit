@@ -71,7 +71,7 @@ export async function GET(request: Request) {
                         registrationId: sm.registrationId || "N/A",
                         name: sm.name,
                         mobileNumber: sm.mobileNumber || p.mobileNumber, // Fallback to primary
-                        email: sm.email || "N/A",
+                        email: sm.email || p.email || "N/A",
                         location: sm.location || p.location || "N/A",
                         type: "Secondary",
                         isSponsor: false, // secondary members don't carry sponsor flag

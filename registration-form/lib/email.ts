@@ -282,6 +282,249 @@ export async function sendRegistrationEmails(participant: IParticipant, eventNam
     }
 }
 
+export interface AlertEmailRecipient {
+    registrationId: string
+    name: string
+    email: string
+}
+
+export async function sendAlertEmail(
+    recipients: AlertEmailRecipient[]
+): Promise<{ success: boolean; successCount: number; failureCount: number; error?: string }> {
+    const subject = "Important Information — RIFAH Annual Summit 2026"
+    try {
+        await dbConnect()
+
+        const config = await SystemConfig.findOne({ key: 'smtp' }).lean()
+        if (!config || !config.value) {
+            return { success: false, successCount: 0, failureCount: recipients.length, error: "SMTP not configured" }
+        }
+
+        const { host, port, user, pass, fromEmail } = config.value
+
+        const transporter = nodemailer.createTransport({
+            host,
+            port,
+            secure: port === 465,
+            auth: { user, pass },
+        })
+
+        const eventName = "RIFAH Annual Summit"
+        let successCount = 0
+        let failureCount = 0
+
+        // Deduplicate: one email per unique address (keep first occurrence)
+        const seen = new Set<string>()
+        const uniqueRecipients = recipients.filter(r => {
+            const addr = r.email?.toLowerCase()
+            if (!addr || addr === 'n/a' || !addr.includes('@') || seen.has(addr)) return false
+            seen.add(addr)
+            return true
+        })
+
+        for (const recipient of uniqueRecipients) {
+            if (!recipient.email || recipient.email === 'N/A') {
+                failureCount++
+                continue
+            }
+
+            const html = getAlertEmailHtml({ name: recipient.name, registrationId: recipient.registrationId })
+
+            try {
+                await transporter.sendMail({
+                    from: fromEmail || user,
+                    to: recipient.email,
+                    subject,
+                    html,
+                    attachments: [
+                        {
+                            filename: 'logo.png',
+                            path: path.join(process.cwd(), 'public', 'assets', 'logo.png'),
+                            cid: 'logo'
+                        }
+                    ]
+                })
+                successCount++
+            } catch (err) {
+                console.error(`Failed to send alert email to ${recipient.email}:`, err)
+                failureCount++
+            }
+        }
+
+        return { success: true, successCount, failureCount }
+    } catch (error) {
+        console.error("Error in sendAlertEmail:", error)
+        return { success: false, successCount: 0, failureCount: recipients.length, error: "Email process failed" }
+    }
+}
+
+function getAlertEmailHtml(params: { name: string; registrationId: string }) {
+    const { name, registrationId } = params
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RIFAH Annual Summit 2026 — Important Information</title>
+  <style>
+    @media only screen and (max-width:600px){
+      .email-wrapper{width:100%!important;padding:0!important;}
+      .content-pad{padding:24px 16px!important;}
+      .schedule-table td{display:block;width:100%!important;box-sizing:border-box;}
+      .schedule-time{border-radius:6px 6px 0 0!important;border-bottom:none!important;}
+      .schedule-desc{border-radius:0 0 6px 6px!important;padding-top:6px!important;}
+      .info-card{padding:16px!important;}
+      h1.title{font-size:20px!important;}
+    }
+  </style>
+</head>
+<body style="margin:0;padding:0;background-color:#f1f5f9;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f1f5f9;">
+    <tr><td align="center" style="padding:24px 8px;">
+
+      <table role="presentation" class="email-wrapper" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.10);">
+
+        <!-- ===== HEADER ===== -->
+        <tr>
+          <td style="background:linear-gradient(135deg,#d10c09 0%,#f52404 100%);padding:36px 30px;text-align:center;position:relative;overflow:hidden;">
+            <div style="position:absolute;top:-60%;right:-40%;width:220%;height:220%;background:radial-gradient(circle,rgba(255,255,255,0.08) 0%,transparent 65%);pointer-events:none;"></div>
+            <div style="position:relative;z-index:1;">
+              <div style="width:68px;height:68px;background:rgba(255,255,255,0.15);border-radius:50%;margin:0 auto 16px;line-height:68px;text-align:center;">
+                <img src="cid:logo" width="52" height="52" alt="RIFAH" style="vertical-align:middle;display:inline-block;">
+              </div>
+              <h1 class="title" style="color:#ffffff;font-size:24px;font-weight:700;margin:0 0 8px;text-shadow:0 2px 6px rgba(0,0,0,0.15);line-height:1.3;">RIFAH Annual Summit 2026</h1>
+            </div>
+          </td>
+        </tr>
+
+        <!-- ===== BODY ===== -->
+        <tr>
+          <td class="content-pad" style="padding:32px 30px;">
+
+            <!-- Greeting -->
+            <p style="color:#1f2937;font-size:16px;margin:0 0 14px;">Dear <strong>${name}</strong>,</p>
+            <p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 28px;">
+              We are excited to welcome you to the <strong>RIFAH Annual Summit 2026</strong> &mdash; <em>Let&rsquo;s Grow Together</em>.
+              Please read the following important information carefully before arriving at the venue.
+            </p>
+
+            <!-- Registration ID -->
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+              <tr>
+                <td style="background:#fff7ed;border:1.5px solid #fdba74;border-radius:12px;padding:18px 22px;">
+                  <p style="color:#9a3412;font-size:11px;font-weight:700;margin:0 0 8px;text-transform:uppercase;letter-spacing:0.08em;">Your Registration ID</p>
+                  <p style="color:#c2410c;font-size:26px;font-weight:800;margin:0 0 6px;letter-spacing:0.04em;">${registrationId}</p>
+                  <p style="color:#78350f;font-size:13px;margin:0;">Please show this ID at the registration desk upon entry.</p>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Schedule -->
+            <p style="color:#6b7280;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 10px;">Schedule for the Day</p>
+            <table role="presentation" class="schedule-table" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate;border-spacing:0 6px;margin-bottom:28px;">
+              <tr>
+                <td class="schedule-time" style="background:#fef2f2;color:#dc2626;font-weight:700;font-size:14px;padding:12px 16px;border-radius:8px 0 0 8px;white-space:nowrap;width:110px;">9:00 AM</td>
+                <td class="schedule-desc" style="background:#fef2f2;color:#374151;font-size:14px;padding:12px 16px;border-radius:0 8px 8px 0;">Registration Opens</td>
+              </tr>
+              <tr>
+                <td class="schedule-time" style="background:#fff1f2;color:#e11d48;font-weight:700;font-size:14px;padding:12px 16px;border-radius:8px 0 0 8px;white-space:nowrap;width:110px;">9:45 AM</td>
+                <td class="schedule-desc" style="background:#fff1f2;color:#374151;font-size:14px;padding:12px 16px;border-radius:0 8px 8px 0;"><strong>Registration Closes</strong> &mdash; Please arrive before this time</td>
+              </tr>
+              <tr>
+                <td class="schedule-time" style="background:#fef2f2;color:#dc2626;font-weight:700;font-size:14px;padding:12px 16px;border-radius:8px 0 0 8px;white-space:nowrap;width:110px;">10:00 AM</td>
+                <td class="schedule-desc" style="background:#fef2f2;color:#374151;font-size:14px;padding:12px 16px;border-radius:0 8px 8px 0;">Event Begins</td>
+              </tr>
+              <tr>
+                <td class="schedule-time" style="background:#fff7ed;color:#c2410c;font-weight:700;font-size:14px;padding:12px 16px;border-radius:8px 0 0 8px;white-space:nowrap;width:110px;">6:00 PM</td>
+                <td class="schedule-desc" style="background:#fff7ed;color:#374151;font-size:14px;padding:12px 16px;border-radius:0 8px 8px 0;">Event Concludes</td>
+              </tr>
+            </table>
+
+            <!-- Dress Code -->
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:14px;">
+              <tr>
+                <td class="info-card" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:18px 20px;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td style="padding-right:12px;vertical-align:top;">
+  <div style="width:42px;height:42px;background:#1d4ed8;border-radius:10px;text-align:center;line-height:42px;font-size:22px;">
+    👔
+  </div>
+</td>
+                      <td>
+                        <p style="color:#6b7280;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;margin:0 0 4px;">Dress Code</p>
+                        <p style="color:#1f2937;font-size:15px;font-weight:700;margin:0 0 5px;">Formal Attire or Blazer</p>
+                        <p style="color:#6b7280;font-size:13px;line-height:1.6;margin:0;">Please come dressed in formal attire or a blazer. Either is welcome — just keep it neat and professional!</p>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Venue -->
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+              <tr>
+                <td class="info-card" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:18px 20px;">
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td style="padding-right:12px;vertical-align:top;">
+  <div style="width:42px;height:42px;background:#dc2626;border-radius:10px;text-align:center;line-height:42px;font-size:22px;">
+    📍
+  </div>
+</td>
+                      <td>
+                        <p style="color:#6b7280;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;margin:0 0 4px;">Venue</p>
+                        <p style="color:#1f2937;font-size:15px;font-weight:700;margin:0 0 3px;">KAY EM SPECTRA</p>
+                        <p style="color:#6b7280;font-size:13px;margin:0 0 3px;">Vanagaram, Chennai</p>
+                        <p style="color:#dc2626;font-size:13px;font-weight:600;margin:0;">Saturday, 16th May 2026 &nbsp;|&nbsp; 9:00 AM &ndash; 6:00 PM</p>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Please Note -->
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+              <tr>
+                <td style="background:#fffbeb;border:1.5px solid #fcd34d;border-radius:10px;padding:18px 20px;">
+                  <p style="color:#92400e;font-size:13px;font-weight:700;margin:0 0 10px;">&#9888; Please Note</p>
+                  <ul style="color:#78350f;font-size:13px;line-height:1.8;margin:0;padding-left:18px;">
+                    <li>Registration closes sharp at <strong>9:45 AM</strong>. Late arrivals may not be accommodated.</li>
+                    <li>Carry a valid Registration ID.</li>
+                    <li>Be seated before <strong>10:00 AM</strong> as the event starts promptly.</li>
+                  </ul>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Closing -->
+            <p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 20px;">We look forward to seeing you at the summit!</p>
+            <p style="color:#1f2937;font-size:15px;margin:0;">Warm regards,<br><strong>Team RIFAH</strong><br><span style="color:#6b7280;font-size:13px;">Tamilnadu Traders Federation</span></p>
+
+          </td>
+        </tr>
+
+        <!-- ===== FOOTER ===== -->
+        <tr>
+          <td style="background:#1f2937;padding:28px 30px;text-align:center;">
+            <img src="cid:logo" alt="RIFAH" style="width:60px;height:auto;margin-bottom:12px;display:block;margin-left:auto;margin-right:auto;">
+            <p style="color:#ffffff;font-size:15px;font-weight:600;margin:0 0 4px;">RIFAH</p>
+            <p style="color:#9ca3af;font-size:13px;margin:0 0 16px;">Tamilnadu Traders Federation</p>
+            <div style="border-top:1px solid #374151;padding-top:16px;">
+              <p style="color:#6b7280;font-size:11px;margin:0;">This message was sent by the event organizers. Please do not reply to this email.</p>
+            </div>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+}
+
 function getMemberEmailHtml(params: {
     participant: IParticipant | (ISecondaryMember & { 
         secondaryMembers?: ISecondaryMember[]; 
