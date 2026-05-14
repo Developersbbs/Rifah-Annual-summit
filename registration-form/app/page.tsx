@@ -430,6 +430,13 @@ export default function PongalLandingPage() {
             )}
 
             {/* CTA Button */}
+            {!loading && !eventStatus?.isActive && (
+              <div className="mb-6 px-4 py-2 rounded-xl bg-black/30 border border-[#f5d78e]/30 backdrop-blur-sm animate-in fade-in slide-in-from-bottom-2 duration-700">
+                <h2 className="text-[#f5d78e] text-3xl md:text-4xl font-bold">
+                  {t("Registration is now closed. Thank you for registering!")}
+                </h2>
+              </div>
+            )}
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto px-4 sm:px-0">
               <Button
                 onClick={handleRegistrationClick}
@@ -850,17 +857,35 @@ export default function PongalLandingPage() {
 
             {/* Bottom CTA Banner */}
             <div className="max-w-4xl mx-auto mt-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-red-800 rounded-2xl px-6 py-6 sm:px-8">
-              <div>
-                <p className="font-bold text-white text-lg">{t("Ready to grow with RIFAH?")}</p>
-                <p className="text-red-200 text-sm mt-1">
-                  {t("Join hundreds of business leaders at the Annual Summit 2026.")}
-                </p>
+              <div className="flex-1">
+                {!loading && !eventStatus?.isActive ? (
+                   <>
+                    <p className="font-bold text-[#f5d78e] text-lg">{t("Registration closed")}</p>
+                    <p className="text-red-100 text-sm mt-1 font-medium">
+                      {t("Thank you for registering!")}
+                    </p>
+                   </>
+                ) : (
+                  <>
+                    <p className="font-bold text-white text-lg">{t("Ready to grow with RIFAH?")}</p>
+                    <p className="text-red-200 text-sm mt-1">
+                      {t("Join hundreds of business leaders at the Annual Summit 2026.")}
+                    </p>
+                  </>
+                )}
               </div>
               <Link
-                href="/register"
-                className="shrink-0 px-6 py-2.5 bg-white text-red-800 font-semibold rounded-full text-sm hover:bg-red-50 transition-colors"
+                href={eventStatus?.isActive ? "/register" : "#"}
+                className={`shrink-0 px-6 py-2.5 bg-white text-red-800 font-semibold rounded-full text-sm hover:bg-red-50 transition-colors ${!eventStatus?.isActive ? "opacity-75 cursor-not-allowed" : ""}`}
+                onClick={(e) => {
+                  if (!eventStatus?.isActive) e.preventDefault()
+                }}
               >
-                {t("Register Now")}
+                {loading
+                  ? t("Loading...")
+                  : eventStatus?.isActive
+                    ? t("Register Now")
+                    : t("Registration Closed")}
               </Link>
             </div>
 
