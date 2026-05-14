@@ -461,7 +461,7 @@ function getAlertEmailHtml(params: { name: string; registrationId: string }) {
                       <td>
                         <p style="color:#6b7280;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;margin:0 0 4px;">Dress Code</p>
                         <p style="color:#1f2937;font-size:15px;font-weight:700;margin:0 0 5px;">Business formal or Blazer</p>
-                        <p style="color:#6b7280;font-size:13px;line-height:1.6;margin:0;">Please come dressed in formal attire or a blazer. Either is welcome — just keep it neat and professional!</p>
+                        <p style="color:#6b7280;font-size:13px;line-height:1.6;margin:0;">Please come Formals (White Shirt with Dark Pant preferable)</p>
                       </td>
                     </tr>
                   </table>
