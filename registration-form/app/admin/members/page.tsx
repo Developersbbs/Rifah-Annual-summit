@@ -73,6 +73,10 @@ export default function MembersPage() {
     const [resultDialogOpen, setResultDialogOpen] = useState(false)
     const [sendResults, setSendResults] = useState<{ successCount: number; failureCount: number; error?: string } | null>(null)
 
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1)
+    const [pageSize, setPageSize] = useState(10)
+
     const fetchMembers = useCallback(async () => {
         setLoading(true)
         try {
@@ -96,6 +100,18 @@ export default function MembersPage() {
         m.name.toLowerCase().includes(search.toLowerCase()) ||
         m.mobileNumber.includes(search) ||
         m.registrationId.toLowerCase().includes(search.toLowerCase())
+    )
+
+    // Reset to page 1 when search changes
+    useEffect(() => {
+        setCurrentPage(1)
+    }, [search])
+
+    // Pagination calculations
+    const totalPages = Math.ceil(filteredMembers.length / pageSize)
+    const paginatedMembers = filteredMembers.slice(
+        (currentPage - 1) * pageSize,
+        currentPage * pageSize
     )
 
     // Selection helpers
@@ -356,14 +372,14 @@ export default function MembersPage() {
                                             ))}
                                         </TableRow>
                                     ))
-                                ) : filteredMembers.length === 0 ? (
+                                ) : paginatedMembers.length === 0 ? (
                                     <TableRow>
                                         <TableCell colSpan={9} className="text-center py-10 text-muted-foreground">
                                             {t("No members found")}
                                         </TableCell>
                                     </TableRow>
                                 ) : (
-                                    filteredMembers.map((member, idx) => (
+                                    paginatedMembers.map((member, idx) => (
                                         <TableRow
                                             key={idx}
                                             className={selectedIds.has(member.registrationId) ? "bg-orange-50 dark:bg-orange-950/20" : ""}
@@ -424,6 +440,77 @@ export default function MembersPage() {
                             </TableBody>
                         </Table>
                     </div>
+
+                    {/* Pagination Controls */}
+                    {!loading && filteredMembers.length > 0 && (
+                        <div className="flex items-center justify-between px-2 py-4">
+                            <div className="text-sm text-muted-foreground">
+                                {t("Showing")} {(currentPage - 1) * pageSize + 1} {t("to")}{" "}
+                                {Math.min(currentPage * pageSize, filteredMembers.length)} {t("of")}{" "}
+                                {filteredMembers.length} {t("entries")}
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <div className="flex items-center gap-1.5 mr-4">
+                                    <span className="text-sm text-muted-foreground">{t("Rows per page")}:</span>
+                                    <select
+                                        value={pageSize}
+                                        onChange={(e) => {
+                                            setPageSize(Number(e.target.value))
+                                            setCurrentPage(1)
+                                        }}
+                                        className="h-8 w-16 rounded-md border border-input bg-background px-1 py-1 text-sm shadow-sm outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                    >
+                                        {[10, 20, 50, 100].map((size) => (
+                                            <option key={size} value={size}>
+                                                {size}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                        disabled={currentPage === 1}
+                                    >
+                                        {t("Previous")}
+                                    </Button>
+                                    <div className="flex items-center gap-1">
+                                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                            let pageNum = i + 1
+                                            if (totalPages > 5 && currentPage > 3) {
+                                                pageNum = currentPage - 3 + i
+                                                if (pageNum + 5 > totalPages) pageNum = totalPages - 4
+                                            }
+                                            if (pageNum <= 0) pageNum = 1
+                                            if (pageNum > totalPages) return null
+
+                                            return (
+                                                <Button
+                                                    key={pageNum}
+                                                    variant={currentPage === pageNum ? "default" : "outline"}
+                                                    size="sm"
+                                                    className="w-8 h-8 p-0"
+                                                    onClick={() => setCurrentPage(pageNum)}
+                                                >
+                                                    {pageNum}
+                                                </Button>
+                                            )
+                                        })}
+                                    </div>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                        disabled={currentPage === totalPages}
+                                    >
+                                        {t("Next")}
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
 

@@ -73,6 +73,10 @@ export default function SpeakersVolunteersPage() {
     const [editRecord, setEditRecord] = useState<SpeakerVolunteerRecord | null>(null)
     const [deleting, setDeleting] = useState<string | null>(null)
 
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1)
+    const [pageSize, setPageSize] = useState(10)
+
     const fetchRecords = useCallback(async () => {
         setLoading(true)
         try {
@@ -131,6 +135,18 @@ export default function SpeakersVolunteersPage() {
             (r.topic?.toLowerCase().includes(q) ?? false)
         )
     })
+
+    // Reset to page 1 when search or filter changes
+    useEffect(() => {
+        setCurrentPage(1)
+    }, [search, roleFilter])
+
+    // Pagination calculations
+    const totalPages = Math.ceil(filtered.length / pageSize)
+    const paginatedRecords = filtered.slice(
+        (currentPage - 1) * pageSize,
+        currentPage * pageSize
+    )
 
     // ── Export helpers ──────────────────────────────────────────────────────────
 
@@ -311,14 +327,14 @@ export default function SpeakersVolunteersPage() {
                                             ))}
                                         </TableRow>
                                     ))
-                                ) : filtered.length === 0 ? (
+                                ) : paginatedRecords.length === 0 ? (
                                     <TableRow>
                                         <TableCell colSpan={9} className="text-center py-10 text-muted-foreground">
                                             No records found
                                         </TableCell>
                                     </TableRow>
                                 ) : (
-                                    filtered.map((record) => (
+                                    paginatedRecords.map((record) => (
                                         <TableRow key={record._id}>
                                             <TableCell className="font-bold text-primary">
                                                 {record.registrationId || <span className="text-muted-foreground text-xs">—</span>}
@@ -376,6 +392,77 @@ export default function SpeakersVolunteersPage() {
                             </TableBody>
                         </Table>
                     </div>
+
+                    {/* Pagination Controls */}
+                    {!loading && filtered.length > 0 && (
+                        <div className="flex items-center justify-between px-2 py-4">
+                            <div className="text-sm text-muted-foreground">
+                                Showing {(currentPage - 1) * pageSize + 1} to{" "}
+                                {Math.min(currentPage * pageSize, filtered.length)} of{" "}
+                                {filtered.length} entries
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <div className="flex items-center gap-1.5 mr-4">
+                                    <span className="text-sm text-muted-foreground">Rows per page:</span>
+                                    <select
+                                        value={pageSize}
+                                        onChange={(e) => {
+                                            setPageSize(Number(e.target.value))
+                                            setCurrentPage(1)
+                                        }}
+                                        className="h-8 w-16 rounded-md border border-input bg-background px-1 py-1 text-sm shadow-sm outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                    >
+                                        {[10, 20, 50, 100].map((size) => (
+                                            <option key={size} value={size}>
+                                                {size}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                        disabled={currentPage === 1}
+                                    >
+                                        Previous
+                                    </Button>
+                                    <div className="flex items-center gap-1">
+                                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                            let pageNum = i + 1
+                                            if (totalPages > 5 && currentPage > 3) {
+                                                pageNum = currentPage - 3 + i
+                                                if (pageNum + 5 > totalPages) pageNum = totalPages - 4
+                                            }
+                                            if (pageNum <= 0) pageNum = 1
+                                            if (pageNum > totalPages) return null
+
+                                            return (
+                                                <Button
+                                                    key={pageNum}
+                                                    variant={currentPage === pageNum ? "default" : "outline"}
+                                                    size="sm"
+                                                    className="w-8 h-8 p-0"
+                                                    onClick={() => setCurrentPage(pageNum)}
+                                                >
+                                                    {pageNum}
+                                                </Button>
+                                            )
+                                        })}
+                                    </div>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                        disabled={currentPage === totalPages}
+                                    >
+                                        Next
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
 
