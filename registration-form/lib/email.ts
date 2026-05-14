@@ -453,7 +453,7 @@ function getAlertEmailHtml(params: { name: string; registrationId: string }) {
 </td>
                       <td>
                         <p style="color:#6b7280;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;margin:0 0 4px;">Dress Code</p>
-                        <p style="color:#1f2937;font-size:15px;font-weight:700;margin:0 0 5px;">Formal Attire or Blazer</p>
+                        <p style="color:#1f2937;font-size:15px;font-weight:700;margin:0 0 5px;">Business formal or Blazer</p>
                         <p style="color:#6b7280;font-size:13px;line-height:1.6;margin:0;">Please come dressed in formal attire or a blazer. Either is welcome — just keep it neat and professional!</p>
                       </td>
                     </tr>
@@ -526,8 +526,8 @@ function getAlertEmailHtml(params: { name: string; registrationId: string }) {
 }
 
 function getMemberEmailHtml(params: {
-    participant: IParticipant | (ISecondaryMember & { 
-        secondaryMembers?: ISecondaryMember[]; 
+    participant: IParticipant | (ISecondaryMember & {
+        secondaryMembers?: ISecondaryMember[];
         isSponsor?: boolean;
         paymentMethod?: string;
         totalAmount?: number;
@@ -645,9 +645,9 @@ function getMemberEmailHtml(params: {
                                 <div style="display: flex; align-items: center;">
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${isPending ? '#f59e0b' : '#92400e'}" stroke-width="2" style="margin-right: 10px;">
                                         ${isPending
-            ? '<circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline>'
-            : '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline>'
-        }
+                ? '<circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline>'
+                : '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline>'
+            }
                                     </svg>
                                     <span style="color: ${isPending ? '#92400e' : '#7c2d12'}; font-weight: 600;">
                                         ${isPending ? 'நிலுவையில் உள்ளது (நிர்வாக அனுமதிக்கு காத்திருக்கிறது)' : 'முடிந்தது'}
@@ -764,9 +764,9 @@ function getMemberEmailHtml(params: {
                                 <div style="display: flex; align-items: center;">
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${isPending ? '#f59e0b' : '#92400e'}" stroke-width="2" style="margin-right: 10px;">
                                         ${isPending
-            ? '<circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline>'
-            : '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline>'
-        }
+                ? '<circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline>'
+                : '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline>'
+            }
                                     </svg>
                                     <span style="color: ${isPending ? '#fcfcfc' : '#ffffff'}; font-weight: 600;">
                                         ${isPending ? 'Pending (Awaiting Admin Approval)' : 'Completed'}
