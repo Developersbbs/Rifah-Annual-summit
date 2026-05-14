@@ -860,7 +860,7 @@ export default function PongalLandingPage() {
               <div className="flex-1">
                 {!loading && !eventStatus?.isActive ? (
                    <>
-                    <p className="font-bold text-[#f5d78e] text-lg">{t("Registration closed")}</p>
+                    <p className="font-bold text-[#f5d78e] text-lg">{t("Registration Closed")}</p>
                     <p className="text-red-100 text-sm mt-1 font-medium">
                       {t("Thank you for registering!")}
                     </p>
