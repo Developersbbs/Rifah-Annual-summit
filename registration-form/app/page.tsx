@@ -431,7 +431,7 @@ export default function PongalLandingPage() {
 
             {/* CTA Button */}
             {!loading && !eventStatus?.isActive && (
-              <div className="mb-6 px-4 py-2 rounded-xl bg-black/30 border border-[#f5d78e]/30 backdrop-blur-sm animate-in fade-in slide-in-from-bottom-2 duration-700">
+              <div className="mb-6 px-4 py-2 rounded-2xl bg-black/30 border border-[#f5d78e]/30 backdrop-blur-sm animate-in fade-in slide-in-from-bottom-2 duration-700">
                 <h2 className="text-[#f5d78e] text-3xl md:text-4xl font-bold">
                   {t("Registration is now closed. Thank you for registering!")}
                 </h2>
