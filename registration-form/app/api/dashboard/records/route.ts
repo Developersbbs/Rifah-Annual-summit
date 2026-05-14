@@ -11,6 +11,7 @@ export async function GET(request: Request) {
         const page = parseInt(searchParams.get('page') || '1')
         const limit = parseInt(searchParams.get('limit') || '20')
         const search = searchParams.get('search') || ''
+        const regId = searchParams.get('regId') || ''
 
         const genderFilter = searchParams.get('gender') || 'all'
 
@@ -24,10 +25,22 @@ export async function GET(request: Request) {
         }
 
         if (search) {
+            const regex = { $regex: search, $options: 'i' }
             query.$or = [
-                { name: { $regex: search, $options: 'i' } },
-                { mobileNumber: { $regex: search, $options: 'i' } }
+                { name: regex },
+                { mobileNumber: regex },
+                { registrationId: regex },
+                { "secondaryMembers.name": regex },
+                { "secondaryMembers.mobileNumber": regex },
+                { "secondaryMembers.registrationId": regex }
             ]
+        }
+
+        if (regId) {
+            const regRegex = { $regex: regId, $options: 'i' }
+            query.$or = query.$or || []
+            query.$or.push({ registrationId: regRegex })
+            query.$or.push({ "secondaryMembers.registrationId": regRegex })
         }
 
         // Use projection to only fetch needed fields
@@ -52,8 +65,17 @@ export async function GET(request: Request) {
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         participants.forEach((p: any) => {
+            const matchesSearchPrimary = !search || 
+                (p.name && p.name.toLowerCase().includes(search.toLowerCase())) || 
+                (p.mobileNumber && p.mobileNumber.includes(search))
+            
+            const matchesRegIdPrimary = !regId || 
+                (p.registrationId && p.registrationId.toLowerCase().includes(regId.toLowerCase()))
+
             // primary
-            if ((type === 'all' || type === 'primary') && (genderFilter === 'all' || p.gender === genderFilter)) {
+            if ((type === 'all' || type === 'primary') && 
+                (genderFilter === 'all' || p.gender === genderFilter) &&
+                matchesSearchPrimary && matchesRegIdPrimary) {
                 records.push({
                     _id: p._id.toString(),
                     type: "Primary",
@@ -77,7 +99,17 @@ export async function GET(request: Request) {
             if (type === 'all' || type === 'secondary') {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 p.secondaryMembers?.forEach((m: any) => {
-                    if (genderFilter === 'all' || m.gender === genderFilter) {
+                    const matchesSearchSecondary = !search || 
+                        (m.name && m.name.toLowerCase().includes(search.toLowerCase())) || 
+                        (m.mobileNumber && m.mobileNumber.includes(search)) ||
+                        (p.name && p.name.toLowerCase().includes(search.toLowerCase())) || 
+                        (p.mobileNumber && p.mobileNumber.includes(search))
+                    
+                    const matchesRegIdSecondary = !regId || 
+                        (m.registrationId && m.registrationId.toLowerCase().includes(regId.toLowerCase()))
+
+                    if ((genderFilter === 'all' || m.gender === genderFilter) &&
+                        matchesSearchSecondary && matchesRegIdSecondary) {
                         records.push({
                             _id: p._id.toString(),
                             type: "Secondary",

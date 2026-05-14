@@ -78,6 +78,7 @@ export default function DashboardPage() {
     const [type, setType] = React.useState<"all" | "primary" | "secondary">("all")
     const [gender, setGender] = React.useState<"all" | "male" | "female" | "other">("all")
     const [search, setSearch] = React.useState("")
+    const [regId, setRegId] = React.useState("")
     const [page, setPage] = React.useState(1)
     const [pagination, setPagination] = React.useState<PaginationData | null>(null)
     const [downloading, setDownloading] = React.useState<string | null>(null)
@@ -102,7 +103,8 @@ export default function DashboardPage() {
                 gender,
                 page: page.toString(),
                 limit: "20",
-                search
+                search,
+                regId
             })
             const res = await fetch(`/api/dashboard/records?${params}`)
             const data = await res.json()
@@ -113,7 +115,7 @@ export default function DashboardPage() {
         } finally {
             setLoading(false)
         }
-    }, [filter, type, gender, page, search])
+    }, [filter, type, gender, page, search, regId])
 
     React.useEffect(() => {
         loadStats()
@@ -124,7 +126,7 @@ export default function DashboardPage() {
 
     React.useEffect(() => {
         loadRecords()
-    }, [loadRecords, filter, type, page, search])
+    }, [loadRecords, filter, type, page, search, regId])
 
     const download = async (format: "xlsx" | "csv" | "json") => {
         setDownloading(format)
@@ -146,7 +148,7 @@ export default function DashboardPage() {
 
     React.useEffect(() => {
         loadRecords()
-    }, [loadRecords, filter, type, page, search])
+    }, [loadRecords, filter, type, page, search, regId])
 
     return (
         <div className="space-y-6 p-5">
@@ -254,7 +256,7 @@ export default function DashboardPage() {
                         </Tabs>
                     </div>
                 </div>
-                <div className="px-4 pb-4">
+                <div className="flex flex-wrap items-center gap-4 px-4 pb-4">
                     <Input
                         placeholder={t("Search by name or phone...")}
                         value={search}
@@ -263,6 +265,15 @@ export default function DashboardPage() {
                             setPage(1)
                         }}
                         className="max-w-sm"
+                    />
+                    <Input
+                        placeholder={t("Search by Reg ID...")}
+                        value={regId}
+                        onChange={(e) => {
+                            setRegId(e.target.value)
+                            setPage(1)
+                        }}
+                        className="max-w-[200px] border-blue-200 focus:border-blue-500"
                     />
                 </div>
                 <div className="overflow-x-auto">
