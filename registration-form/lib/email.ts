@@ -501,6 +501,7 @@ function getAlertEmailHtml(params: { name: string; registrationId: string }) {
                     <li>Registration closes sharp at <strong>9:45 AM</strong>. Late arrivals may not be accommodated.</li>
                     <li>Carry a valid Registration ID.</li>
                     <li>Be seated before <strong>10:00 AM</strong> as the event starts promptly.</li>
+                    <li>Spot registrations are strictly not allowed.</li>
                   </ul>
                 </td>
               </tr>
