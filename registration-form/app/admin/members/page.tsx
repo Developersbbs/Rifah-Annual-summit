@@ -70,8 +70,9 @@ export default function MembersPage() {
     const [emailDialogOpen, setEmailDialogOpen] = useState(false)
     const [emailTargets, setEmailTargets] = useState<Member[]>([])
     const [sending, setSending] = useState(false)
+    const [sendProgress, setSendProgress] = useState<{ sent: number; failed: number; total: number } | null>(null)
     const [resultDialogOpen, setResultDialogOpen] = useState(false)
-    const [sendResults, setSendResults] = useState<{ successCount: number; failureCount: number; error?: string } | null>(null)
+    const [sendResults, setSendResults] = useState<{ successCount: number; failureCount: number } | null>(null)
 
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1)
@@ -168,43 +169,47 @@ export default function MembersPage() {
 
     const handleSendEmail = async () => {
         setSending(true)
-        try {
-            const res = await fetch('/api/admin/send-alert-email', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    recipients: emailTargets.map(m => ({
-                        registrationId: m.registrationId,
-                        name: m.name,
-                        email: m.email
-                    }))
+        const batchSize = 5
+        let totalSuccess = 0
+        let totalFailed = 0
+        const total = emailTargets.length
+
+        setSendProgress({ sent: 0, failed: 0, total })
+
+        for (let i = 0; i < emailTargets.length; i += batchSize) {
+            const batch = emailTargets.slice(i, i + batchSize)
+            try {
+                const res = await fetch('/api/admin/send-alert-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        recipients: batch.map(m => ({
+                            registrationId: m.registrationId,
+                            name: m.name,
+                            email: m.email,
+                        }))
+                    })
                 })
-            })
-            const data = await res.json()
-            if (!res.ok) throw new Error(data.error || "Failed to send")
-            
-            setSendResults({
-                successCount: data.details?.successCount || 0,
-                failureCount: data.details?.failureCount || 0,
-                error: data.error
-            })
-            
-            setEmailDialogOpen(false)
-            setResultDialogOpen(true)
-            setSelectedIds(new Set())
-            
-            if (data.details?.failureCount === 0) {
-                toast.success(t("All emails sent successfully"))
-            } else if (data.details?.successCount > 0) {
-                toast.success(t("Email operation completed with some failures"))
-            } else {
-                toast.error(t("Failed to send emails"))
+                const data = await res.json()
+                if (res.ok) {
+                    totalSuccess += data.details?.successCount || 0
+                    totalFailed += data.details?.failureCount || 0
+                } else {
+                    totalFailed += batch.length
+                }
+            } catch {
+                totalFailed += batch.length
             }
-        } catch (err) {
-            toast.error(err instanceof Error ? err.message : "Failed to send emails")
-        } finally {
-            setSending(false)
+            setSendProgress({ sent: totalSuccess, failed: totalFailed, total })
         }
+
+        const results = { successCount: totalSuccess, failureCount: totalFailed }
+        setSendResults(results)
+        setSending(false)
+        setSendProgress(null)
+        setEmailDialogOpen(false)
+        setResultDialogOpen(true)
+        setSelectedIds(new Set())
     }
 
     // Export helpers
@@ -514,68 +519,98 @@ export default function MembersPage() {
                 </CardContent>
             </Card>
 
-            {/* Email Send Confirmation Dialog */}
-            <Dialog open={emailDialogOpen} onOpenChange={setEmailDialogOpen}>
+            {/* Email Send Confirmation / Progress Dialog */}
+            <Dialog open={emailDialogOpen} onOpenChange={(open) => { if (!sending) setEmailDialogOpen(open) }}>
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <IconSend className="h-5 w-5 text-orange-600" />
-                            Send Event Alert Email
+                            {sending ? "Sending Emails…" : "Send Event Alert Email"}
                         </DialogTitle>
                     </DialogHeader>
 
-                    <div className="space-y-4 py-2">
-                        {/* Template preview card */}
-                        <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-950/20 px-4 py-3">
-                            <p className="text-xs font-semibold text-red-700 dark:text-red-400 uppercase tracking-wide mb-1">Template</p>
-                            <p className="text-sm font-medium text-gray-800 dark:text-gray-200">RIFAH Annual Summit 2026 — Event Alert</p>
-                            <p className="text-xs text-muted-foreground mt-1">Includes: Schedule · Dress Code · Venue · Important Notes</p>
-                        </div>
-
-                        {/* Subject */}
-                        <div className="rounded-lg border bg-muted/40 px-4 py-3">
-                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Subject</p>
-                            <p className="text-sm text-foreground">Important Information — RIFAH Annual Summit 2026</p>
-                        </div>
-
-                        {/* Recipients */}
-                        <div className="rounded-lg border bg-orange-50 dark:bg-orange-950/20 px-4 py-3">
-                            <p className="text-xs font-semibold text-orange-700 dark:text-orange-400 uppercase tracking-wide mb-1">
-                                Recipients ({emailTargets.length})
+                    {sending && sendProgress ? (
+                        /* ── Progress view ── */
+                        <div className="space-y-5 py-2">
+                            <div className="flex justify-between text-sm font-medium">
+                                <span className="text-muted-foreground">Sending emails…</span>
+                                <span className="text-foreground">
+                                    {sendProgress.sent + sendProgress.failed} / {sendProgress.total}
+                                </span>
+                            </div>
+                            {/* Progress bar */}
+                            <div className="w-full bg-muted rounded-full h-3 overflow-hidden">
+                                <div
+                                    className="h-3 rounded-full bg-orange-500 transition-all duration-300"
+                                    style={{ width: `${Math.round(((sendProgress.sent + sendProgress.failed) / sendProgress.total) * 100)}%` }}
+                                />
+                            </div>
+                            <div className="grid grid-cols-2 gap-3 text-center">
+                                <div className="rounded-lg border border-green-100 bg-green-50 py-3">
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-green-600 mb-1">Sent</p>
+                                    <p className="text-2xl font-bold text-green-700">{sendProgress.sent}</p>
+                                </div>
+                                <div className="rounded-lg border border-red-100 bg-red-50 py-3">
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-red-600 mb-1">Failed</p>
+                                    <p className="text-2xl font-bold text-red-700">{sendProgress.failed}</p>
+                                </div>
+                            </div>
+                            <p className="text-xs text-center text-muted-foreground">
+                                Please wait — do not close this window.
                             </p>
-                            {emailTargets.length === 1 ? (
-                                <p className="text-sm text-gray-800 dark:text-gray-200">
-                                    {emailTargets[0].name}
-                                    <span className="text-muted-foreground ml-1">({emailTargets[0].email})</span>
+                        </div>
+                    ) : (
+                        /* ── Confirm view ── */
+                        <div className="space-y-4 py-2">
+                            <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-950/20 px-4 py-3">
+                                <p className="text-xs font-semibold text-red-700 uppercase tracking-wide mb-1">Template</p>
+                                <p className="text-sm font-medium text-gray-800 dark:text-gray-200">RIFAH Annual Summit 2026 — Event Alert</p>
+                                <p className="text-xs text-muted-foreground mt-1">Includes: Schedule · Dress Code · Venue · Important Notes</p>
+                            </div>
+
+                            <div className="rounded-lg border bg-muted/40 px-4 py-3">
+                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Subject</p>
+                                <p className="text-sm text-foreground">Important Information — RIFAH Annual Summit 2026</p>
+                            </div>
+
+                            <div className="rounded-lg border bg-orange-50 dark:bg-orange-950/20 px-4 py-3">
+                                <p className="text-xs font-semibold text-orange-700 uppercase tracking-wide mb-2">
+                                    Recipients ({emailTargets.length})
                                 </p>
-                            ) : (
-                                <>
+                                {emailTargets.length === 1 ? (
                                     <p className="text-sm text-gray-800 dark:text-gray-200">
-                                        {emailTargets.slice(0, 4).map(m => m.name).join(", ")}
-                                        {emailTargets.length > 4 && (
-                                            <span className="text-muted-foreground"> +{emailTargets.length - 4} more</span>
+                                        {emailTargets[0].name}
+                                        <span className="text-muted-foreground ml-1">({emailTargets[0].email})</span>
+                                    </p>
+                                ) : (
+                                    <p className="text-sm text-gray-800 dark:text-gray-200">
+                                        {emailTargets.slice(0, 3).map(m => m.name).join(", ")}
+                                        {emailTargets.length > 3 && (
+                                            <span className="text-muted-foreground"> +{emailTargets.length - 3} more</span>
                                         )}
                                     </p>
-                                </>
-                            )}
-                        </div>
+                                )}
+                            </div>
 
-                        <p className="text-xs text-muted-foreground">
-                            Each recipient will receive a personalised email with their name and registration ID. This is a manual send — emails are not sent automatically.
-                        </p>
-                    </div>
+                            <p className="text-xs text-muted-foreground">
+                                Each recipient will receive a personalised email with their name and registration ID.
+                            </p>
+                        </div>
+                    )}
 
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setEmailDialogOpen(false)} disabled={sending}>
-                            Cancel
-                        </Button>
+                        {!sending && (
+                            <Button variant="outline" onClick={() => setEmailDialogOpen(false)}>
+                                Cancel
+                            </Button>
+                        )}
                         <Button
                             onClick={handleSendEmail}
                             disabled={sending}
-                            className="bg-orange-600 hover:bg-orange-700 text-white"
+                            className="bg-orange-600 hover:bg-orange-700 text-white min-w-[140px]"
                         >
                             {sending ? (
-                                <><IconRefresh className="h-4 w-4 mr-2 animate-spin" /> Sending...</>
+                                <><IconRefresh className="h-4 w-4 mr-2 animate-spin" /> Sending…</>
                             ) : (
                                 <><IconSend className="h-4 w-4 mr-2" /> Send to {emailTargets.length} {emailTargets.length === 1 ? "Member" : "Members"}</>
                             )}
@@ -583,6 +618,7 @@ export default function MembersPage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
             {/* Email Result Dialog */}
             <Dialog open={resultDialogOpen} onOpenChange={setResultDialogOpen}>
                 <DialogContent className="sm:max-w-md">
@@ -593,29 +629,43 @@ export default function MembersPage() {
                             ) : (
                                 <IconMail className="h-5 w-5 text-orange-600" />
                             )}
-                            Email Send Results
+                            {sendResults?.failureCount === 0 ? "All Emails Sent!" : "Email Send Complete"}
                         </DialogTitle>
                     </DialogHeader>
+
                     <div className="py-4 space-y-4">
+                        {sendResults?.failureCount === 0 && (
+                            <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-center">
+                                <p className="text-green-700 text-sm font-medium">
+                                    ✓ All {sendResults.successCount} emails were delivered successfully.
+                                </p>
+                            </div>
+                        )}
+
                         <div className="grid grid-cols-2 gap-4 text-center">
                             <div className="p-4 rounded-lg bg-green-50 border border-green-100">
-                                <p className="text-sm font-medium text-green-600 uppercase tracking-wider">Success</p>
+                                <p className="text-xs font-semibold text-green-600 uppercase tracking-wider mb-1">Sent</p>
                                 <p className="text-3xl font-bold text-green-700">{sendResults?.successCount || 0}</p>
                             </div>
                             <div className="p-4 rounded-lg bg-red-50 border border-red-100">
-                                <p className="text-sm font-medium text-red-600 uppercase tracking-wider">Failed</p>
+                                <p className="text-xs font-semibold text-red-600 uppercase tracking-wider mb-1">Failed</p>
                                 <p className="text-3xl font-bold text-red-700">{sendResults?.failureCount || 0}</p>
                             </div>
                         </div>
-                        {sendResults?.failureCount ? sendResults.failureCount > 0 && (
+
+                        {(sendResults?.failureCount ?? 0) > 0 && (
                             <div className="p-3 rounded-md bg-amber-50 border border-amber-200 text-sm text-amber-800">
-                                <p className="font-semibold mb-1">Note:</p>
-                                <p>Some emails could not be sent. This usually happens due to SMTP rate limits or invalid email addresses. Please check your SMTP settings if failures persist.</p>
+                                <p className="font-semibold mb-1">Note</p>
+                                <p>Some emails could not be delivered. This is usually caused by SMTP rate limits or invalid addresses. Please check your SMTP settings if this persists.</p>
                             </div>
-                        ) : null}
+                        )}
                     </div>
+
                     <DialogFooter>
-                        <Button onClick={() => setResultDialogOpen(false)}>
+                        <Button
+                            className="w-full"
+                            onClick={() => setResultDialogOpen(false)}
+                        >
                             Close
                         </Button>
                     </DialogFooter>
