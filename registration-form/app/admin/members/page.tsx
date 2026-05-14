@@ -70,6 +70,8 @@ export default function MembersPage() {
     const [emailDialogOpen, setEmailDialogOpen] = useState(false)
     const [emailTargets, setEmailTargets] = useState<Member[]>([])
     const [sending, setSending] = useState(false)
+    const [resultDialogOpen, setResultDialogOpen] = useState(false)
+    const [sendResults, setSendResults] = useState<{ successCount: number; failureCount: number; error?: string } | null>(null)
 
     const fetchMembers = useCallback(async () => {
         setLoading(true)
@@ -164,9 +166,24 @@ export default function MembersPage() {
             })
             const data = await res.json()
             if (!res.ok) throw new Error(data.error || "Failed to send")
-            toast.success(data.message)
+            
+            setSendResults({
+                successCount: data.details?.successCount || 0,
+                failureCount: data.details?.failureCount || 0,
+                error: data.error
+            })
+            
             setEmailDialogOpen(false)
+            setResultDialogOpen(true)
             setSelectedIds(new Set())
+            
+            if (data.details?.failureCount === 0) {
+                toast.success(t("All emails sent successfully"))
+            } else if (data.details?.successCount > 0) {
+                toast.success(t("Email operation completed with some failures"))
+            } else {
+                toast.error(t("Failed to send emails"))
+            }
         } catch (err) {
             toast.error(err instanceof Error ? err.message : "Failed to send emails")
         } finally {
@@ -475,6 +492,44 @@ export default function MembersPage() {
                             ) : (
                                 <><IconSend className="h-4 w-4 mr-2" /> Send to {emailTargets.length} {emailTargets.length === 1 ? "Member" : "Members"}</>
                             )}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+            {/* Email Result Dialog */}
+            <Dialog open={resultDialogOpen} onOpenChange={setResultDialogOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            {sendResults?.failureCount === 0 ? (
+                                <IconMailFast className="h-5 w-5 text-green-600" />
+                            ) : (
+                                <IconMail className="h-5 w-5 text-orange-600" />
+                            )}
+                            Email Send Results
+                        </DialogTitle>
+                    </DialogHeader>
+                    <div className="py-4 space-y-4">
+                        <div className="grid grid-cols-2 gap-4 text-center">
+                            <div className="p-4 rounded-lg bg-green-50 border border-green-100">
+                                <p className="text-sm font-medium text-green-600 uppercase tracking-wider">Success</p>
+                                <p className="text-3xl font-bold text-green-700">{sendResults?.successCount || 0}</p>
+                            </div>
+                            <div className="p-4 rounded-lg bg-red-50 border border-red-100">
+                                <p className="text-sm font-medium text-red-600 uppercase tracking-wider">Failed</p>
+                                <p className="text-3xl font-bold text-red-700">{sendResults?.failureCount || 0}</p>
+                            </div>
+                        </div>
+                        {sendResults?.failureCount ? sendResults.failureCount > 0 && (
+                            <div className="p-3 rounded-md bg-amber-50 border border-amber-200 text-sm text-amber-800">
+                                <p className="font-semibold mb-1">Note:</p>
+                                <p>Some emails could not be sent. This usually happens due to SMTP rate limits or invalid email addresses. Please check your SMTP settings if failures persist.</p>
+                            </div>
+                        ) : null}
+                    </div>
+                    <DialogFooter>
+                        <Button onClick={() => setResultDialogOpen(false)}>
+                            Close
                         </Button>
                     </DialogFooter>
                 </DialogContent>
