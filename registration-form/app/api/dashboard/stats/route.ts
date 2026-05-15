@@ -7,7 +7,7 @@ export async function GET() {
         await dbConnect()
         const participants = await Participant.find({ isRegistered: true, approvalStatus: 'approved' }).lean()
 
-        const totalRegistrations = participants.filter(p => !p.isSponsor).length
+        const totalRegistrations = participants.length
         let totalPeople = 0
         let totalCheckedIn = 0
         let totalSecondaryCheckedIn = 0
