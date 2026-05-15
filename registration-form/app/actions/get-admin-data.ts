@@ -28,7 +28,7 @@ export async function getAdminData() {
         ])
 
         const stats = {
-            totalRegistrations: participants.length,
+            totalRegistrations: 0,
             totalGuests: 0,
             totalAmount: 0,
             pendingApprovals: 0,
@@ -55,14 +55,18 @@ export async function getAdminData() {
             const paymentMethod = p.paymentMethod || "cash"
             const approvalStatus = p.approvalStatus || "pending"
 
-            stats.totalGuests += totalMembers
-            stats.totalAmount += totalAmount
-            stats.totalMembers += totalMembers
+            if (!p.isSponsor) {
+                stats.totalRegistrations += 1
+                stats.totalGuests += totalMembers
+                stats.totalMembers += totalMembers
 
-            if (paymentMethod === "cash") {
-                stats.cashPayments += 1
+                if (paymentMethod === "cash") {
+                    stats.cashPayments += 1
+                } else {
+                    stats.onlinePayments += 1
+                }
             } else {
-                stats.onlinePayments += 1
+                stats.totalSponsors += 1
             }
 
             if (approvalStatus === "pending") {
@@ -74,15 +78,12 @@ export async function getAdminData() {
                     stats.approvedRegistrations += 1
                     stats.approvedPrimary += 1
                     stats.approvedNonSponsors += 1
+                    stats.approvedSecondary += secondaryMembersCount
+                    stats.approvedMembers += totalMembers
+                    stats.totalAmount += totalAmount
                 }
-                stats.approvedSecondary += secondaryMembersCount
-                stats.approvedMembers += totalMembers
             } else if (approvalStatus === "rejected") {
                 stats.rejectedRegistrations += 1
-            }
-
-            if (p.isSponsor) {
-                stats.totalSponsors += 1
             }
         })
 

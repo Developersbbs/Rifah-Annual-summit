@@ -300,7 +300,7 @@ export async function getCheckInStats() {
     }
 }
 
-export async function getParticipantsByStatus(status: 'all' | 'checked-in' | 'pending', page: number = 1, limit: number = 20, query: string = "") {
+export async function getParticipantsByStatus(status: 'all' | 'checked-in' | 'pending', page: number = 1, limit: number = 20, query: string = "", regId: string = "") {
     await dbConnect()
     try {
         // Show approved participants who have completed payment (cash) or used online payment
@@ -323,11 +323,33 @@ export async function getParticipantsByStatus(status: 'all' | 'checked-in' | 'pe
             dbQuery["$or"] = [
                 { name: { $regex: regex } },
                 { mobileNumber: { $regex: regex } },
-                { registrationId: { $regex: regex } },
                 { "secondaryMembers.mobileNumber": { $regex: regex } },
-                { "secondaryMembers.name": { $regex: regex } },
-                { "secondaryMembers.registrationId": { $regex: regex } }
+                { "secondaryMembers.name": { $regex: regex } }
             ]
+        }
+
+        if (regId && regId.length >= 2) {
+            const regex = new RegExp(regId, 'i')
+            if (dbQuery["$or"]) {
+                // If query is also present, we want to match both (query AND regId)
+                // But regId itself can be in primary or secondary
+                const regIdMatch = {
+                    $or: [
+                        { registrationId: { $regex: regex } },
+                        { "secondaryMembers.registrationId": { $regex: regex } }
+                    ]
+                }
+                dbQuery["$and"] = [
+                    { $or: dbQuery["$or"] },
+                    regIdMatch
+                ]
+                delete dbQuery["$or"]
+            } else {
+                dbQuery["$or"] = [
+                    { registrationId: { $regex: regex } },
+                    { "secondaryMembers.registrationId": { $regex: regex } }
+                ]
+            }
         }
 
         const total = await Participant.countDocuments(dbQuery)

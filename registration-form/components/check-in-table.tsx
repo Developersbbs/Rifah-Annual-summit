@@ -225,6 +225,8 @@ export function CheckInTable() {
         limit: 20,
         totalPages: 0
     })
+    const [regId, setRegId] = React.useState("")
+    const [debouncedRegId, setDebouncedRegId] = React.useState("")
 
     // Optimistic update function
     const handleOptimisticCheckIn = (participantId: string, type: 'primary' | 'secondary', memberId?: string) => {
@@ -276,12 +278,19 @@ export function CheckInTable() {
         return () => clearTimeout(timer)
     }, [query])
 
+    React.useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedRegId(regId)
+        }, 500)
+        return () => clearTimeout(timer)
+    }, [regId])
+
     // Fetch Logic based on View
     const fetchData = async () => {
         setLoading(true)
         // Treat 'search' view as 'all' status
         const status = view === 'search' ? 'all' : view
-        const data = await getParticipantsByStatus(status, page, 20, debouncedQuery)
+        const data = await getParticipantsByStatus(status, page, 20, debouncedQuery, debouncedRegId)
         setResults(data.records)
         setPagination(data.pagination)
         setLoading(false)
@@ -294,7 +303,7 @@ export function CheckInTable() {
         }
         fetchAll()
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [debouncedQuery, view, page])
+    }, [debouncedQuery, debouncedRegId, view, page])
 
     const handleRefresh = () => {
         fetchData()
@@ -304,34 +313,34 @@ export function CheckInTable() {
     return (
         <div className="space-y-6">
             {/* Stats Row */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
-                <div className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
-                    <div className="text-sm text-muted-foreground">Total Primary</div>
-                    <div className="text-2xl font-bold">{stats.registeredMembers}</div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3 sm:gap-4">
+                <div className="p-3 sm:p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
+                    <div className="text-xs sm:text-sm text-muted-foreground">Total Primary</div>
+                    <div className="text-xl sm:text-2xl font-bold">{stats.registeredMembers}</div>
                 </div>
-                <div className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
-                    <div className="text-sm text-muted-foreground">Total Secondary</div>
-                    <div className="text-2xl font-bold">{stats.registeredParticipants}</div>
+                <div className="p-3 sm:p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
+                    <div className="text-xs sm:text-sm text-muted-foreground">Total Secondary</div>
+                    <div className="text-xl sm:text-2xl font-bold">{stats.registeredParticipants}</div>
                 </div>
-                <div className="p-4 rounded-lg border bg-blue-50 text-blue-900 border-blue-100 dark:bg-blue-900/20 dark:text-blue-100 dark:border-blue-900">
-                    <div className="text-sm opacity-80">Total Sponsors</div>
-                    <div className="text-2xl font-bold">{stats.totalSponsors}</div>
+                <div className="p-3 sm:p-4 rounded-lg border bg-blue-50 text-blue-900 border-blue-100 dark:bg-blue-900/20 dark:text-blue-100 dark:border-blue-900">
+                    <div className="text-xs sm:text-sm opacity-80">Total Sponsors</div>
+                    <div className="text-xl sm:text-2xl font-bold">{stats.totalSponsors}</div>
                 </div>
-                <div className="p-4 rounded-lg border bg-green-50 text-green-900 border-green-100 dark:bg-green-900/20 dark:text-green-100 dark:border-green-900">
-                    <div className="text-sm opacity-80">Checked-in Primary</div>
-                    <div className="text-2xl font-bold">{stats.checkedInMembers}</div>
+                <div className="p-3 sm:p-4 rounded-lg border bg-green-50 text-green-900 border-green-100 dark:bg-green-900/20 dark:text-green-100 dark:border-green-900">
+                    <div className="text-xs sm:text-sm opacity-80">Checked-in Pri</div>
+                    <div className="text-xl sm:text-2xl font-bold">{stats.checkedInMembers}</div>
                 </div>
-                <div className="p-4 rounded-lg border bg-green-50 text-green-900 border-green-100 dark:bg-green-900/20 dark:text-green-100 dark:border-green-900">
-                    <div className="text-sm opacity-80">Checked-in Secondary</div>
-                    <div className="text-2xl font-bold">{stats.checkedInParticipants}</div>
+                <div className="p-3 sm:p-4 rounded-lg border bg-green-50 text-green-900 border-green-100 dark:bg-green-900/20 dark:text-green-100 dark:border-green-900">
+                    <div className="text-xs sm:text-sm opacity-80">Checked-in Sec</div>
+                    <div className="text-xl sm:text-2xl font-bold">{stats.checkedInParticipants}</div>
                 </div>
-                <div className="p-4 rounded-lg border bg-green-100 text-green-900 border-green-200 dark:bg-green-900/40 dark:text-green-100 dark:border-green-800">
-                    <div className="text-sm opacity-80">Total Checked-in</div>
-                    <div className="text-2xl font-bold">{stats.checkedInMembers + stats.checkedInParticipants}</div>
+                <div className="p-3 sm:p-4 rounded-lg border bg-green-100 text-green-900 border-green-200 dark:bg-green-900/40 dark:text-green-100 dark:border-green-800">
+                    <div className="text-xs sm:text-sm opacity-80">Total Checked</div>
+                    <div className="text-xl sm:text-2xl font-bold">{stats.checkedInMembers + stats.checkedInParticipants}</div>
                 </div>
-                <div className="p-4 rounded-lg border bg-green-50 text-green-900 border-green-100 dark:bg-green-900/20 dark:text-green-100 dark:border-green-900">
-                    <div className="text-sm opacity-80">Checked-in Sponsors</div>
-                    <div className="text-2xl font-bold">{stats.checkedInSponsors}</div>
+                <div className="p-3 sm:p-4 rounded-lg border bg-green-50 text-green-900 border-green-100 dark:bg-green-900/20 dark:text-green-100 dark:border-green-900">
+                    <div className="text-xs sm:text-sm opacity-80">Checked-in Spo</div>
+                    <div className="text-xl sm:text-2xl font-bold">{stats.checkedInSponsors}</div>
                 </div>
             </div>
 
@@ -350,21 +359,35 @@ export function CheckInTable() {
                     </Button>
                 </div>
 
-                <div className="relative mb-6">
-                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Search by Name, Mobile or Register ID..."
-                        className="pl-9 h-12 text-lg"
-                        value={query}
-                        onChange={(e) => {
-                            setQuery(e.target.value)
-                            setPage(1)
-                        }}
-                    />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            placeholder="Search by Name or Mobile..."
+                            className="pl-9 h-11"
+                            value={query}
+                            onChange={(e) => {
+                                setQuery(e.target.value)
+                                setPage(1)
+                            }}
+                        />
+                    </div>
+                    <div className="relative">
+                        <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            placeholder="Search by Register ID..."
+                            className="pl-9 h-11 border-blue-200 focus:border-blue-500"
+                            value={regId}
+                            onChange={(e) => {
+                                setRegId(e.target.value)
+                                setPage(1)
+                            }}
+                        />
+                    </div>
                 </div>
 
                 {/* Single Table for all views */}
-                <div className="rounded-md border bg-card">
+                <div className="rounded-md border bg-card overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow>
