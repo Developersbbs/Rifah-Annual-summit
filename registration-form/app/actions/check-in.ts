@@ -54,13 +54,22 @@ export async function searchParticipants(query: string) {
 
 interface CheckInData {
     memberPresent: boolean
-    guestCount: number
 }
 
 interface SecondaryMemberCheckInData {
     participantId: string
     memberMobileNumber?: string
     memberIndex?: number
+}
+
+// Derive the correct isCheckedIn and actualGuests from actual individual check-in flags
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function deriveCheckInStatus(participant: any): { isCheckedIn: boolean; totalChecked: number } {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const secondaryChecked = participant.secondaryMembers?.filter((m: any) => m.isCheckedIn).length || 0
+    const totalMembers = 1 + (participant.secondaryMembers?.length || 0)
+    const totalChecked = (participant.checkIn?.memberPresent ? 1 : 0) + secondaryChecked
+    return { isCheckedIn: totalChecked === totalMembers, totalChecked }
 }
 
 export async function performSecondaryMemberCheckIn(data: SecondaryMemberCheckInData) {
@@ -77,17 +86,14 @@ export async function performSecondaryMemberCheckIn(data: SecondaryMemberCheckIn
             return { success: false, error: "Participant not found" }
         }
 
-        // Negative Test Case 2: Block check-in for non-approved participants
         if (participant.approvalStatus !== 'approved') {
             return { success: false, error: "Participant is not approved for check-in" }
         }
 
-        // Block check-in for unpaid participants
         if (participant.paymentStatus !== 'completed') {
             return { success: false, error: "Payment not completed" }
         }
 
-        // Negative Test Case 5: Block check-in for unregistered users
         if (!participant.isRegistered) {
             return { success: false, error: "User is not registered" }
         }
@@ -110,43 +116,28 @@ export async function performSecondaryMemberCheckIn(data: SecondaryMemberCheckIn
 
         const member = participant.secondaryMembers[memberIndex]
 
-        // Negative Test Case 1: Prevent duplicate check-in
         if (member.isCheckedIn) {
             return { success: false, error: "Member already checked in" }
         }
 
-        // Negative Test Case 6: Prevent over check-in
-        const totalRegistered = 1 + (participant.secondaryMembers?.length || 0)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const alreadyCheckedIn = (participant.checkIn?.memberPresent ? 1 : 0) + participant.secondaryMembers.filter((m: any) => m.isCheckedIn).length
-
-        if (alreadyCheckedIn >= totalRegistered) {
-            return { success: false, error: "All registered members already checked in" }
-        }
-
-        // Check-in the secondary member
+        // Mark this secondary member as checked in
         participant.secondaryMembers[memberIndex].isCheckedIn = true
         participant.secondaryMembers[memberIndex].checkedInAt = new Date()
 
-        // Recalculate isCheckedIn: true only when ALL members (primary + every secondary) are checked in
-        const primaryCheckedIn = participant.checkIn?.memberPresent || false
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const secondaryAllCheckedIn = participant.secondaryMembers.filter((m: any) => m.isCheckedIn).length
-        const totalMembers = 1 + participant.secondaryMembers.length
-        const totalCheckedIn = (primaryCheckedIn ? 1 : 0) + secondaryAllCheckedIn
-        const isAllCheckedIn = totalCheckedIn === totalMembers
+        // Recompute isCheckedIn: only true when ALL members are in
+        const { isCheckedIn, totalChecked } = deriveCheckInStatus(participant)
 
         if (!participant.checkIn) {
             participant.checkIn = {
-                isCheckedIn: isAllCheckedIn,
+                isCheckedIn,
                 memberPresent: false,
                 timestamp: new Date(),
-                actualGuests: totalCheckedIn,
+                actualGuests: totalChecked,
                 checkedInBy: user.email
             }
         } else {
-            participant.checkIn.isCheckedIn = isAllCheckedIn
-            participant.checkIn.actualGuests = totalCheckedIn
+            participant.checkIn.isCheckedIn = isCheckedIn
+            participant.checkIn.actualGuests = totalChecked
             participant.checkIn.checkedInBy = user.email
         }
 
@@ -174,39 +165,42 @@ export async function performCheckIn(id: string, data: CheckInData) {
             return { success: false, error: "Participant not found" }
         }
 
-        // Negative Test Case 2: Block check-in for non-approved participants
         if (participant.approvalStatus !== 'approved') {
             return { success: false, error: "Participant is not approved for check-in" }
         }
 
-        // Block check-in for unpaid participants
         if (participant.paymentStatus !== 'completed') {
             return { success: false, error: "Payment not completed" }
         }
 
-        // Negative Test Case 5: Block check-in for unregistered users
         if (!participant.isRegistered) {
             return { success: false, error: "User is not registered" }
         }
 
-        // Prevent duplicate primary check-in
         if (participant.checkIn?.memberPresent) {
             return { success: false, error: "Primary member already checked in" }
         }
 
-        // Derive isCheckedIn from actual individual check-in states — only mark all-done when everyone is in
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const secondaryCheckedIn = participant.secondaryMembers?.filter((m: any) => m.isCheckedIn).length || 0
-        const totalMembers = 1 + (participant.secondaryMembers?.length || 0)
-        const totalCheckedIn = (data.memberPresent ? 1 : 0) + secondaryCheckedIn
-
-        participant.checkIn = {
-            isCheckedIn: totalCheckedIn === totalMembers,
-            memberPresent: data.memberPresent,
-            timestamp: participant.checkIn?.timestamp || new Date(),
-            actualGuests: totalCheckedIn,
-            checkedInBy: user.email
+        // Set primary member as present, then derive isCheckedIn from all actual states
+        if (!participant.checkIn) {
+            participant.checkIn = {
+                isCheckedIn: false,
+                memberPresent: data.memberPresent,
+                timestamp: new Date(),
+                actualGuests: 0,
+                checkedInBy: user.email
+            }
+        } else {
+            participant.checkIn.memberPresent = data.memberPresent
+            participant.checkIn.checkedInBy = user.email
+            if (!participant.checkIn.timestamp) {
+                participant.checkIn.timestamp = new Date()
+            }
         }
+
+        const { isCheckedIn, totalChecked } = deriveCheckInStatus(participant)
+        participant.checkIn.isCheckedIn = isCheckedIn
+        participant.checkIn.actualGuests = totalChecked
 
         await participant.save()
         revalidatePath("/admin/checkin")
@@ -218,10 +212,61 @@ export async function performCheckIn(id: string, data: CheckInData) {
     }
 }
 
+// Fix stale checkIn.isCheckedIn values in DB for all registered/approved participants
+export async function resyncAllCheckInStatus() {
+    await dbConnect()
+    const user = await getCurrentUser()
+    if (!user) return { success: false, error: "Unauthorized" }
+
+    try {
+        const participants = await Participant.find({
+            isRegistered: true,
+            approvalStatus: 'approved'
+        }).lean()
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const bulkOps: object[] = []
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        for (const p of participants as any[]) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const secondaryChecked = p.secondaryMembers?.filter((m: any) => m.isCheckedIn).length || 0
+            const totalMembers = 1 + (p.secondaryMembers?.length || 0)
+            const totalChecked = (p.checkIn?.memberPresent ? 1 : 0) + secondaryChecked
+            const isCheckedIn = totalChecked === totalMembers
+
+            // Skip if already correct
+            if (p.checkIn?.isCheckedIn === isCheckedIn && p.checkIn?.actualGuests === totalChecked) continue
+
+            bulkOps.push({
+                updateOne: {
+                    filter: { _id: p._id },
+                    update: {
+                        $set: {
+                            'checkIn.isCheckedIn': isCheckedIn,
+                            'checkIn.actualGuests': totalChecked
+                        }
+                    }
+                }
+            })
+        }
+
+        if (bulkOps.length > 0) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            await Participant.bulkWrite(bulkOps as any)
+        }
+
+        revalidatePath("/admin/checkin")
+        return { success: true, synced: bulkOps.length }
+    } catch (error) {
+        console.error("Re-sync error:", error)
+        return { success: false, error: error instanceof Error ? error.message : "Re-sync failed" }
+    }
+}
+
 export async function getCheckInStats() {
     await dbConnect()
     try {
-        // Include participants who are approved AND either: paid (cash/online completed) or online payment method
         const participants = await Participant.find({
             isRegistered: true,
             approvalStatus: 'approved',
@@ -236,32 +281,32 @@ export async function getCheckInStats() {
         let checkedInMembers = 0
         let checkedInParticipants = 0
         let totalSponsors = 0
-        let checkedInSponsors = 0;
+        let checkedInSponsors = 0
 
-        (participants as unknown as IParticipant[]).forEach((p) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ;(participants as unknown as IParticipant[]).forEach((p: any) => {
             if (p.isSponsor) {
                 totalSponsors++
             } else {
                 registeredMembers++
             }
-            
-            // Use secondaryMembers.length for secondary members
+
             const totalSecondary = p.secondaryMembers?.length || 0
             registeredParticipants += totalSecondary
 
-            if (p.checkIn?.isCheckedIn) {
-                if (p.checkIn.memberPresent) {
-                    if (p.isSponsor) {
-                        checkedInSponsors++
-                    } else {
-                        checkedInMembers++
-                    }
+            // Count primary independently — don't gate on isCheckedIn
+            if (p.checkIn?.memberPresent) {
+                if (p.isSponsor) {
+                    checkedInSponsors++
+                } else {
+                    checkedInMembers++
                 }
-                // Count checked-in secondary members from secondaryMembers array
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const secondaryCheckedIn = p.secondaryMembers?.filter((m: any) => m.isCheckedIn).length || 0
-                checkedInParticipants += secondaryCheckedIn
             }
+
+            // Count each secondary member independently
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const secondaryCheckedIn = p.secondaryMembers?.filter((m: any) => m.isCheckedIn).length || 0
+            checkedInParticipants += secondaryCheckedIn
         })
 
         return {
@@ -288,7 +333,6 @@ export async function getCheckInStats() {
 export async function getParticipantsByStatus(status: 'all' | 'checked-in' | 'pending', page: number = 1, limit: number = 20, query: string = "", regId: string = "") {
     await dbConnect()
     try {
-        // Show approved participants who have completed payment (cash) or used online payment
         const dbQuery: Record<string, unknown> = {
             approvalStatus: "approved",
             $or: [
@@ -316,8 +360,6 @@ export async function getParticipantsByStatus(status: 'all' | 'checked-in' | 'pe
         if (regId && regId.length >= 2) {
             const regex = new RegExp(regId, 'i')
             if (dbQuery["$or"]) {
-                // If query is also present, we want to match both (query AND regId)
-                // But regId itself can be in primary or secondary
                 const regIdMatch = {
                     $or: [
                         { registrationId: { $regex: regex } },
@@ -340,39 +382,54 @@ export async function getParticipantsByStatus(status: 'all' | 'checked-in' | 'pe
         const total = await Participant.countDocuments(dbQuery)
         const totalPages = Math.ceil(total / limit)
         const skip = (page - 1) * limit
-        
-        const sort = status === 'checked-in' 
-            ? { "checkIn.timestamp": -1 } as const 
+
+        const sort = status === 'checked-in'
+            ? { "checkIn.timestamp": -1 } as const
             : { createdAt: -1 } as const
 
         const participants = await Participant.find(dbQuery)
-            .sort(sort as unknown as string | Record<string, 1 | -1>) 
+            .sort(sort as unknown as string | Record<string, 1 | -1>)
             .skip(skip)
             .limit(limit)
             .lean()
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const records = (participants as unknown as IParticipant[]).map((p: any) => ({
-            ...p,
-            _id: p._id.toString(),
-            eventId: p.eventId?.toString(),
-            approvedBy: p.approvedBy?.toString(),
-            createdAt: p.createdAt instanceof Date ? p.createdAt.toISOString() : p.createdAt,
-            updatedAt: p.updatedAt instanceof Date ? p.updatedAt.toISOString() : p.updatedAt,
+        const records = (participants as unknown as IParticipant[]).map((p: any) => {
+            // Always recompute isCheckedIn from actual member states to override any stale DB value
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            secondaryMembers: p.secondaryMembers?.map((member: any) => ({
-                ...member,
-                _id: member._id?.toString(),
-                checkedInAt: member.checkedInAt instanceof Date ? member.checkedInAt.toISOString() : member.checkedInAt
-            })),
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            approvalLogs: p.approvalLogs?.map((log: any) => ({
-                ...log,
-                _id: log._id?.toString(),
-                approvedBy: log.approvedBy?.toString(),
-                timestamp: log.timestamp instanceof Date ? log.timestamp.toISOString() : log.timestamp
-            }))
-        }))
+            const secondaryChecked = p.secondaryMembers?.filter((m: any) => m.isCheckedIn).length || 0
+            const totalMembers = 1 + (p.secondaryMembers?.length || 0)
+            const totalChecked = (p.checkIn?.memberPresent ? 1 : 0) + secondaryChecked
+            const computedIsCheckedIn = totalChecked === totalMembers
+
+            return {
+                ...p,
+                _id: p._id.toString(),
+                eventId: p.eventId?.toString(),
+                approvedBy: p.approvedBy?.toString(),
+                createdAt: p.createdAt instanceof Date ? p.createdAt.toISOString() : p.createdAt,
+                updatedAt: p.updatedAt instanceof Date ? p.updatedAt.toISOString() : p.updatedAt,
+                checkIn: p.checkIn ? {
+                    ...p.checkIn,
+                    isCheckedIn: computedIsCheckedIn,
+                    actualGuests: totalChecked,
+                    timestamp: p.checkIn.timestamp instanceof Date ? p.checkIn.timestamp.toISOString() : p.checkIn.timestamp
+                } : undefined,
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                secondaryMembers: p.secondaryMembers?.map((member: any) => ({
+                    ...member,
+                    _id: member._id?.toString(),
+                    checkedInAt: member.checkedInAt instanceof Date ? member.checkedInAt.toISOString() : member.checkedInAt
+                })),
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                approvalLogs: p.approvalLogs?.map((log: any) => ({
+                    ...log,
+                    _id: log._id?.toString(),
+                    approvedBy: log.approvedBy?.toString(),
+                    timestamp: log.timestamp instanceof Date ? log.timestamp.toISOString() : log.timestamp
+                }))
+            }
+        })
 
         return {
             records,
