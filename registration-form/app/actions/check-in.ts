@@ -224,7 +224,6 @@ export async function resyncAllCheckInStatus() {
             approvalStatus: 'approved'
         }).lean()
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const bulkOps: object[] = []
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
