@@ -28,7 +28,7 @@ export async function getAdminData() {
         ])
 
         const stats = {
-            totalRegistrations: participants.length,
+            totalRegistrations: 0,
             totalGuests: 0,
             totalAmount: 0,
             pendingApprovals: 0,
@@ -36,17 +36,16 @@ export async function getAdminData() {
             approvedMembers: 0,
             approvedPrimary: 0,
             approvedSecondary: 0,
-            approvedNonSponsors: 0, // NEW: Approved people who are NOT sponsors
-            approvedSponsorsCount: 0, // NEW: Approved people who ARE sponsors
+            approvedNonSponsors: 0,
+            approvedSponsorsCount: 0,
             rejectedRegistrations: 0,
             cashPayments: 0,
             onlinePayments: 0,
             totalMembers: 0,
-            totalSponsors: 0, // All sponsor registrations
+            totalSponsors: 0,
             speakerCount,
             volunteerCount,
         };
-
         (participants as unknown as IParticipant[]).forEach((p: IParticipant) => {
             // Handle new schema fields for participants
             const secondaryMembersCount = p.secondaryMembers?.length || 0
@@ -55,35 +54,40 @@ export async function getAdminData() {
             const paymentMethod = p.paymentMethod || "cash"
             const approvalStatus = p.approvalStatus || "pending"
 
-            stats.totalGuests += totalMembers
-            stats.totalAmount += totalAmount
-            stats.totalMembers += totalMembers
-
-            if (paymentMethod === "cash") {
-                stats.cashPayments += 1
-            } else {
-                stats.onlinePayments += 1
-            }
-
-            if (approvalStatus === "pending") {
-                stats.pendingApprovals += 1
-            } else if (approvalStatus === "approved") {
-                stats.approvedRegistrations += 1
-                stats.approvedMembers += totalMembers
-                stats.approvedPrimary += 1
-                stats.approvedSecondary += secondaryMembersCount
-                
-                if (p.isSponsor) {
-                    stats.approvedSponsorsCount += totalMembers
-                } else {
-                    stats.approvedNonSponsors += totalMembers
-                }
-            } else if (approvalStatus === "rejected") {
-                stats.rejectedRegistrations += 1
-            }
-
             if (p.isSponsor) {
                 stats.totalSponsors += 1
+                // Count secondary members of sponsors as regular members/guests if needed?
+                // For now, following "separate count" logic:
+                stats.totalMembers += secondaryMembersCount
+                stats.totalGuests += secondaryMembersCount
+            } else {
+                stats.totalRegistrations += 1
+                stats.totalMembers += totalMembers
+                stats.totalGuests += totalMembers
+                if (paymentMethod === "cash") {
+                    stats.cashPayments += 1
+                } else {
+                    stats.onlinePayments += 1
+                }
+            }
+
+            stats.totalAmount += totalAmount
+
+            if (approvalStatus === "pending") {
+                if (!p.isSponsor) stats.pendingApprovals += 1
+            } else if (approvalStatus === "approved") {
+                if (!p.isSponsor) {
+                    stats.approvedRegistrations += 1
+                    stats.approvedPrimary += 1
+                    stats.approvedMembers += totalMembers
+                    stats.approvedNonSponsors += totalMembers
+                } else {
+                    stats.approvedSponsorsCount += 1 // Count the sponsor itself
+                    stats.approvedMembers += secondaryMembersCount // Count their secondary members
+                }
+                stats.approvedSecondary += secondaryMembersCount
+            } else if (approvalStatus === "rejected") {
+                if (!p.isSponsor) stats.rejectedRegistrations += 1
             }
         })
 
