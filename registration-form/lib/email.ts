@@ -283,6 +283,7 @@ export interface AlertEmailRecipient {
     registrationId: string
     name: string
     email: string
+    secondaryMembers?: { registrationId: string; name: string }[]
 }
 
 export async function sendThankYouEmail(
@@ -575,7 +576,7 @@ export async function sendAlertEmail(
                     return
                 }
 
-                const html = getAlertEmailHtml({ name: recipient.name, registrationId: recipient.registrationId })
+                const html = getAlertEmailHtml({ name: recipient.name, registrationId: recipient.registrationId, secondaryMembers: recipient.secondaryMembers })
 
                 try {
                     await transporter.sendMail({
@@ -607,8 +608,26 @@ export async function sendAlertEmail(
     }
 }
 
-function getAlertEmailHtml(params: { name: string; registrationId: string }) {
-    const { name, registrationId } = params
+function getAlertEmailHtml(params: { name: string; registrationId: string; secondaryMembers?: { registrationId: string; name: string }[] }) {
+    const { name, registrationId, secondaryMembers } = params
+
+    const secondaryMembersHtml = secondaryMembers && secondaryMembers.length > 0
+        ? `
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:16px;border-top:2px solid #fdba74;padding-top:14px;">
+              <tr>
+                <td>
+                  <p style="color:#9a3412;font-size:11px;font-weight:700;margin:0 0 10px;text-transform:uppercase;letter-spacing:0.08em;">Secondary Members</p>
+                  ${secondaryMembers.map(sm => `
+                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:6px;">
+                    <tr>
+                      <td style="color:#78350f;font-size:14px;">${sm.name}</td>
+                      <td style="text-align:right;color:#c2410c;font-size:14px;font-weight:700;letter-spacing:0.03em;">${sm.registrationId}</td>
+                    </tr>
+                  </table>`).join('')}
+                </td>
+              </tr>
+            </table>`
+        : ''
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -664,6 +683,7 @@ function getAlertEmailHtml(params: { name: string; registrationId: string }) {
                   <p style="color:#9a3412;font-size:11px;font-weight:700;margin:0 0 8px;text-transform:uppercase;letter-spacing:0.08em;">Your Registration ID</p>
                   <p style="color:#c2410c;font-size:26px;font-weight:800;margin:0 0 6px;letter-spacing:0.04em;">${registrationId}</p>
                   <p style="color:#78350f;font-size:13px;margin:0;">Please show this ID at the registration desk upon entry.</p>
+                  ${secondaryMembersHtml}
                 </td>
               </tr>
             </table>

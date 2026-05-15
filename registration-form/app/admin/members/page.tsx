@@ -57,6 +57,7 @@ interface Member {
     paymentStatus: string
     approvalStatus: string
     createdAt: string
+    secondaryMembers?: { registrationId: string; name: string }[]
 }
 
 export default function MembersPage() {
@@ -187,6 +188,7 @@ export default function MembersPage() {
                             registrationId: m.registrationId,
                             name: m.name,
                             email: m.email,
+                            secondaryMembers: m.secondaryMembers,
                         }))
                     })
                 })

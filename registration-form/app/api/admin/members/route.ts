@@ -43,6 +43,7 @@ export async function GET(request: Request) {
             paymentStatus?: string
             approvalStatus?: string
             createdAt: string | Date
+            secondaryMembers?: { registrationId: string; name: string }[]
         }
         const allMembers: MemberRecord[] = []
 
@@ -61,7 +62,13 @@ export async function GET(request: Request) {
                 businessCategory: p.businessCategory || "N/A",
                 paymentStatus: p.paymentStatus,
                 approvalStatus: p.approvalStatus,
-                createdAt: p.createdAt
+                createdAt: p.createdAt,
+                secondaryMembers: p.secondaryMembers && p.secondaryMembers.length > 0
+                    ? p.secondaryMembers.map((sm: ISecondaryMember) => ({
+                        registrationId: sm.registrationId || "N/A",
+                        name: sm.name
+                    }))
+                    : undefined
             })
 
             // Add secondary members
