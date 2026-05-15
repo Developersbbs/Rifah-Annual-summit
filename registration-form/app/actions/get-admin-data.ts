@@ -78,8 +78,10 @@ export async function getAdminData() {
                     stats.approvedRegistrations += 1
                     stats.approvedPrimary += 1
                     stats.approvedNonSponsors += 1
-                    stats.approvedSecondary += secondaryMembersCount
-                    stats.approvedMembers += totalMembers
+                }
+                stats.approvedSecondary += secondaryMembersCount
+                stats.approvedMembers += totalMembers
+                if (!p.isSponsor) {
                     stats.totalAmount += totalAmount
                 }
             } else if (approvalStatus === "rejected") {
