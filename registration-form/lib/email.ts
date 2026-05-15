@@ -399,7 +399,7 @@ function getThankYouEmailHtml(params: { name: string; registrationId: string }) 
                 Thank You for Attending!
               </h1>
               <p style="color:rgba(255,255,255,0.88);font-size:15px;margin:0;line-height:1.5;">
-                RIFAH Annual Summit 2026 &mdash; <em>Let&rsquo;s Grow Together</em>
+                RIFAH Annual Summit 2026
               </p>
             </div>
           </td>
@@ -421,7 +421,7 @@ function getThankYouEmailHtml(params: { name: string; registrationId: string }) 
               <tr>
                 <td class="highlight-card" style="background:linear-gradient(135deg,#fff7ed 0%,#fef9ec 100%);border:1.5px solid #fcd34d;border-radius:14px;padding:26px 24px;text-align:center;">
                   <div style="font-size:34px;margin-bottom:12px;">🌟</div>
-                  <p style="color:#92400e;font-size:16px;font-weight:700;margin:0 0 10px;line-height:1.4;">
+                  <p style="color:#92400e;font-size:15px;font-weight:600;margin:0 0 10px;line-height:1.4;">
                     Your presence meant the world to us!
                   </p>
                   <p style="color:#78350f;font-size:14px;margin:0;line-height:1.7;">

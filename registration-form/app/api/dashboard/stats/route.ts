@@ -13,6 +13,7 @@ export async function GET() {
         let totalSecondaryCheckedIn = 0
         let primaryMembers = 0
         let secondaryMembers = 0
+        let totalSponsors = 0
         let male = 0
         let female = 0
         let other = 0
@@ -21,7 +22,13 @@ export async function GET() {
         participants.forEach((p: any) => {
             const secondaryCount = p.secondaryMembers?.length || 0
             totalPeople += 1 + secondaryCount
-            primaryMembers += 1
+            
+            if (p.isSponsor) {
+                totalSponsors++
+            } else {
+                primaryMembers++
+            }
+
             secondaryMembers += secondaryCount
             if (p.checkIn?.isCheckedIn) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -51,6 +58,7 @@ export async function GET() {
             totalSecondaryCheckedIn,
             primaryMembers,
             secondaryMembers,
+            totalSponsors,
             male,
             female,
             other

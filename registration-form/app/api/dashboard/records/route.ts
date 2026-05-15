@@ -79,7 +79,7 @@ export async function GET(request: Request) {
                 matchesSearchPrimary && matchesRegIdPrimary) {
                 records.push({
                     _id: p._id.toString(),
-                    type: "Primary",
+                    type: p.isSponsor ? "Sponsor" : "Primary",
                     registrationId: p.registrationId || "",
                     name: p.name,
                     phone: p.mobileNumber,

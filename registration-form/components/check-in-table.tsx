@@ -125,9 +125,14 @@ function MembersDialog({ participant, open, onOpenChange, onRefresh, onOptimisti
                                 <CheckCircle2 className={`h-5 w-5 ${participant.checkIn?.memberPresent ? 'text-green-600' : 'text-muted-foreground'}`} />
                                 <span className="font-semibold">Primary Member</span>
                             </div>
-                            <Badge variant={participant.checkIn?.memberPresent ? "default" : "outline"}>
-                                {participant.checkIn?.memberPresent ? "Checked In" : "Pending"}
-                            </Badge>
+                            <div className="flex items-center gap-2">
+                                <Badge variant={participant.checkIn?.memberPresent ? "default" : "outline"}>
+                                    {participant.checkIn?.memberPresent ? "Checked In" : "Pending"}
+                                </Badge>
+                                {participant.isSponsor && (
+                                    <Badge variant="default" className="bg-blue-600">Sponsor</Badge>
+                                )}
+                            </div>
                         </div>
                         <div className="text-sm space-y-1">
                             <p className="font-mono text-xs font-bold text-blue-600">{participant.registrationId || "-"}</p>
@@ -212,7 +217,9 @@ export function CheckInTable() {
         registeredMembers: 0,
         registeredParticipants: 0,
         checkedInMembers: 0,
-        checkedInParticipants: 0
+        checkedInParticipants: 0,
+        totalSponsors: 0,
+        checkedInSponsors: 0
     })
     const [page, setPage] = React.useState(1)
     const [pagination, setPagination] = React.useState({
@@ -300,14 +307,18 @@ export function CheckInTable() {
     return (
         <div className="space-y-6">
             {/* Stats Row */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
                 <div className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
-                    <div className="text-sm text-muted-foreground">Total Primary Members</div>
+                    <div className="text-sm text-muted-foreground">Total Primary</div>
                     <div className="text-2xl font-bold">{stats.registeredMembers}</div>
                 </div>
                 <div className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
-                    <div className="text-sm text-muted-foreground">Total Secondary Members</div>
+                    <div className="text-sm text-muted-foreground">Total Secondary</div>
                     <div className="text-2xl font-bold">{stats.registeredParticipants}</div>
+                </div>
+                <div className="p-4 rounded-lg border bg-blue-50 text-blue-900 border-blue-100 dark:bg-blue-900/20 dark:text-blue-100 dark:border-blue-900">
+                    <div className="text-sm opacity-80">Total Sponsors</div>
+                    <div className="text-2xl font-bold">{stats.totalSponsors}</div>
                 </div>
                 <div className="p-4 rounded-lg border bg-green-50 text-green-900 border-green-100 dark:bg-green-900/20 dark:text-green-100 dark:border-green-900">
                     <div className="text-sm opacity-80">Checked-in Primary</div>
@@ -315,12 +326,15 @@ export function CheckInTable() {
                 </div>
                 <div className="p-4 rounded-lg border bg-green-50 text-green-900 border-green-100 dark:bg-green-900/20 dark:text-green-100 dark:border-green-900">
                     <div className="text-sm opacity-80">Checked-in Secondary</div>
-                    <div className="flex items-baseline gap-2">
-                        <div className="text-2xl font-bold">{stats.checkedInParticipants}</div>
-                        <div className="text-sm font-medium opacity-80">
-                            (Total: {stats.checkedInMembers + stats.checkedInParticipants})
-                        </div>
-                    </div>
+                    <div className="text-2xl font-bold">{stats.checkedInParticipants}</div>
+                </div>
+                <div className="p-4 rounded-lg border bg-green-100 text-green-900 border-green-200 dark:bg-green-900/40 dark:text-green-100 dark:border-green-800">
+                    <div className="text-sm opacity-80">Total Checked-in</div>
+                    <div className="text-2xl font-bold">{stats.checkedInMembers + stats.checkedInParticipants}</div>
+                </div>
+                <div className="p-4 rounded-lg border bg-green-50 text-green-900 border-green-100 dark:bg-green-900/20 dark:text-green-100 dark:border-green-900">
+                    <div className="text-sm opacity-80">Checked-in Sponsors</div>
+                    <div className="text-2xl font-bold">{stats.checkedInSponsors}</div>
                 </div>
             </div>
 
@@ -437,7 +451,12 @@ function CheckInRow({ participant, onRefresh, onOptimisticCheckIn }: { participa
             <TableRow>
                 <TableCell>
                     <div className="font-mono text-xs font-bold text-orange-600 mb-1">{participant.registrationId || "-"}</div>
-                    <div className="font-semibold">{participant.name}</div>
+                    <div className="font-semibold flex items-center gap-2">
+                        {participant.name}
+                        {participant.isSponsor && (
+                            <Badge variant="default" className="bg-blue-600 hover:bg-blue-700 text-[10px] h-4 px-1 py-0">SPONSOR</Badge>
+                        )}
+                    </div>
                     <div className="text-xs text-muted-foreground">{participant.mobileNumber}</div>
                     <Badge variant="outline" className="mt-1">{participant.location || "Unassigned"}</Badge>
                     <div className="mt-2 text-xs">

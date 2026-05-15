@@ -249,17 +249,28 @@ export async function getCheckInStats() {
         let registeredMembers = 0
         let registeredParticipants = 0
         let checkedInMembers = 0
-        let checkedInParticipants = 0;
+        let checkedInParticipants = 0
+        let totalSponsors = 0
+        let checkedInSponsors = 0;
 
         (participants as unknown as IParticipant[]).forEach((p) => {
-            registeredMembers++
+            if (p.isSponsor) {
+                totalSponsors++
+            } else {
+                registeredMembers++
+            }
+            
             // Use secondaryMembers.length for secondary members
             const totalSecondary = p.secondaryMembers?.length || 0
             registeredParticipants += totalSecondary
 
             if (p.checkIn?.isCheckedIn) {
                 if (p.checkIn.memberPresent) {
-                    checkedInMembers++
+                    if (p.isSponsor) {
+                        checkedInSponsors++
+                    } else {
+                        checkedInMembers++
+                    }
                 }
                 // Count checked-in secondary members from secondaryMembers array
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -272,7 +283,9 @@ export async function getCheckInStats() {
             registeredMembers,
             registeredParticipants,
             checkedInMembers,
-            checkedInParticipants
+            checkedInParticipants,
+            totalSponsors,
+            checkedInSponsors
         }
     } catch (error) {
         console.error("Stats error:", error)
@@ -280,7 +293,9 @@ export async function getCheckInStats() {
             registeredMembers: 0,
             registeredParticipants: 0,
             checkedInMembers: 0,
-            checkedInParticipants: 0
+            checkedInParticipants: 0,
+            totalSponsors: 0,
+            checkedInSponsors: 0
         }
     }
 }

@@ -54,7 +54,7 @@ export async function GET(request: Request) {
                 mobileNumber: p.mobileNumber,
                 email: p.email || "N/A",
                 location: p.location || "N/A",
-                type: "Primary",
+                type: p.isSponsor ? "Sponsor" : "Primary",
                 isSponsor: p.isSponsor || false,
                 gender: p.gender || "N/A",
                 businessName: p.businessName || "N/A",

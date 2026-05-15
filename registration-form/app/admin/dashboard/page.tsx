@@ -46,6 +46,7 @@ interface DashboardStats {
     totalSecondaryCheckedIn: number
     primaryMembers: number
     secondaryMembers: number
+    totalSponsors: number
     male: number
     female: number
     other: number
@@ -261,7 +262,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
                 <div className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
                     <div className="text-xs text-muted-foreground uppercase font-semibold">{t("Registrations")}</div>
                     <div className="text-xl font-bold">{stats?.totalRegistrations || 0}</div>
@@ -273,6 +274,10 @@ export default function DashboardPage() {
                 <div className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
                     <div className="text-xs text-muted-foreground uppercase font-semibold">{t("Secondary")}</div>
                     <div className="text-xl font-bold">{stats?.secondaryMembers || 0}</div>
+                </div>
+                <div className="p-4 rounded-lg border bg-blue-50 border-blue-100 text-blue-900 dark:bg-blue-950/20 dark:border-blue-900 dark:text-blue-100 shadow-sm">
+                    <div className="text-xs uppercase font-semibold opacity-80">{t("Sponsors")}</div>
+                    <div className="text-xl font-bold">{stats?.totalSponsors || 0}</div>
                 </div>
                 <div className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
                     <div className="text-xs text-muted-foreground uppercase font-semibold">{t("Male")}</div>
@@ -286,8 +291,8 @@ export default function DashboardPage() {
                     <div className="text-xs text-muted-foreground uppercase font-semibold">{t("Other")}</div>
                     <div className="text-xl font-bold">{stats?.other || 0}</div>
                 </div>
-                <div className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
-                    <div className="text-xs text-muted-foreground uppercase font-semibold">{t("Checked-in")}</div>
+                <div className="p-4 rounded-lg border bg-green-50 border-green-100 text-green-900 dark:bg-green-950/20 dark:border-green-900 dark:text-green-100 shadow-sm">
+                    <div className="text-xs uppercase font-semibold opacity-80">{t("Checked-in")}</div>
                     <div className="text-xl font-bold">{stats?.totalCheckedIn || 0}</div>
                 </div>
             </div>

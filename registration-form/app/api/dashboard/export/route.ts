@@ -22,7 +22,7 @@ export async function GET(request: Request) {
         participants.forEach((p: any) => {
             data.push({
                 Name: p.name,
-                Type: "Primary",
+                Type: p.isSponsor ? "Sponsor" : "Primary",
                 Phone: p.mobileNumber,
                 Email: p.email || "",
                 Gender: p.gender || "other",
