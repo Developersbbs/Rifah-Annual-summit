@@ -30,12 +30,14 @@ export async function GET() {
             }
 
             secondaryMembers += secondaryCount
-            if (p.checkIn?.isCheckedIn) {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                totalCheckedIn += (p.checkIn?.memberPresent ? 1 : 0) + (p.secondaryMembers?.filter((m: any) => m.isCheckedIn).length || 0)
+            // Count every checked-in member individually
+            if (p.checkIn?.memberPresent) {
+                totalCheckedIn += 1
             }
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            totalSecondaryCheckedIn += p.secondaryMembers?.filter((m: any) => m.isCheckedIn).length || 0
+            
+            const secondaryChecked = p.secondaryMembers?.filter((m: any) => m.isCheckedIn).length || 0
+            totalCheckedIn += secondaryChecked
+            totalSecondaryCheckedIn += secondaryChecked
 
             // Primary gender
             if (p.gender === 'male') male++
