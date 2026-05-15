@@ -482,27 +482,31 @@ export default function MembersPage() {
                                         {t("Previous")}
                                     </Button>
                                     <div className="flex items-center gap-1">
-                                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                                            let pageNum = i + 1
-                                            if (totalPages > 5 && currentPage > 3) {
-                                                pageNum = currentPage - 3 + i
-                                                if (pageNum + 5 > totalPages) pageNum = totalPages - 4
+                                        {(() => {
+                                            const pages = [];
+                                            let startPage = Math.max(1, currentPage - 2);
+                                            const endPage = Math.min(totalPages, startPage + 4);
+                                            
+                                            if (endPage - startPage < 4) {
+                                                startPage = Math.max(1, endPage - 4);
                                             }
-                                            if (pageNum <= 0) pageNum = 1
-                                            if (pageNum > totalPages) return null
 
-                                            return (
-                                                <Button
-                                                    key={pageNum}
-                                                    variant={currentPage === pageNum ? "default" : "outline"}
-                                                    size="sm"
-                                                    className="w-8 h-8 p-0"
-                                                    onClick={() => setCurrentPage(pageNum)}
-                                                >
-                                                    {pageNum}
-                                                </Button>
-                                            )
-                                        })}
+                                            for (let p = startPage; p <= endPage; p++) {
+                                                if (p < 1) continue;
+                                                pages.push(
+                                                    <Button
+                                                        key={p}
+                                                        variant={currentPage === p ? "default" : "outline"}
+                                                        size="sm"
+                                                        className="w-8 h-8 p-0"
+                                                        onClick={() => setCurrentPage(p)}
+                                                    >
+                                                        {p}
+                                                    </Button>
+                                                );
+                                            }
+                                            return pages;
+                                        })()}
                                     </div>
                                     <Button
                                         variant="outline"
