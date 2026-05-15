@@ -85,7 +85,7 @@ export default function DashboardPage() {
     const [records, setRecords] = React.useState<DashboardRecord[]>([])
     const [loading, setLoading] = React.useState(true)
     const [filter, setFilter] = React.useState<"all" | "checked-in" | "not-checked-in">("all")
-    const [type, setType] = React.useState<"all" | "primary" | "secondary">("all")
+    const [type, setType] = React.useState<"all" | "primary" | "secondary" | "sponsor">("all")
     const [gender, setGender] = React.useState<"all" | "male" | "female" | "other">("all")
     const [search, setSearch] = React.useState("")
     const [regId, setRegId] = React.useState("")
@@ -322,6 +322,7 @@ export default function DashboardPage() {
                                 <TabsTrigger value="all">{t("All Types")}</TabsTrigger>
                                 <TabsTrigger value="primary">{t("Primary")}</TabsTrigger>
                                 <TabsTrigger value="secondary">{t("Secondary")}</TabsTrigger>
+                                <TabsTrigger value="sponsor">{t("Sponsor")}</TabsTrigger>
                             </TabsList>
                         </Tabs>
 

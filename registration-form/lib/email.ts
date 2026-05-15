@@ -432,7 +432,7 @@ function getThankYouEmailHtml(params: { name: string; registrationId: string }) 
             </table>
 
             <!-- Registration ID -->
-            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+            <!-- <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
               <tr>
                 <td style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px 24px;">
                   <p style="color:#6b7280;font-size:11px;font-weight:700;margin:0 0 8px;text-transform:uppercase;letter-spacing:0.08em;">Your Registration ID</p>
@@ -440,7 +440,7 @@ function getThankYouEmailHtml(params: { name: string; registrationId: string }) 
                   <p style="color:#9ca3af;font-size:13px;margin:0;">Thank you for being part of this landmark event.</p>
                 </td>
               </tr>
-            </table>
+            </table> -->
 
             <!-- What We Achieved -->
             <p style="color:#6b7280;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 12px;">What We Achieved Together</p>
@@ -514,7 +514,6 @@ function getThankYouEmailHtml(params: { name: string; registrationId: string }) 
           <td style="background:#1f2937;padding:30px;text-align:center;">
             <img src="cid:logo" alt="RIFAH" style="width:62px;height:auto;margin-bottom:12px;display:block;margin-left:auto;margin-right:auto;">
             <p style="color:#ffffff;font-size:15px;font-weight:600;margin:0 0 4px;">RIFAH</p>
-            <p style="color:#9ca3af;font-size:13px;margin:0 0 18px;">Tamilnadu Traders Federation</p>
             <div style="border-top:1px solid #374151;padding-top:18px;">
               <p style="color:#6b7280;font-size:11px;margin:0;">This message was sent by the event organizers. Please do not reply to this email.</p>
             </div>

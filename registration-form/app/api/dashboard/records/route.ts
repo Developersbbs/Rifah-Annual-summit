@@ -19,9 +19,16 @@ export async function GET(request: Request) {
         const query: any = { isRegistered: true }
 
         if (filter === 'checked-in') {
-            query["checkIn.memberPresent"] = true
+            query.$or = [
+                { "checkIn.memberPresent": true },
+                { "secondaryMembers.isCheckedIn": true }
+            ]
         } else if (filter === 'not-checked-in') {
-            query["checkIn.memberPresent"] = false
+            query.$or = [
+                { "checkIn.memberPresent": false },
+                { "secondaryMembers": { $exists: true, $ne: [] }, "secondaryMembers.isCheckedIn": { $ne: true } },
+                { "secondaryMembers": { $size: 0 } } // Also include those with no secondary members if primary is false (already covered by first condition mostly)
+            ]
         }
 
         if (search) {
@@ -74,7 +81,15 @@ export async function GET(request: Request) {
                 (p.registrationId && p.registrationId.toLowerCase().includes(regId.toLowerCase()))
 
             // primary
-            if ((type === 'all' || type === 'primary') && 
+            const isMatchForType = type === 'all' || 
+                                   (type === 'primary' && !p.isSponsor) || 
+                                   (type === 'sponsor' && p.isSponsor);
+            
+            const isMatchForCheckInPrimary = filter === 'all' || 
+                                             (filter === 'checked-in' && p.checkIn?.memberPresent) || 
+                                             (filter === 'not-checked-in' && !p.checkIn?.memberPresent);
+
+            if (isMatchForType && isMatchForCheckInPrimary &&
                 (genderFilter === 'all' || p.gender === genderFilter) &&
                 matchesSearchPrimary && matchesRegIdPrimary) {
                 records.push({
@@ -110,7 +125,12 @@ export async function GET(request: Request) {
                     const matchesRegIdSecondary = !regId || 
                         (m.registrationId && m.registrationId.toLowerCase().includes(regId.toLowerCase()))
 
+                    const isMatchForCheckInSecondary = filter === 'all' || 
+                                                       (filter === 'checked-in' && m.isCheckedIn) || 
+                                                       (filter === 'not-checked-in' && !m.isCheckedIn);
+
                     if ((genderFilter === 'all' || m.gender === genderFilter) &&
+                        isMatchForCheckInSecondary &&
                         matchesSearchSecondary && matchesRegIdSecondary) {
                         records.push({
                             _id: p._id.toString(),
@@ -140,7 +160,7 @@ export async function GET(request: Request) {
         const endIndex = startIndex + limit
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const filteredRecords = records.filter((r: any) => {
-            return r.type === 'Primary' || r.type === 'Secondary'
+            return r.type === 'Primary' || r.type === 'Secondary' || r.type === 'Sponsor'
         })
         const paginatedRecords = filteredRecords.slice(startIndex, endIndex)
 

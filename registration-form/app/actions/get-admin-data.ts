@@ -68,16 +68,15 @@ export async function getAdminData() {
             if (approvalStatus === "pending") {
                 stats.pendingApprovals += 1
             } else if (approvalStatus === "approved") {
-                stats.approvedRegistrations += 1
-                stats.approvedMembers += totalMembers
-                stats.approvedPrimary += 1
-                stats.approvedSecondary += secondaryMembersCount
-                
                 if (p.isSponsor) {
-                    stats.approvedSponsorsCount += totalMembers
+                    stats.approvedSponsorsCount += 1
                 } else {
-                    stats.approvedNonSponsors += totalMembers
+                    stats.approvedRegistrations += 1
+                    stats.approvedPrimary += 1
+                    stats.approvedNonSponsors += 1
                 }
+                stats.approvedSecondary += secondaryMembersCount
+                stats.approvedMembers += totalMembers
             } else if (approvalStatus === "rejected") {
                 stats.rejectedRegistrations += 1
             }
