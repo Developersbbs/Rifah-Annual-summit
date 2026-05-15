@@ -123,15 +123,12 @@ function MembersDialog({ participant, open, onOpenChange, onRefresh, onOptimisti
                         <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">
                                 <CheckCircle2 className={`h-5 w-5 ${participant.checkIn?.memberPresent ? 'text-green-600' : 'text-muted-foreground'}`} />
-                                <span className="font-semibold">Primary Member</span>
+                                <span className="font-semibold">{participant.isSponsor ? "Sponsor" : "Primary Member"}</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <Badge variant={participant.checkIn?.memberPresent ? "default" : "outline"}>
                                     {participant.checkIn?.memberPresent ? "Checked In" : "Pending"}
                                 </Badge>
-                                {participant.isSponsor && (
-                                    <Badge variant="default" className="bg-blue-600">Sponsor</Badge>
-                                )}
                             </div>
                         </div>
                         <div className="text-sm space-y-1">
@@ -453,9 +450,6 @@ function CheckInRow({ participant, onRefresh, onOptimisticCheckIn }: { participa
                     <div className="font-mono text-xs font-bold text-orange-600 mb-1">{participant.registrationId || "-"}</div>
                     <div className="font-semibold flex items-center gap-2">
                         {participant.name}
-                        {participant.isSponsor && (
-                            <Badge variant="default" className="bg-blue-600 hover:bg-blue-700 text-[10px] h-4 px-1 py-0">SPONSOR</Badge>
-                        )}
                     </div>
                     <div className="text-xs text-muted-foreground">{participant.mobileNumber}</div>
                     <Badge variant="outline" className="mt-1">{participant.location || "Unassigned"}</Badge>
@@ -467,7 +461,7 @@ function CheckInRow({ participant, onRefresh, onOptimisticCheckIn }: { participa
                 <TableCell className="text-center">
                     <div className="space-y-1">
                         <div className="text-sm font-medium">
-                            {isPrimaryComplete ? "✓" : "○"} Primary
+                            {isPrimaryComplete ? "✓" : "○"} {participant.isSponsor ? "Sponsor" : "Primary"}
                         </div>
                         {totalSecondary > 0 && (
                             <div className="text-xs text-muted-foreground">
