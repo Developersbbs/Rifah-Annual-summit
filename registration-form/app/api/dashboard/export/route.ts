@@ -21,6 +21,7 @@ export async function GET(request: Request) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         participants.forEach((p: any) => {
             data.push({
+                "Registration ID": p.registrationId || "N/A",
                 Name: p.name,
                 Type: p.isSponsor ? "Sponsor" : "Primary",
                 Phone: p.mobileNumber,
@@ -44,6 +45,7 @@ export async function GET(request: Request) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             p.secondaryMembers?.forEach((m: any) => {
                 data.push({
+                    "Registration ID": m.registrationId || "N/A",
                     Name: m.name,
                     Type: "Secondary",
                     Phone: m.mobileNumber,
