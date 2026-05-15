@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import dbConnect from "@/lib/db"
 import Participant from "@/models/Participant"
+import { IParticipant, ISecondaryMember } from "@/lib/types"
 
 export async function GET() {
     try {
@@ -18,8 +19,7 @@ export async function GET() {
         let female = 0
         let other = 0
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        participants.forEach((p: any) => {
+        ;(participants as unknown as IParticipant[]).forEach((p: IParticipant) => {
             const secondaryCount = p.secondaryMembers?.length || 0
             totalPeople += 1 + secondaryCount
             
@@ -35,7 +35,7 @@ export async function GET() {
                 totalCheckedIn += 1
             }
             
-            const secondaryChecked = p.secondaryMembers?.filter((m: any) => m.isCheckedIn).length || 0
+            const secondaryChecked = p.secondaryMembers?.filter((m: ISecondaryMember) => m.isCheckedIn).length || 0
             totalCheckedIn += secondaryChecked
             totalSecondaryCheckedIn += secondaryChecked
 
@@ -45,8 +45,7 @@ export async function GET() {
             else if (p.gender === 'other') other++
 
             // Secondary gender
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            p.secondaryMembers?.forEach((m: any) => {
+            p.secondaryMembers?.forEach((m: ISecondaryMember) => {
                 if (m.gender === 'male') male++
                 else if (m.gender === 'female') female++
                 else if (m.gender === 'other') other++
