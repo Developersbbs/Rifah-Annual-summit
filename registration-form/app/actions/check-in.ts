@@ -116,13 +116,11 @@ export async function performSecondaryMemberCheckIn(data: SecondaryMemberCheckIn
         }
 
         // Negative Test Case 6: Prevent over check-in
-        const primaryCheckedIn = participant.checkIn?.memberPresent || false
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const secondaryCheckedIn = participant.secondaryMembers.filter((m: any) => m.isCheckedIn).length
-        const totalCheckedIn = (primaryCheckedIn ? 1 : 0) + secondaryCheckedIn
         const totalRegistered = 1 + (participant.secondaryMembers?.length || 0)
-        
-        if (totalCheckedIn >= totalRegistered) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const alreadyCheckedIn = (participant.checkIn?.memberPresent ? 1 : 0) + participant.secondaryMembers.filter((m: any) => m.isCheckedIn).length
+
+        if (alreadyCheckedIn >= totalRegistered) {
             return { success: false, error: "All registered members already checked in" }
         }
 
@@ -130,20 +128,25 @@ export async function performSecondaryMemberCheckIn(data: SecondaryMemberCheckIn
         participant.secondaryMembers[memberIndex].isCheckedIn = true
         participant.secondaryMembers[memberIndex].checkedInAt = new Date()
 
-        // Update overall check-in status if primary is checked in or any secondary is checked in
-        const anyCheckedIn = participant.checkIn?.isCheckedIn || 
-                           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                           participant.secondaryMembers.some((m: any) => m.isCheckedIn)
-        
+        // Recalculate isCheckedIn: true only when ALL members (primary + every secondary) are checked in
+        const primaryCheckedIn = participant.checkIn?.memberPresent || false
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const secondaryAllCheckedIn = participant.secondaryMembers.filter((m: any) => m.isCheckedIn).length
+        const totalMembers = 1 + participant.secondaryMembers.length
+        const totalCheckedIn = (primaryCheckedIn ? 1 : 0) + secondaryAllCheckedIn
+        const isAllCheckedIn = totalCheckedIn === totalMembers
+
         if (!participant.checkIn) {
             participant.checkIn = {
-                isCheckedIn: anyCheckedIn,
+                isCheckedIn: isAllCheckedIn,
                 memberPresent: false,
                 timestamp: new Date(),
+                actualGuests: totalCheckedIn,
                 checkedInBy: user.email
             }
         } else {
-            participant.checkIn.isCheckedIn = anyCheckedIn
+            participant.checkIn.isCheckedIn = isAllCheckedIn
+            participant.checkIn.actualGuests = totalCheckedIn
             participant.checkIn.checkedInBy = user.email
         }
 
@@ -155,20 +158,6 @@ export async function performSecondaryMemberCheckIn(data: SecondaryMemberCheckIn
         console.error("Secondary member check-in error:", error)
         return { success: false, error: error instanceof Error ? error.message : "Check-in failed" }
     }
-}
-
-// Sync function to derive check-in state from actual data (primary + secondary)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function syncCheckinStatus(participant: any) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const secondaryChecked = participant.secondaryMembers?.filter((m: any) => m.isCheckedIn).length || 0
-    const totalMembers = 1 + (participant.secondaryMembers?.length || 0)
-    const totalChecked = (participant.checkIn?.memberPresent ? 1 : 0) + secondaryChecked
-
-    // AUTO DERIVE STATE
-    participant.checkIn = participant.checkIn || {}
-    participant.checkIn.memberPresent = totalChecked > 0
-    participant.checkIn.isCheckedIn = totalChecked === totalMembers
 }
 
 export async function performCheckIn(id: string, data: CheckInData) {
@@ -200,28 +189,24 @@ export async function performCheckIn(id: string, data: CheckInData) {
             return { success: false, error: "User is not registered" }
         }
 
-        // Negative Test Case 6: Prevent over check-in
-        const totalRegistered = 1 + (participant.secondaryMembers?.length || 0)
-        const actualGuests = (data.memberPresent ? 1 : 0) + data.guestCount
-        
-        if (actualGuests > totalRegistered) {
-            return { success: false, error: `Cannot check-in more than registered (${totalRegistered})` }
+        // Prevent duplicate primary check-in
+        if (participant.checkIn?.memberPresent) {
+            return { success: false, error: "Primary member already checked in" }
         }
 
-        // Calculate Totals based on Logic:
-        // actualGuests = (MemberPresent ? 1 : 0) + GuestCount
-        const isCheckedIn = actualGuests > 0
+        // Derive isCheckedIn from actual individual check-in states — only mark all-done when everyone is in
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const secondaryCheckedIn = participant.secondaryMembers?.filter((m: any) => m.isCheckedIn).length || 0
+        const totalMembers = 1 + (participant.secondaryMembers?.length || 0)
+        const totalCheckedIn = (data.memberPresent ? 1 : 0) + secondaryCheckedIn
 
         participant.checkIn = {
-            isCheckedIn: isCheckedIn,
+            isCheckedIn: totalCheckedIn === totalMembers,
             memberPresent: data.memberPresent,
             timestamp: participant.checkIn?.timestamp || new Date(),
-            actualGuests: actualGuests,
-            checkedInBy: user.email // Updates last modifier
+            actualGuests: totalCheckedIn,
+            checkedInBy: user.email
         }
-
-        // Sync check-in status after primary check-in
-        syncCheckinStatus(participant)
 
         await participant.save()
         revalidatePath("/admin/checkin")

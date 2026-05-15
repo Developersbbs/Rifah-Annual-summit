@@ -41,20 +41,19 @@ function MembersDialog({ participant, open, onOpenChange, onRefresh, onOptimisti
 
     const handlePrimaryCheckIn = async () => {
         setCheckingIn("primary")
-        const newMemberPresent = !participant.checkIn?.memberPresent
 
         // Optimistic update
         onOptimisticCheckIn(participant._id, 'primary')
 
         const res = await performCheckIn(participant._id, {
-            memberPresent: newMemberPresent,
-            guestCount: participant.checkIn?.actualGuests ? (participant.checkIn.actualGuests - (participant.checkIn.memberPresent ? 1 : 0)) : 0
+            memberPresent: true,
+            guestCount: 0
         })
         setCheckingIn(null)
 
         if (res.success) {
             onRefresh()
-            toast.success("Primary member check-in updated")
+            toast.success("Primary member checked in")
         } else {
             onRefresh() // Revert by refreshing
             toast.error(res.error)
