@@ -397,7 +397,7 @@ export default function DashboardPage() {
                                             {record.registrationId || "-"}
                                         </TableCell>
                                         <TableCell className="font-medium">
-                                            {search && (record.name.toLowerCase().includes(search.toLowerCase()) || record.phone.includes(search)) ? (
+                                            {search && (record.name.toLowerCase().includes(search.toLowerCase()) || record.phone?.includes(search)) ? (
                                                 <span className="bg-yellow-200 dark:bg-yellow-800">{record.name}</span>
                                             ) : record.name}
                                         </TableCell>
@@ -413,7 +413,7 @@ export default function DashboardPage() {
                                             )}
                                         </TableCell>
                                         <TableCell>
-                                            {search && record.phone.includes(search) ? (
+                                            {search && record.phone?.includes(search) ? (
                                                 <span className="bg-yellow-200 dark:bg-yellow-800">{record.phone}</span>
                                             ) : record.phone}
                                         </TableCell>

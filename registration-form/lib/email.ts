@@ -411,100 +411,34 @@ function getThankYouEmailHtml(params: { name: string; registrationId: string }) 
           <td class="content-pad" style="padding:36px 30px;">
 
             <!-- Greeting -->
-            <p style="color:#1f2937;font-size:17px;font-weight:600;margin:0 0 14px;">Dear <strong>${name}</strong>,</p>
-            <p style="color:#374151;font-size:15px;line-height:1.8;margin:0 0 28px;">
-              On behalf of the entire <strong>RIFAH</strong> team, we extend our heartfelt gratitude for your presence at the
-              <strong>RIFAH Annual Summit 2026</strong>. Your participation made this event truly remarkable and memorable.
+            <p style="color:#1f2937;font-size:16px;margin:0 0 18px;">Dear Participant,</p>
+
+            <p style="color:#374151;font-size:15px;line-height:1.8;margin:0 0 16px;">
+              Thank you for attending the <strong>RIFAH Annual Summit 2026</strong>. Your presence and participation made the event truly memorable and successful.
             </p>
 
-            <!-- Thank You Highlight -->
+            <p style="color:#374151;font-size:15px;line-height:1.8;margin:0 0 16px;">
+              Together, we shared ideas, built meaningful connections, and strengthened our business community.
+            </p>
+
+            <p style="color:#374151;font-size:15px;line-height:1.8;margin:0 0 24px;">
+              We hope the summit was valuable, insightful, and inspiring. Stay connected with RIFAH for upcoming events and initiatives.
+            </p>
+
+            <!-- Feedback -->
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
               <tr>
-                <td class="highlight-card" style="background:linear-gradient(135deg,#fff7ed 0%,#fef9ec 100%);border:1.5px solid #fcd34d;border-radius:14px;padding:26px 24px;text-align:center;">
-                  <div style="font-size:34px;margin-bottom:12px;">🌟</div>
-                  <p style="color:#92400e;font-size:15px;font-weight:600;margin:0 0 10px;line-height:1.4;">
-                    Your presence meant the world to us!
-                  </p>
-                  <p style="color:#78350f;font-size:14px;margin:0;line-height:1.7;">
-                    Together, we shared ideas, built meaningful connections, and took a collective step forward in strengthening our business community.
-                  </p>
-                </td>
-              </tr>
-            </table>
-
-            <!-- Registration ID -->
-            <!-- <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
-              <tr>
-                <td style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px 24px;">
-                  <p style="color:#6b7280;font-size:11px;font-weight:700;margin:0 0 8px;text-transform:uppercase;letter-spacing:0.08em;">Your Registration ID</p>
-                  <p style="color:#1e40af;font-size:26px;font-weight:800;margin:0 0 6px;letter-spacing:0.04em;">${registrationId}</p>
-                  <p style="color:#9ca3af;font-size:13px;margin:0;">Thank you for being part of this landmark event.</p>
-                </td>
-              </tr>
-            </table> -->
-
-            <!-- What We Achieved -->
-            <p style="color:#6b7280;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin:0 0 12px;">What We Achieved Together</p>
-            <table role="presentation" class="info-card" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;">
-              <tr>
-                <td style="padding:20px;">
-                  <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                    <tr>
-                      <td style="padding-bottom:12px;vertical-align:top;">
-                        <table role="presentation" cellpadding="0" cellspacing="0">
-                          <tr>
-                            <td style="width:30px;color:#dc2626;font-size:18px;font-weight:700;vertical-align:top;padding-top:2px;">&#x2736;</td>
-                            <td style="color:#374151;font-size:14px;line-height:1.7;">Inspiring keynotes and actionable business insights from industry leaders</td>
-                          </tr>
-                        </table>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style="padding-bottom:12px;vertical-align:top;">
-                        <table role="presentation" cellpadding="0" cellspacing="0">
-                          <tr>
-                            <td style="width:30px;color:#dc2626;font-size:18px;font-weight:700;vertical-align:top;padding-top:2px;">&#x2736;</td>
-                            <td style="color:#374151;font-size:14px;line-height:1.7;">Meaningful networking with fellow entrepreneurs, traders, and business leaders</td>
-                          </tr>
-                        </table>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style="vertical-align:top;">
-                        <table role="presentation" cellpadding="0" cellspacing="0">
-                          <tr>
-                            <td style="width:30px;color:#dc2626;font-size:18px;font-weight:700;vertical-align:top;padding-top:2px;">&#x2736;</td>
-                            <td style="color:#374151;font-size:14px;line-height:1.7;">A shared vision for a stronger, more unified and prosperous business community</td>
-                          </tr>
-                        </table>
-                      </td>
-                    </tr>
-                  </table>
-                </td>
-              </tr>
-            </table>
-
-            <!-- Stay Connected -->
-            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
-              <tr>
-                <td style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:12px;padding:22px 24px;text-align:center;">
-                  <p style="color:#991b1b;font-size:15px;font-weight:700;margin:0 0 8px;">Stay Connected with RIFAH</p>
-                  <p style="color:#7f1d1d;font-size:13px;margin:0;line-height:1.7;">
-                    Follow us for updates on future events, workshops, and community initiatives.
-                    Your journey with the RIFAH family has just begun &mdash; and we are excited for what lies ahead!
-                  </p>
+                <td style="background:#fff7ed;border:1.5px solid #fdba74;border-radius:12px;padding:20px 24px;text-align:center;">
+                  <p style="color:#9a3412;font-size:14px;font-weight:600;margin:0 0 12px;">We would appreciate your valuable feedback</p>
+                  <a href="https://forms.gle/c6PpxWVPYj5m7cUbA" style="display:inline-block;padding:12px 28px;background:linear-gradient(135deg,#d10c09 0%,#f52404 100%);color:#ffffff;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px;">Share Your Feedback</a>
                 </td>
               </tr>
             </table>
 
             <!-- Closing -->
-            <p style="color:#374151;font-size:15px;line-height:1.8;margin:0 0 24px;">
-              We hope you found the summit valuable, enriching, and inspiring. We look forward to welcoming you at our future events and continuing this wonderful journey of growth together.
-            </p>
             <p style="color:#1f2937;font-size:15px;margin:0;line-height:1.9;">
-              With warm regards,<br>
-              <strong style="font-size:16px;">Team RIFAH</strong><br>
-              <span style="color:#6b7280;font-size:13px;">Tamilnadu Traders Federation</span>
+              Warm regards,<br>
+              <strong style="font-size:16px;">Team RIFAH</strong>
             </p>
 
           </td>
