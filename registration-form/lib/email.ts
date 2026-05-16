@@ -411,7 +411,7 @@ function getThankYouEmailHtml(params: { name: string; registrationId: string }) 
           <td class="content-pad" style="padding:36px 30px;">
 
             <!-- Greeting -->
-            <p style="color:#1f2937;font-size:16px;margin:0 0 18px;">Dear Participant,</p>
+            <p style="color:#1f2937;font-size:16px;margin:0 0 18px;">Dear <strong>${name}</strong>,</p>
 
             <p style="color:#374151;font-size:15px;line-height:1.8;margin:0 0 16px;">
               Thank you for attending the <strong>RIFAH Annual Summit 2026</strong>. Your presence and participation made the event truly memorable and successful.
@@ -449,6 +449,7 @@ function getThankYouEmailHtml(params: { name: string; registrationId: string }) 
           <td style="background:#1f2937;padding:30px;text-align:center;">
             <img src="cid:logo" alt="RIFAH" style="width:62px;height:auto;margin-bottom:12px;display:block;margin-left:auto;margin-right:auto;">
             <p style="color:#ffffff;font-size:15px;font-weight:600;margin:0 0 4px;">RIFAH</p>
+            <p style="color:#9ca3af;font-size:12px;margin:0 0 4px;">Reg ID: ${registrationId}</p>
             <div style="border-top:1px solid #374151;padding-top:18px;">
               <p style="color:#6b7280;font-size:11px;margin:0;">This message was sent by the event organizers. Please do not reply to this email.</p>
             </div>

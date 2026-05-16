@@ -4,6 +4,7 @@ import * as React from "react"
 import { useMemo } from "react"
 import { Download, CheckCircle2, Loader2, Send, Mail } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { useTranslation } from "react-i18next"
 import "@/lib/i18n"
 import { Input } from "@/components/ui/input"
@@ -33,11 +34,13 @@ import {
     IconFileSpreadsheet,
     IconFileDescription,
     IconFileCode,
+    IconMailFast,
 } from "@tabler/icons-react"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { ViewParticipantDialog } from "@/components/view-participant-dialog"
 import { IParticipant } from "@/lib/types"
+import { toast } from "sonner"
 
 interface DashboardStats {
     totalRegistrations: number
@@ -98,6 +101,15 @@ export default function DashboardPage() {
     const [thankYouResult, setThankYouResult] = React.useState<{ successCount: number; failureCount: number } | null>(null)
     const [sendingEmailId, setSendingEmailId] = React.useState<string | null>(null)
 
+    // Bulk alert email state
+    const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set())
+    const [emailDialogOpen, setEmailDialogOpen] = React.useState(false)
+    const [emailTargets, setEmailTargets] = React.useState<DashboardRecord[]>([])
+    const [sending, setSending] = React.useState(false)
+    const [sendProgress, setSendProgress] = React.useState<{ sent: number; failed: number; total: number } | null>(null)
+    const [resultDialogOpen, setResultDialogOpen] = React.useState(false)
+    const [sendResults, setSendResults] = React.useState<{ successCount: number; failureCount: number } | null>(null)
+
     const loadStats = React.useCallback(async () => {
         try {
             const res = await fetch("/api/dashboard/stats")
@@ -142,6 +154,93 @@ export default function DashboardPage() {
         loadRecords()
     }, [loadRecords, filter, type, page, search, regId])
 
+    // Reset selection when page/filter changes
+    React.useEffect(() => {
+        setSelectedIds(new Set())
+    }, [page, filter, type, gender, search, regId])
+
+    const allPageSelected = memoizedRecords.length > 0 && memoizedRecords.every(r => selectedIds.has(r.registrationId))
+    const somePageSelected = memoizedRecords.some(r => selectedIds.has(r.registrationId))
+
+    const toggleSelectAll = () => {
+        if (allPageSelected) {
+            setSelectedIds(prev => {
+                const next = new Set(prev)
+                memoizedRecords.forEach(r => next.delete(r.registrationId))
+                return next
+            })
+        } else {
+            setSelectedIds(prev => {
+                const next = new Set(prev)
+                memoizedRecords.forEach(r => next.add(r.registrationId))
+                return next
+            })
+        }
+    }
+
+    const toggleRow = (id: string) => {
+        setSelectedIds(prev => {
+            const next = new Set(prev)
+            if (next.has(id)) next.delete(id)
+            else next.add(id)
+            return next
+        })
+    }
+
+    const openBulkEmailDialog = () => {
+        const selected = memoizedRecords.filter(r => selectedIds.has(r.registrationId))
+        const withEmail = selected.filter(r => r.email && r.email !== 'N/A' && r.email.includes('@'))
+        if (withEmail.length === 0) {
+            toast.error(t("None of the selected members have a valid email address"))
+            return
+        }
+        setEmailTargets(withEmail)
+        setEmailDialogOpen(true)
+    }
+
+    const handleSendAlertEmail = async () => {
+        setSending(true)
+        const batchSize = 5
+        let totalSuccess = 0
+        let totalFailed = 0
+        const total = emailTargets.length
+        setSendProgress({ sent: 0, failed: 0, total })
+
+        for (let i = 0; i < emailTargets.length; i += batchSize) {
+            const batch = emailTargets.slice(i, i + batchSize)
+            try {
+                const res = await fetch('/api/admin/send-alert-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        recipients: batch.map(r => ({
+                            registrationId: r.registrationId,
+                            name: r.name,
+                            email: r.email,
+                        }))
+                    })
+                })
+                const data = await res.json()
+                if (res.ok) {
+                    totalSuccess += data.details?.successCount || 0
+                    totalFailed += data.details?.failureCount || 0
+                } else {
+                    totalFailed += batch.length
+                }
+            } catch {
+                totalFailed += batch.length
+            }
+            setSendProgress({ sent: totalSuccess, failed: totalFailed, total })
+        }
+
+        setSendResults({ successCount: totalSuccess, failureCount: totalFailed })
+        setSending(false)
+        setSendProgress(null)
+        setEmailDialogOpen(false)
+        setResultDialogOpen(true)
+        setSelectedIds(new Set())
+    }
+
     const handleSendThankYouEmails = async () => {
         setSendingThankYou(true)
         setThankYouResult(null)
@@ -155,11 +254,11 @@ export default function DashboardPage() {
             if (res.ok) {
                 setThankYouResult(data.details)
             } else {
-                alert(data.error || "Failed to send emails")
+                toast.error(data.error || t("Failed to send emails"))
                 setShowThankYouDialog(false)
             }
         } catch {
-            alert("An error occurred while sending emails.")
+            toast.error(t("An error occurred while sending emails."))
             setShowThankYouDialog(false)
         } finally {
             setSendingThankYou(false)
@@ -168,7 +267,7 @@ export default function DashboardPage() {
 
     const handleSendIndividualEmail = async (record: DashboardRecord) => {
         if (!record.email || !record.email.includes("@")) {
-            alert(t("This participant has no valid email address."))
+            toast.error(t("This participant has no valid email address."))
             return
         }
         setSendingEmailId(record._id)
@@ -186,12 +285,12 @@ export default function DashboardPage() {
             })
             const data = await res.json()
             if (res.ok && data.details?.successCount > 0) {
-                alert(`${t("Thank you email sent to")} ${record.name} (${record.email})`)
+                toast.success(`${t("Thank you email sent to")} ${record.name} (${record.email})`)
             } else {
-                alert(data.error || t("Failed to send email."))
+                toast.error(data.error || t("Failed to send email."))
             }
         } catch {
-            alert(t("An error occurred while sending the email."))
+            toast.error(t("An error occurred while sending the email."))
         } finally {
             setSendingEmailId(null)
         }
@@ -359,11 +458,28 @@ export default function DashboardPage() {
                         }}
                         className="max-w-[200px] border-blue-200 focus:border-blue-500"
                     />
+                    {selectedIds.size > 0 && (
+                        <Button
+                            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white"
+                            onClick={openBulkEmailDialog}
+                        >
+                            <IconMailFast className="h-4 w-4" />
+                            {t("Send Alert Email")} ({selectedIds.size})
+                        </Button>
+                    )}
                 </div>
                 <div className="overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow>
+                                <TableHead className="w-[40px]">
+                                    <Checkbox
+                                        checked={allPageSelected}
+                                        onCheckedChange={toggleSelectAll}
+                                        aria-label="Select all on this page"
+                                        data-state={somePageSelected && !allPageSelected ? "indeterminate" : undefined}
+                                    />
+                                </TableHead>
                                 <TableHead className="w-[100px]">{t("Reg ID")}</TableHead>
                                 <TableHead className="w-[200px]">{t("Name")}</TableHead>
                                 <TableHead>{t("Type")}</TableHead>
@@ -380,19 +496,26 @@ export default function DashboardPage() {
                         <TableBody>
                             {loading ? (
                                 <TableRow>
-                                    <TableCell colSpan={9} className="text-center py-8">
+                                    <TableCell colSpan={12} className="text-center py-8">
                                         <Loader2 className="h-6 w-6 animate-spin mx-auto" />
                                     </TableCell>
                                 </TableRow>
                             ) : records.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
+                                    <TableCell colSpan={12} className="text-center py-8 text-muted-foreground">
                                         {t("No records found")}
                                     </TableCell>
                                 </TableRow>
                             ) : (
                                 memoizedRecords.map((record, index) => (
-                                    <TableRow key={index}>
+                                    <TableRow key={index} data-selected={selectedIds.has(record.registrationId)}>
+                                        <TableCell>
+                                            <Checkbox
+                                                checked={selectedIds.has(record.registrationId)}
+                                                onCheckedChange={() => toggleRow(record.registrationId)}
+                                                aria-label={`Select ${record.name}`}
+                                            />
+                                        </TableCell>
                                         <TableCell className="font-mono text-xs font-bold text-blue-600">
                                             {record.registrationId || "-"}
                                         </TableCell>
@@ -595,6 +718,90 @@ export default function DashboardPage() {
                                 )}
                             </Button>
                         )}
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Alert Email Confirmation Dialog */}
+            <Dialog open={emailDialogOpen} onOpenChange={(open) => { if (!sending) setEmailDialogOpen(open) }}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <IconMailFast className="h-5 w-5 text-red-600" />
+                            {t("Send Alert Email")}
+                        </DialogTitle>
+                        <DialogDescription>
+                            {t("Send the RIFAH Annual Summit alert email to the selected participants.")}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+                        {emailTargets.length} {t("participant(s) with valid email will receive the alert email.")}
+                    </div>
+                    {sendProgress && (
+                        <div className="space-y-2 py-1">
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="text-muted-foreground">{t("Sending")}...</span>
+                                <span className="font-medium">{sendProgress.sent + sendProgress.failed} / {sendProgress.total}</span>
+                            </div>
+                            <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-red-500 transition-all"
+                                    style={{ width: `${((sendProgress.sent + sendProgress.failed) / sendProgress.total) * 100}%` }}
+                                />
+                            </div>
+                        </div>
+                    )}
+                    <DialogFooter className="gap-2">
+                        <Button variant="outline" onClick={() => setEmailDialogOpen(false)} disabled={sending}>
+                            {t("Cancel")}
+                        </Button>
+                        <Button onClick={handleSendAlertEmail} disabled={sending} className="bg-red-600 hover:bg-red-700 text-white">
+                            {sending ? (
+                                <>
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    {t("Sending...")}
+                                </>
+                            ) : (
+                                <>
+                                    <IconMailFast className="h-4 w-4 mr-2" />
+                                    {t("Send")}
+                                </>
+                            )}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Alert Email Results Dialog */}
+            <Dialog open={resultDialogOpen} onOpenChange={setResultDialogOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <IconMailFast className="h-5 w-5 text-red-600" />
+                            {t("Email Results")}
+                        </DialogTitle>
+                        <DialogDescription>
+                            {t("Alert emails have been processed.")}
+                        </DialogDescription>
+                    </DialogHeader>
+                    {sendResults && (
+                        <div className="space-y-3 py-2">
+                            <div className="flex items-center justify-between rounded-lg border p-3 bg-green-50">
+                                <span className="text-sm font-medium text-green-800">{t("Successfully sent")}</span>
+                                <span className="text-lg font-bold text-green-700">{sendResults.successCount}</span>
+                            </div>
+                            {sendResults.failureCount > 0 && (
+                                <div className="flex items-center justify-between rounded-lg border p-3 bg-red-50">
+                                    <span className="text-sm font-medium text-red-800">{t("Failed")}</span>
+                                    <span className="text-lg font-bold text-red-700">{sendResults.failureCount}</span>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                    <DialogFooter>
+                        <Button onClick={() => { setResultDialogOpen(false); setSendResults(null) }}>
+                            {t("Close")}
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

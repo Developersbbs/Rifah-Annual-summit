@@ -6,6 +6,7 @@ import {
 } from "@/components/ui/sidebar"
 import { getCurrentUser } from "@/lib/auth"
 import { redirect } from "next/navigation"
+import { Toaster } from "sonner"
 
 
 export default async function Layout({ children }: { children: React.ReactNode }) {
@@ -30,6 +31,7 @@ export default async function Layout({ children }: { children: React.ReactNode }
                 <SiteHeader />
                 {children}
             </SidebarInset>
+            <Toaster richColors position="top-right" />
         </SidebarProvider>
     )
 }
